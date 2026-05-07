@@ -10,8 +10,16 @@
   --accent: #1b4b72;
   --accent-soft: #d7e6f5;
   background:
-    radial-gradient(circle at top left, rgba(233, 191, 108, 0.22), transparent 24rem),
-    radial-gradient(circle at bottom right, rgba(59, 123, 163, 0.18), transparent 28rem),
+    radial-gradient(
+      circle at top left,
+      rgba(233, 191, 108, 0.22),
+      transparent 24rem
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(59, 123, 163, 0.18),
+      transparent 28rem
+    ),
     linear-gradient(180deg, #f5e7d4 0%, #eff4f8 100%);
   color: var(--ink);
   font-family: "Iowan Old Style", "Palatino Linotype", serif;
@@ -121,7 +129,11 @@ select {
   padding: 14px 18px 18px;
   border-radius: 26px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(252, 249, 244, 0.9)),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.82),
+      rgba(252, 249, 244, 0.9)
+    ),
     rgba(255, 255, 255, 0.74);
   border: 1px solid rgba(37, 48, 62, 0.08);
   box-shadow:
@@ -184,7 +196,10 @@ select {
     0 14px 30px rgba(70, 78, 90, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.82);
   cursor: pointer;
-  transition: transform 120ms ease, background-color 120ms ease, color 120ms ease;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease,
+    color 120ms ease;
 }
 
 .reading-action-button[data-active="true"] {
@@ -354,7 +369,10 @@ select {
   background: rgba(255, 255, 255, 0.86);
   color: #173a58;
   cursor: pointer;
-  transition: transform 120ms ease, background-color 120ms ease, border-color 120ms ease;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease;
 }
 
 .panel-toggle[data-active="true"] {
@@ -372,7 +390,10 @@ select {
 
 .control-deck {
   display: grid;
-  grid-template-columns: minmax(260px, 0.7fr) minmax(340px, 0.9fr) minmax(420px, 1.3fr);
+  grid-template-columns: minmax(260px, 0.7fr) minmax(340px, 0.9fr) minmax(
+      420px,
+      1.3fr
+    );
   gap: 12px;
   margin-bottom: 14px;
   padding: 10px;
@@ -394,19 +415,30 @@ select {
 
 .control-card-intro {
   background:
-    radial-gradient(circle at top right, rgba(237, 139, 50, 0.18), transparent 12rem),
+    radial-gradient(
+      circle at top right,
+      rgba(237, 139, 50, 0.18),
+      transparent 12rem
+    ),
     rgba(255, 255, 255, 0.78);
 }
 
 .control-card-search {
   background:
-    radial-gradient(circle at top left, rgba(27, 75, 114, 0.12), transparent 14rem),
+    radial-gradient(
+      circle at top left,
+      rgba(27, 75, 114, 0.12),
+      transparent 14rem
+    ),
     rgba(255, 255, 255, 0.76);
 }
 
 .control-card-settings {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(247, 250, 252, 0.78));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.82),
+    rgba(247, 250, 252, 0.78)
+  );
 }
 
 .control-card-header {
@@ -572,7 +604,9 @@ select {
   background: rgba(255, 255, 255, 0.88);
   padding: 7px 9px;
   outline: none;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .field-input:focus {
@@ -705,7 +739,11 @@ select {
   border: 1px solid rgba(32, 52, 76, 0.08);
   border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(255, 253, 249, 0.9), rgba(250, 245, 235, 0.82)),
+    linear-gradient(
+      180deg,
+      rgba(255, 253, 249, 0.9),
+      rgba(250, 245, 235, 0.82)
+    ),
     rgba(255, 255, 255, 0.76);
   box-shadow:
     0 26px 70px rgba(73, 57, 33, 0.1),
@@ -809,6 +847,10 @@ select {
   gap: 4px;
 }
 
+.reader-toolbar-group-annotation {
+  gap: 4px;
+}
+
 .reader-toolbar-group-fullscreen {
   margin-left: auto;
 }
@@ -824,7 +866,9 @@ select {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 120ms ease, background-color 120ms ease;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease;
 }
 
 .toolbar-button {
@@ -854,7 +898,10 @@ select {
   font-size: 0.78rem;
   line-height: 1;
   cursor: pointer;
-  transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    transform 120ms ease;
 }
 
 .toolbar-mode-button:hover {
@@ -865,6 +912,40 @@ select {
   background: var(--accent);
   color: white;
   box-shadow: 0 8px 18px rgba(27, 75, 114, 0.16);
+}
+
+.toolbar-annotation-style {
+  min-width: 68px;
+}
+
+.toolbar-color-swatches {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 2px;
+}
+
+.toolbar-color-swatch {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: var(--swatch-color);
+  box-shadow: 0 0 0 1px rgba(37, 48, 62, 0.16);
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.toolbar-color-swatch:hover {
+  transform: translateY(-1px);
+}
+
+.toolbar-color-swatch.is-active {
+  box-shadow:
+    0 0 0 2px rgba(27, 75, 114, 0.75),
+    0 8px 18px rgba(27, 75, 114, 0.16);
 }
 
 .search-card {
@@ -1079,8 +1160,7 @@ select {
   background: rgba(255, 255, 255, 0.96);
   overflow: auto;
   overflow-anchor: none;
-  box-shadow:
-    0 18px 40px rgba(66, 51, 28, 0.06);
+  box-shadow: 0 18px 40px rgba(66, 51, 28, 0.06);
 }
 
 .reading-surface[data-fullscreen="true"] .reader-root {
@@ -1122,7 +1202,9 @@ select {
   font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background-color 120ms ease, opacity 120ms ease;
+  transition:
+    background-color 120ms ease,
+    opacity 120ms ease;
 }
 
 .reader-selection-toolbar-button.is-secondary {
@@ -1182,6 +1264,14 @@ select {
   background: rgba(30, 64, 175, 0.92);
 }
 
+.reader-viewport-overlay-rect.is-annotation.is-underline {
+  height: 3px !important;
+  margin-top: calc(var(--overlay-height, 0px) - 4px);
+  background: rgba(239, 68, 68, 0.86);
+  outline: 0;
+  border-radius: 999px;
+}
+
 .reader-root[data-mode="paginated"] {
   overflow: hidden;
 }
@@ -1191,7 +1281,11 @@ select {
   align-content: center;
   justify-items: center;
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.92), rgba(246, 238, 223, 0.72)),
+    radial-gradient(
+      circle at top,
+      rgba(255, 255, 255, 0.92),
+      rgba(246, 238, 223, 0.72)
+    ),
     linear-gradient(180deg, #f1eadb 0%, #e6dcc8 100%);
 }
 
@@ -1203,7 +1297,8 @@ select {
   width: 100%;
 }
 
-.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"] .epub-dom-spread {
+.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"]
+  .epub-dom-spread {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
@@ -1214,38 +1309,46 @@ select {
   min-width: 0;
 }
 
-.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"] .epub-dom-spread-slot {
+.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"]
+  .epub-dom-spread-slot {
   min-height: 100%;
   display: flex;
 }
 
-.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"] .epub-dom-spread-slot-blank {
+.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"]
+  .epub-dom-spread-slot-blank {
   border-radius: 14px;
   border: 1px dashed rgba(116, 92, 52, 0.18);
   background: rgba(255, 250, 240, 0.32);
 }
 
-.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"] .epub-dom-spread-slot-left {
+.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"]
+  .epub-dom-spread-slot-left {
   justify-content: flex-start;
 }
 
-.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"] .epub-dom-spread-slot-right {
+.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"]
+  .epub-dom-spread-slot-right {
   justify-content: flex-end;
 }
 
-.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"][data-page-spread-placement="left"] .epub-dom-section-fxl {
+.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"][data-page-spread-placement="left"]
+  .epub-dom-section-fxl {
   justify-self: start;
 }
 
-.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"][data-page-spread-placement="right"] .epub-dom-section-fxl {
+.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"][data-page-spread-placement="right"]
+  .epub-dom-section-fxl {
   justify-self: end;
 }
 
-.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"][data-page-spread-placement="center"] .epub-dom-section-fxl {
+.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"][data-synthetic-spread="enabled"][data-page-spread-placement="center"]
+  .epub-dom-section-fxl {
   justify-self: center;
 }
 
-.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"] .epub-dom-section-fxl {
+.reader-root[data-mode="paginated"][data-rendition-layout="pre-paginated"]
+  .epub-dom-section-fxl {
   box-shadow:
     0 18px 40px rgba(73, 57, 33, 0.18),
     0 0 0 1px rgba(116, 92, 52, 0.12);
@@ -1504,7 +1607,8 @@ select {
 }
 
 .reader-root[data-mode="scroll"] .epub-dom-section,
-.reader-root[data-mode="paginated"] .epub-dom-section:not(.epub-dom-section-fxl) {
+.reader-root[data-mode="paginated"]
+  .epub-dom-section:not(.epub-dom-section-fxl) {
   max-width: 48rem;
   margin: 0 auto;
 }
@@ -1536,7 +1640,8 @@ select {
 .reader-root blockquote {
   margin: var(--reader-paragraph-spacing, 12px) 0;
   padding-left: var(--reader-quote-accent-gap, 16px);
-  border-left: var(--reader-quote-accent-width, 4px) solid var(--reader-quote-accent-color, rgba(37, 99, 235, 0.2));
+  border-left: var(--reader-quote-accent-width, 4px) solid
+    var(--reader-quote-accent-color, rgba(37, 99, 235, 0.2));
 }
 
 .reader-root pre {

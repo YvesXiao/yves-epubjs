@@ -59,6 +59,7 @@ type BuilderOptions = {
   highlightedBlockIds?: Set<string>;
   highlightRangesByBlock?: Map<string, BlockHighlightRange[]>;
   underlinedBlockIds?: Set<string>;
+  underlineColorsByBlock?: Map<string, string>;
   activeBlockId: string | undefined;
 };
 
@@ -74,41 +75,47 @@ export class DisplayListBuilder {
     const contentWidth = Math.max(120, options.width);
 
     for (const block of options.blocks) {
-      const built = block.type === "pretext"
-        ? buildPretextBlockDisplay({
-            block,
-            section: options.section,
-            top: currentTop,
-            width: contentWidth,
-            theme: options.theme,
-            styleProfile,
-            locator: options.locatorMap?.get(block.id),
-            resolveImageLoaded: options.resolveImageLoaded,
-            resolveImageUrl: options.resolveImageUrl,
-            highlighted: options.highlightedBlockIds?.has(block.id) ?? false,
-            highlightRanges: options.highlightRangesByBlock?.get(block.id) ?? [],
-            underlined: options.underlinedBlockIds?.has(block.id) ?? false,
-            active: options.activeBlockId === block.id
-          })
-        : this.buildNativeBlock({
-            block: block.block,
-            estimatedHeight: block.estimatedHeight,
-            section: options.section,
-            top: currentTop,
-            width: contentWidth,
-            viewportHeight: options.viewportHeight,
-            theme: options.theme,
-            typography: options.typography,
-            styleProfile,
-            locator: options.locatorMap?.get(block.id),
-            resolveImageLoaded: options.resolveImageLoaded,
-            resolveImageUrl: options.resolveImageUrl,
-            resolveImageIntrinsicSize: options.resolveImageIntrinsicSize,
-            highlighted: options.highlightedBlockIds?.has(block.id) ?? false,
-            highlightRanges: options.highlightRangesByBlock?.get(block.id) ?? [],
-            underlined: options.underlinedBlockIds?.has(block.id) ?? false,
-            active: options.activeBlockId === block.id
-          });
+      const underlineColor = options.underlineColorsByBlock?.get(block.id);
+      const built =
+        block.type === "pretext"
+          ? buildPretextBlockDisplay({
+              block,
+              section: options.section,
+              top: currentTop,
+              width: contentWidth,
+              theme: options.theme,
+              styleProfile,
+              locator: options.locatorMap?.get(block.id),
+              resolveImageLoaded: options.resolveImageLoaded,
+              resolveImageUrl: options.resolveImageUrl,
+              highlighted: options.highlightedBlockIds?.has(block.id) ?? false,
+              highlightRanges:
+                options.highlightRangesByBlock?.get(block.id) ?? [],
+              underlined: options.underlinedBlockIds?.has(block.id) ?? false,
+              ...(underlineColor ? { underlineColor } : {}),
+              active: options.activeBlockId === block.id
+            })
+          : this.buildNativeBlock({
+              block: block.block,
+              estimatedHeight: block.estimatedHeight,
+              section: options.section,
+              top: currentTop,
+              width: contentWidth,
+              viewportHeight: options.viewportHeight,
+              theme: options.theme,
+              typography: options.typography,
+              styleProfile,
+              locator: options.locatorMap?.get(block.id),
+              resolveImageLoaded: options.resolveImageLoaded,
+              resolveImageUrl: options.resolveImageUrl,
+              resolveImageIntrinsicSize: options.resolveImageIntrinsicSize,
+              highlighted: options.highlightedBlockIds?.has(block.id) ?? false,
+              highlightRanges:
+                options.highlightRangesByBlock?.get(block.id) ?? [],
+              underlined: options.underlinedBlockIds?.has(block.id) ?? false,
+              ...(underlineColor ? { underlineColor } : {}),
+              active: options.activeBlockId === block.id
+            });
 
       ops.push(...built.ops);
       interactions.push(...built.interactions);
@@ -147,6 +154,7 @@ export class DisplayListBuilder {
     highlighted: boolean;
     highlightRanges: BlockHighlightRange[];
     underlined: boolean;
+    underlineColor?: string;
     active: boolean;
   }): {
     ops: DrawOp[];
@@ -214,11 +222,15 @@ export class DisplayListBuilder {
 
     switch (input.block.kind) {
       case "image": {
-        const renderSrc = input.resolveImageUrl?.(input.block.src) ?? input.block.src;
+        const renderSrc =
+          input.resolveImageUrl?.(input.block.src) ?? input.block.src;
         const imageLayout = resolveImageLayout({
           availableWidth: width,
           viewportHeight: input.viewportHeight,
-          ...resolveImageIntrinsicSize(input.block, input.resolveImageIntrinsicSize),
+          ...resolveImageIntrinsicSize(
+            input.block,
+            input.resolveImageIntrinsicSize
+          ),
           fillWidth: isCoverImageBlock(input.section, input.block)
         });
         const imageRect = {
@@ -289,7 +301,10 @@ export class DisplayListBuilder {
             locator: input.locator,
             x: contentRect.x + input.styleProfile.quote.accentGap,
             top: contentRect.y + input.styleProfile.quote.contentInsetY,
-            width: Math.max(40, contentRect.width - input.styleProfile.quote.accentGap),
+            width: Math.max(
+              40,
+              contentRect.width - input.styleProfile.quote.accentGap
+            ),
             height: contentRect.height,
             font: `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`,
             color: blockStyle.color,
@@ -297,6 +312,9 @@ export class DisplayListBuilder {
             highlighted: input.highlighted,
             highlightRanges: input.highlightRanges,
             underlined: input.underlined,
+            ...(input.underlineColor
+              ? { underlineColor: input.underlineColor }
+              : {}),
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -310,7 +328,9 @@ export class DisplayListBuilder {
           blockId: input.block.id,
           locator: input.locator,
           rect,
-          color: blockStyle.backgroundColor ?? input.styleProfile.code.blockBackground,
+          color:
+            blockStyle.backgroundColor ??
+            input.styleProfile.code.blockBackground,
           radius: input.styleProfile.code.blockRadius
         } satisfies RectDrawOp);
         ops.push(
@@ -321,14 +341,23 @@ export class DisplayListBuilder {
             locator: input.locator,
             x: contentRect.x + input.styleProfile.code.blockPaddingX,
             top: contentRect.y + input.styleProfile.code.blockPaddingY,
-            width: Math.max(40, contentRect.width - input.styleProfile.code.blockPaddingX * 2),
-            height: Math.max(0, contentRect.height - input.styleProfile.code.blockPaddingY * 2),
+            width: Math.max(
+              40,
+              contentRect.width - input.styleProfile.code.blockPaddingX * 2
+            ),
+            height: Math.max(
+              0,
+              contentRect.height - input.styleProfile.code.blockPaddingY * 2
+            ),
             font: `400 ${input.styleProfile.code.fontSize}px ${input.styleProfile.code.fontFamily}`,
             color: blockStyle.color,
             textAlign: blockStyle.textAlign,
             highlighted: input.highlighted,
             highlightRanges: input.highlightRanges,
             underlined: input.underlined,
+            ...(input.underlineColor
+              ? { underlineColor: input.underlineColor }
+              : {}),
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -344,7 +373,7 @@ export class DisplayListBuilder {
           rect,
           color: blockStyle.backgroundColor ?? "rgba(59, 123, 163, 0.08)",
           radius: 12
-        } satisfies RectDrawOp)
+        } satisfies RectDrawOp);
         ops.push({
           kind: "rect",
           sectionId: input.section.id,
@@ -359,7 +388,7 @@ export class DisplayListBuilder {
           },
           color: input.styleProfile.aside.accentColor,
           radius: 4
-        } satisfies RectDrawOp)
+        } satisfies RectDrawOp);
         ops.push(
           ...this.buildWrappedTextOps({
             text: extractBlockText(input.block),
@@ -368,14 +397,23 @@ export class DisplayListBuilder {
             locator: input.locator,
             x: contentRect.x + input.styleProfile.aside.accentGap,
             top: contentRect.y + input.styleProfile.aside.contentInsetY,
-            width: Math.max(40, contentRect.width - input.styleProfile.aside.accentGap),
-            height: Math.max(0, contentRect.height - input.styleProfile.aside.contentInsetY * 2),
+            width: Math.max(
+              40,
+              contentRect.width - input.styleProfile.aside.accentGap
+            ),
+            height: Math.max(
+              0,
+              contentRect.height - input.styleProfile.aside.contentInsetY * 2
+            ),
             font: `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`,
             color: blockStyle.color,
             textAlign: blockStyle.textAlign,
             highlighted: input.highlighted,
             highlightRanges: input.highlightRanges,
             underlined: input.underlined,
+            ...(input.underlineColor
+              ? { underlineColor: input.underlineColor }
+              : {}),
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -397,6 +435,9 @@ export class DisplayListBuilder {
             },
             highlighted: input.highlighted,
             underlined: input.underlined,
+            ...(input.underlineColor
+              ? { underlineColor: input.underlineColor }
+              : {}),
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -422,6 +463,9 @@ export class DisplayListBuilder {
             resolveImageIntrinsicSize: input.resolveImageIntrinsicSize,
             highlighted: input.highlighted,
             underlined: input.underlined,
+            ...(input.underlineColor
+              ? { underlineColor: input.underlineColor }
+              : {}),
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -443,6 +487,9 @@ export class DisplayListBuilder {
             },
             highlighted: input.highlighted,
             underlined: input.underlined,
+            ...(input.underlineColor
+              ? { underlineColor: input.underlineColor }
+              : {}),
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -467,6 +514,9 @@ export class DisplayListBuilder {
             highlighted: input.highlighted,
             highlightRanges: input.highlightRanges,
             underlined: input.underlined,
+            ...(input.underlineColor
+              ? { underlineColor: input.underlineColor }
+              : {}),
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -496,25 +546,30 @@ export class DisplayListBuilder {
     highlighted: boolean;
     highlightRanges: BlockHighlightRange[];
     underlined: boolean;
+    underlineColor?: string;
     active: boolean;
     styleProfile: ReadingStyleProfile;
   }): TextRunDrawOp[] {
     const fontSize = extractFontSize(input.font);
     const lineHeight = Math.max(fontSize * 1.45, 18);
-    const lines = wrapTextWithOffsets(input.text || "", input.width, input.font);
+    const lines = wrapTextWithOffsets(
+      input.text || "",
+      input.width,
+      input.font
+    );
     return lines.map((line, index) => {
-      const lineWidth = approximateTextWidth(line.text, input.font)
+      const lineWidth = approximateTextWidth(line.text, input.font);
       const lineX = this.resolveTextLineStartX(
         input.textAlign,
         input.x,
         input.width,
         lineWidth
-      )
+      );
       const highlightSegments = resolveLineHighlightSegments(
         input.highlightRanges,
         line.start,
         line.end
-      )
+      );
       return {
         kind: "text",
         sectionId: input.section.id,
@@ -543,9 +598,12 @@ export class DisplayListBuilder {
             : undefined,
         ...(highlightSegments.length ? { highlightSegments } : {}),
         underline: input.underlined || undefined,
+        ...(input.underlineColor
+          ? { underlineColor: input.underlineColor }
+          : {}),
         href: undefined
-      }
-    })
+      };
+    });
   }
 
   private buildPreformattedTextOps(input: {
@@ -563,25 +621,30 @@ export class DisplayListBuilder {
     highlighted: boolean;
     highlightRanges: BlockHighlightRange[];
     underlined: boolean;
+    underlineColor?: string;
     active: boolean;
     styleProfile: ReadingStyleProfile;
   }): TextRunDrawOp[] {
-    const fontSize = extractFontSize(input.font)
-    const lineHeight = Math.max(fontSize * 1.45, 18)
-    const lines = wrapPreformattedTextWithOffsets(input.text || "", input.width, input.font)
+    const fontSize = extractFontSize(input.font);
+    const lineHeight = Math.max(fontSize * 1.45, 18);
+    const lines = wrapPreformattedTextWithOffsets(
+      input.text || "",
+      input.width,
+      input.font
+    );
     return lines.map((line, index) => {
-      const lineWidth = approximateTextWidth(line.text, input.font)
+      const lineWidth = approximateTextWidth(line.text, input.font);
       const lineX = this.resolveTextLineStartX(
         input.textAlign,
         input.x,
         input.width,
         lineWidth
-      )
+      );
       const highlightSegments = resolveLineHighlightSegments(
         input.highlightRanges,
         line.start,
         line.end
-      )
+      );
       return {
         kind: "text",
         sectionId: input.section.id,
@@ -610,9 +673,12 @@ export class DisplayListBuilder {
             : undefined,
         ...(highlightSegments.length ? { highlightSegments } : {}),
         underline: input.underlined || undefined,
+        ...(input.underlineColor
+          ? { underlineColor: input.underlineColor }
+          : {}),
         href: undefined
-      }
-    })
+      };
+    });
   }
 
   private buildListBlockOps(input: {
@@ -626,22 +692,32 @@ export class DisplayListBuilder {
     theme: Theme;
     highlighted: boolean;
     underlined: boolean;
+    underlineColor?: string;
     active: boolean;
     styleProfile: ReadingStyleProfile;
   }): TextRunDrawOp[] {
-    const ops: TextRunDrawOp[] = []
-    const font = `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`
-    const lineHeight = Math.max(input.typography.fontSize * 1.45, 18)
-    const renderList = (block: ListBlock, depth: number, top: number): number => {
-      let currentTop = top
+    const ops: TextRunDrawOp[] = [];
+    const font = `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`;
+    const lineHeight = Math.max(input.typography.fontSize * 1.45, 18);
+    const renderList = (
+      block: ListBlock,
+      depth: number,
+      top: number
+    ): number => {
+      let currentTop = top;
       block.items.forEach((item, index) => {
-        const marker = block.ordered ? `${(block.start ?? 1) + index}.` : "\u2022"
-        const markerX = input.x + depth * input.styleProfile.list.indent
-        const textX = markerX + input.styleProfile.list.markerGap
-        const textWidth = Math.max(40, input.width - (textX - input.x))
-        const textBlocks = item.blocks.filter((child) => child.kind !== "list")
-        const itemText = textBlocks.map(extractBlockText).filter(Boolean).join(" ")
-        const itemLines = wrapText(itemText || "", textWidth, font)
+        const marker = block.ordered
+          ? `${(block.start ?? 1) + index}.`
+          : "\u2022";
+        const markerX = input.x + depth * input.styleProfile.list.indent;
+        const textX = markerX + input.styleProfile.list.markerGap;
+        const textWidth = Math.max(40, input.width - (textX - input.x));
+        const textBlocks = item.blocks.filter((child) => child.kind !== "list");
+        const itemText = textBlocks
+          .map(extractBlockText)
+          .filter(Boolean)
+          .join(" ");
+        const itemLines = wrapText(itemText || "", textWidth, font);
 
         ops.push({
           kind: "text",
@@ -652,24 +728,27 @@ export class DisplayListBuilder {
           rect: {
             x: markerX,
             y: currentTop,
+            width: approximateTextWidth(marker, font),
+            height: lineHeight
+          },
+          text: marker,
+          x: markerX,
+          y: currentTop,
           width: approximateTextWidth(marker, font),
-          height: lineHeight
-        },
-        text: marker,
-        x: markerX,
-        y: currentTop,
-        width: approximateTextWidth(marker, font),
-        font,
-        color: input.theme.color,
-        backgroundColor: undefined,
-        highlightColor: input.highlighted
+          font,
+          color: input.theme.color,
+          backgroundColor: undefined,
+          highlightColor: input.highlighted
             ? input.styleProfile.highlight.search
             : input.active
               ? input.styleProfile.highlight.active
               : undefined,
           underline: input.underlined || undefined,
+          ...(input.underlineColor
+            ? { underlineColor: input.underlineColor }
+            : {}),
           href: undefined
-        })
+        });
 
         itemLines.forEach((line, lineIndex) => {
           ops.push({
@@ -681,41 +760,44 @@ export class DisplayListBuilder {
             rect: {
               x: textX,
               y: currentTop + lineIndex * lineHeight,
+              width: approximateTextWidth(line, font),
+              height: lineHeight
+            },
+            text: line,
+            x: textX,
+            y: currentTop + lineIndex * lineHeight,
             width: approximateTextWidth(line, font),
-            height: lineHeight
-          },
-          text: line,
-          x: textX,
-          y: currentTop + lineIndex * lineHeight,
-          width: approximateTextWidth(line, font),
-          font,
-          color: input.theme.color,
-          backgroundColor: undefined,
-          highlightColor: input.highlighted
+            font,
+            color: input.theme.color,
+            backgroundColor: undefined,
+            highlightColor: input.highlighted
               ? input.styleProfile.highlight.search
               : input.active
                 ? input.styleProfile.highlight.active
                 : undefined,
             underline: input.underlined || undefined,
+            ...(input.underlineColor
+              ? { underlineColor: input.underlineColor }
+              : {}),
             href: undefined
-          })
-        })
+          });
+        });
 
         currentTop +=
           Math.max(lineHeight, itemLines.length * lineHeight) +
-          input.styleProfile.list.itemGap
+          input.styleProfile.list.itemGap;
         for (const child of item.blocks) {
           if (child.kind === "list") {
-            currentTop = renderList(child, depth + 1, currentTop)
+            currentTop = renderList(child, depth + 1, currentTop);
           }
         }
-      })
+      });
 
-      return currentTop
-    }
+      return currentTop;
+    };
 
-    renderList(input.block, 0, input.top)
-    return ops
+    renderList(input.block, 0, input.top);
+    return ops;
   }
 
   private buildFigureBlockOps(input: {
@@ -735,26 +817,27 @@ export class DisplayListBuilder {
       | undefined;
     highlighted: boolean;
     underlined: boolean;
+    underlineColor?: string;
     active: boolean;
     styleProfile: ReadingStyleProfile;
   }): DrawOp[] {
-    const ops: DrawOp[] = []
-    let currentTop = input.top
+    const ops: DrawOp[] = [];
+    let currentTop = input.top;
 
     for (const child of input.block.blocks) {
       if (child.kind === "image") {
-        const renderSrc = input.resolveImageUrl?.(child.src) ?? child.src
+        const renderSrc = input.resolveImageUrl?.(child.src) ?? child.src;
         const imageLayout = resolveImageLayout({
           availableWidth: input.width,
           viewportHeight: input.viewportHeight,
           ...resolveImageIntrinsicSize(child, input.resolveImageIntrinsicSize)
-        })
+        });
         const imageRect = {
           x: input.x + imageLayout.xOffset,
           y: currentTop,
           width: imageLayout.width,
           height: imageLayout.height
-        }
+        };
         ops.push({
           kind: "image",
           sectionId: input.section.id,
@@ -766,18 +849,19 @@ export class DisplayListBuilder {
           alt: child.alt,
           loaded: Boolean(input.resolveImageLoaded?.(child.src)),
           background: "transparent"
-        })
-        currentTop += imageLayout.height + input.styleProfile.media.blockSpacing
-        continue
+        });
+        currentTop +=
+          imageLayout.height + input.styleProfile.media.blockSpacing;
+        continue;
       }
 
-      const text = extractBlockText(child)
+      const text = extractBlockText(child);
       if (!text) {
-        continue
+        continue;
       }
-      const font = `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`
-      const lineHeight = Math.max(input.typography.fontSize * 1.45, 18)
-      const lines = wrapText(text, input.width, font)
+      const font = `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`;
+      const lineHeight = Math.max(input.typography.fontSize * 1.45, 18);
+      const lines = wrapText(text, input.width, font);
       lines.forEach((line, lineIndex) => {
         ops.push({
           kind: "text",
@@ -788,38 +872,45 @@ export class DisplayListBuilder {
           rect: {
             x: input.x,
             y: currentTop + lineIndex * lineHeight,
+            width: approximateTextWidth(line, font),
+            height: lineHeight
+          },
+          text: line,
+          x: input.x,
+          y: currentTop + lineIndex * lineHeight,
           width: approximateTextWidth(line, font),
-          height: lineHeight
-        },
-        text: line,
-        x: input.x,
-        y: currentTop + lineIndex * lineHeight,
-        width: approximateTextWidth(line, font),
-        font,
-        color: input.theme.color,
-        backgroundColor: undefined,
-        highlightColor: input.highlighted
+          font,
+          color: input.theme.color,
+          backgroundColor: undefined,
+          highlightColor: input.highlighted
             ? input.styleProfile.highlight.search
             : input.active
               ? input.styleProfile.highlight.active
               : undefined,
           underline: input.underlined || undefined,
+          ...(input.underlineColor
+            ? { underlineColor: input.underlineColor }
+            : {}),
           href: undefined
-        })
-      })
-      currentTop += lines.length * lineHeight + input.styleProfile.text.marginBottom
+        });
+      });
+      currentTop +=
+        lines.length * lineHeight + input.styleProfile.text.marginBottom;
     }
 
     if (input.block.caption?.length) {
-      currentTop += input.styleProfile.caption.marginTop
-      const captionText = input.block.caption.map(extractBlockText).filter(Boolean).join(" ")
-      const captionFont = `italic 400 ${input.styleProfile.caption.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`
-      const captionLineHeight = input.styleProfile.caption.lineHeight
+      currentTop += input.styleProfile.caption.marginTop;
+      const captionText = input.block.caption
+        .map(extractBlockText)
+        .filter(Boolean)
+        .join(" ");
+      const captionFont = `italic 400 ${input.styleProfile.caption.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`;
+      const captionLineHeight = input.styleProfile.caption.lineHeight;
       const captionLines = wrapText(
         captionText,
         Math.max(40, input.width - input.styleProfile.caption.insetX * 2),
         captionFont
-      )
+      );
       captionLines.forEach((line, lineIndex) => {
         ops.push({
           kind: "text",
@@ -846,12 +937,15 @@ export class DisplayListBuilder {
               ? input.styleProfile.highlight.active
               : undefined,
           underline: input.underlined || undefined,
+          ...(input.underlineColor
+            ? { underlineColor: input.underlineColor }
+            : {}),
           href: undefined
-        })
-      })
+        });
+      });
     }
 
-    return ops
+    return ops;
   }
 
   private buildTableBlockOps(input: {
@@ -865,21 +959,25 @@ export class DisplayListBuilder {
     theme: Theme;
     highlighted: boolean;
     underlined: boolean;
+    underlineColor?: string;
     active: boolean;
     styleProfile: ReadingStyleProfile;
   }): DrawOp[] {
-    const ops: DrawOp[] = []
-    const captionFont = `italic 400 ${input.styleProfile.caption.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`
-    const cellFont = `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`
-    const headerFont = `700 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`
-    const lineHeight = Math.max(input.typography.fontSize * 1.45, 18)
-    const padding = input.styleProfile.table.cellPadding
-    let currentTop = input.top
+    const ops: DrawOp[] = [];
+    const captionFont = `italic 400 ${input.styleProfile.caption.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`;
+    const cellFont = `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`;
+    const headerFont = `700 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`;
+    const lineHeight = Math.max(input.typography.fontSize * 1.45, 18);
+    const padding = input.styleProfile.table.cellPadding;
+    let currentTop = input.top;
 
     if (input.block.caption?.length) {
-      const captionText = input.block.caption.map(extractBlockText).filter(Boolean).join(" ")
-      currentTop += input.styleProfile.caption.marginTop
-      const captionLines = wrapText(captionText, input.width, captionFont)
+      const captionText = input.block.caption
+        .map(extractBlockText)
+        .filter(Boolean)
+        .join(" ");
+      currentTop += input.styleProfile.caption.marginTop;
+      const captionLines = wrapText(captionText, input.width, captionFont);
       captionLines.forEach((line, lineIndex) => {
         ops.push({
           kind: "text",
@@ -906,12 +1004,15 @@ export class DisplayListBuilder {
               ? input.styleProfile.highlight.active
               : undefined,
           underline: input.underlined || undefined,
+          ...(input.underlineColor
+            ? { underlineColor: input.underlineColor }
+            : {}),
           href: undefined
-        })
-      })
+        });
+      });
       currentTop +=
         captionLines.length * input.styleProfile.caption.lineHeight +
-        input.styleProfile.text.marginBottom
+        input.styleProfile.text.marginBottom;
     }
 
     const columnCount = Math.max(
@@ -919,26 +1020,39 @@ export class DisplayListBuilder {
       ...input.block.rows.map((row) =>
         row.cells.reduce((total, cell) => total + (cell.colSpan ?? 1), 0)
       )
-    )
-    const columnWidth = input.width / columnCount
+    );
+    const columnWidth = input.width / columnCount;
 
     for (const row of input.block.rows) {
       const cellHeights = row.cells.map((cell) => {
-        const span = Math.max(1, cell.colSpan ?? 1)
-        const cellWidth = Math.max(32, columnWidth * span - padding * 2)
-        const font = cell.header ? headerFont : cellFont
-        const text = cell.blocks.map(extractBlockText).filter(Boolean).join(" ")
-        return wrapText(text || "", cellWidth, font).length * lineHeight + padding * 2
-      })
-      const rowHeight = Math.max(lineHeight + padding * 2, ...cellHeights)
-      let currentX = input.x
+        const span = Math.max(1, cell.colSpan ?? 1);
+        const cellWidth = Math.max(32, columnWidth * span - padding * 2);
+        const font = cell.header ? headerFont : cellFont;
+        const text = cell.blocks
+          .map(extractBlockText)
+          .filter(Boolean)
+          .join(" ");
+        return (
+          wrapText(text || "", cellWidth, font).length * lineHeight +
+          padding * 2
+        );
+      });
+      const rowHeight = Math.max(lineHeight + padding * 2, ...cellHeights);
+      let currentX = input.x;
 
       row.cells.forEach((cell) => {
-        const span = Math.max(1, cell.colSpan ?? 1)
-        const cellWidth = columnWidth * span
-        const font = cell.header ? headerFont : cellFont
-        const text = cell.blocks.map(extractBlockText).filter(Boolean).join(" ")
-        const lines = wrapText(text || "", Math.max(32, cellWidth - padding * 2), font)
+        const span = Math.max(1, cell.colSpan ?? 1);
+        const cellWidth = columnWidth * span;
+        const font = cell.header ? headerFont : cellFont;
+        const text = cell.blocks
+          .map(extractBlockText)
+          .filter(Boolean)
+          .join(" ");
+        const lines = wrapText(
+          text || "",
+          Math.max(32, cellWidth - padding * 2),
+          font
+        );
 
         ops.push({
           kind: "rect",
@@ -952,10 +1066,12 @@ export class DisplayListBuilder {
             width: cellWidth,
             height: rowHeight
           },
-          color: cell.header ? "rgba(148, 163, 184, 0.10)" : "rgba(255, 255, 255, 0.001)",
+          color: cell.header
+            ? "rgba(148, 163, 184, 0.10)"
+            : "rgba(255, 255, 255, 0.001)",
           strokeColor: input.styleProfile.table.borderColor,
           strokeWidth: input.styleProfile.table.borderWidth
-        })
+        });
 
         lines.forEach((line, lineIndex) => {
           ops.push({
@@ -967,33 +1083,36 @@ export class DisplayListBuilder {
             rect: {
               x: currentX + padding,
               y: currentTop + padding + lineIndex * lineHeight,
+              width: approximateTextWidth(line, font),
+              height: lineHeight
+            },
+            text: line,
+            x: currentX + padding,
+            y: currentTop + padding + lineIndex * lineHeight,
             width: approximateTextWidth(line, font),
-            height: lineHeight
-          },
-          text: line,
-          x: currentX + padding,
-          y: currentTop + padding + lineIndex * lineHeight,
-          width: approximateTextWidth(line, font),
-          font,
-          color: input.theme.color,
-          backgroundColor: undefined,
-          highlightColor: input.highlighted
+            font,
+            color: input.theme.color,
+            backgroundColor: undefined,
+            highlightColor: input.highlighted
               ? input.styleProfile.highlight.search
               : input.active
                 ? input.styleProfile.highlight.active
                 : undefined,
             underline: input.underlined || undefined,
+            ...(input.underlineColor
+              ? { underlineColor: input.underlineColor }
+              : {}),
             href: undefined
-          })
-        })
+          });
+        });
 
-        currentX += cellWidth
-      })
+        currentX += cellWidth;
+      });
 
-      currentTop += rowHeight
+      currentTop += rowHeight;
     }
 
-    return ops
+    return ops;
   }
 
   private resolveTextLineStartX(
@@ -1010,7 +1129,6 @@ export class DisplayListBuilder {
     }
     return left;
   }
-
 }
 
 function resolveImageIntrinsicSize(
@@ -1033,13 +1151,17 @@ function resolveImageIntrinsicSize(
   const resolvedSize =
     image.src && resolveResourceIntrinsicSize
       ? resolveResourceIntrinsicSize(image.src)
-      : undefined
+      : undefined;
   const width = image.style?.width ?? image.width ?? resolvedSize?.width;
   const height = image.style?.height ?? image.height ?? resolvedSize?.height;
 
   return {
-    ...(typeof width === "number" && width > 0 ? { intrinsicWidth: width } : {}),
-    ...(typeof height === "number" && height > 0 ? { intrinsicHeight: height } : {})
+    ...(typeof width === "number" && width > 0
+      ? { intrinsicWidth: width }
+      : {}),
+    ...(typeof height === "number" && height > 0
+      ? { intrinsicHeight: height }
+      : {})
   };
 }
 
@@ -1049,7 +1171,7 @@ function resolveLineHighlightSegments(
   lineEnd: number
 ): BlockHighlightRange[] {
   if (!ranges.length || lineEnd < lineStart) {
-    return []
+    return [];
   }
 
   return ranges
@@ -1063,5 +1185,5 @@ function resolveLineHighlightSegments(
       start: range.start - lineStart,
       end: range.end - lineStart,
       color: range.color
-    }))
+    }));
 }

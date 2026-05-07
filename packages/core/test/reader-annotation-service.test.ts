@@ -1,13 +1,13 @@
-import { describe, expect, it } from "vitest"
-import type { Annotation, Book, SectionDocument } from "../src/model/types"
-import { ReaderAnnotationService } from "../src/runtime/reader-annotation-service"
+import { describe, expect, it } from "vitest";
+import type { Annotation, Book, SectionDocument } from "../src/model/types";
+import { ReaderAnnotationService } from "../src/runtime/reader-annotation-service";
 
 describe("ReaderAnnotationService", () => {
   it("resolves text-range quotes from section text", () => {
-    const section = createTextSection("s1", "Hello world")
+    const section = createTextSection("s1", "Hello world");
     const service = createService({
       book: createBook([section])
-    })
+    });
 
     expect(
       service.resolveTextRangeQuote(section, {
@@ -20,11 +20,11 @@ describe("ReaderAnnotationService", () => {
           inlineOffset: 11
         }
       })
-    ).toBe("world")
-  })
+    ).toBe("world");
+  });
 
   it("detects when a selection is fully covered by an existing annotation", () => {
-    const section = createTextSection("s1", "Hello world")
+    const section = createTextSection("s1", "Hello world");
     const annotation: Annotation = {
       id: "annotation-1",
       publicationId: "book-1",
@@ -45,11 +45,11 @@ describe("ReaderAnnotationService", () => {
       quote: "Hello world",
       createdAt: "2026-04-24T00:00:00.000Z",
       updatedAt: "2026-04-24T00:00:00.000Z"
-    }
+    };
     const service = createService({
       book: createBook([section]),
       annotations: [annotation]
-    })
+    });
 
     expect(
       service.resolveSelectionHighlightState({
@@ -77,24 +77,74 @@ describe("ReaderAnnotationService", () => {
     ).toEqual({
       mode: "remove-highlight",
       disabled: false
-    })
-  })
-})
+    });
+  });
+
+  it("resolves annotation activation payloads at viewport points", () => {
+    const section = createTextSection("s1", "Hello world");
+    const annotation: Annotation = {
+      id: "annotation-1",
+      publicationId: "book-1",
+      locator: {
+        spineIndex: 0,
+        blockId: "text-1"
+      },
+      style: "underline",
+      textRange: {
+        start: {
+          blockId: "text-1",
+          inlineOffset: 0
+        },
+        end: {
+          blockId: "text-1",
+          inlineOffset: 5
+        }
+      },
+      quote: "Hello",
+      createdAt: "2026-04-24T00:00:00.000Z",
+      updatedAt: "2026-04-24T00:00:00.000Z"
+    };
+    const service = createService({
+      book: createBook([section]),
+      annotations: [annotation],
+      rects: [{ x: 10, y: 20, width: 120, height: 24 }]
+    });
+
+    expect(
+      service.resolveAnnotationActivationAtPoint({ x: 30, y: 30 })
+    ).toMatchObject({
+      annotation: {
+        id: "annotation-1",
+        style: "underline"
+      },
+      locator: {
+        spineIndex: 0,
+        blockId: "text-1",
+        inlineOffset: 0
+      },
+      sectionId: "s1",
+      blockId: "text-1",
+      quote: "Hello"
+    });
+  });
+});
 
 function createService(input: {
-  book: Book
-  annotations?: Annotation[]
+  book: Book;
+  annotations?: Annotation[];
+  rects?: Array<{ x: number; y: number; width: number; height: number }>;
 }): ReaderAnnotationService {
+  const container = document.createElement("div");
   return new ReaderAnnotationService({
     getBook: () => input.book,
     getAnnotations: () => input.annotations ?? [],
     getPublicationId: () => "book-1",
-    getContainer: () => null,
+    getContainer: () => container,
     getMode: () => "scroll",
     getSectionElement: () => null,
-    mapLocatorToViewport: () => [],
+    mapLocatorToViewport: () => input.rects ?? [],
     resolveCanvasTextRangeViewportRects: () => []
-  })
+  });
 }
 
 function createBook(sections: SectionDocument[]): Book {
@@ -111,7 +161,7 @@ function createBook(sections: SectionDocument[]): Book {
     })),
     toc: [],
     sections
-  }
+  };
 }
 
 function createTextSection(id: string, text: string): SectionDocument {
@@ -131,5 +181,5 @@ function createTextSection(id: string, text: string): SectionDocument {
         ]
       }
     ]
-  }
+  };
 }

@@ -474,7 +474,7 @@ export class CanvasRenderer {
         op.y + op.rect.height - 3,
         baselineY + Math.max(fontSize * 0.08, 1)
       );
-      context.strokeStyle = op.color;
+      context.strokeStyle = op.underlineColor ?? op.color;
       context.lineWidth = 1;
       context.beginPath();
       context.moveTo(op.x, underlineY);

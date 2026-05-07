@@ -2,64 +2,67 @@ import type {
   LayoutBlock,
   LayoutPretextBlock,
   LayoutResult
-} from "../layout/layout-engine"
+} from "../layout/layout-engine";
 import type {
   BlockNode,
   Locator,
   SectionDocument,
   Theme,
   TypographyOptions
-} from "../model/types"
-import type { IntrinsicImageSize } from "../utils/image-intrinsic-size"
-import { normalizeLocator } from "./locator"
-import type { SectionDisplayList } from "../renderer/draw-ops"
+} from "../model/types";
+import type { IntrinsicImageSize } from "../utils/image-intrinsic-size";
+import { normalizeLocator } from "./locator";
+import type { SectionDisplayList } from "../renderer/draw-ops";
 
 export type PageBlockSlice =
   | {
-      type: "pretext"
-      block: LayoutPretextBlock
-      lineStart: number
-      lineEnd: number
+      type: "pretext";
+      block: LayoutPretextBlock;
+      lineStart: number;
+      lineEnd: number;
     }
   | {
-      type: "native"
-      block: BlockNode
-    }
+      type: "native";
+      block: BlockNode;
+    };
 
 export type ReaderPage = {
-  pageNumber: number
-  pageNumberInSection: number
-  totalPagesInSection: number
-  spineIndex: number
-  sectionId: string
-  sectionHref: string
-  offsetInSection?: number
-  blocks: PageBlockSlice[]
-}
+  pageNumber: number;
+  pageNumberInSection: number;
+  totalPagesInSection: number;
+  spineIndex: number;
+  sectionId: string;
+  sectionHref: string;
+  offsetInSection?: number;
+  blocks: PageBlockSlice[];
+};
 
 export function buildPaginatedPages(options: {
-  sections: SectionDocument[]
-  currentSectionIndex: number
-  sectionLayout: LayoutResult | undefined
-  pageHeight: number
-  getSectionLayout: (section: SectionDocument, sectionIndex: number) => LayoutResult
+  sections: SectionDocument[];
+  currentSectionIndex: number;
+  sectionLayout: LayoutResult | undefined;
+  pageHeight: number;
+  getSectionLayout: (
+    section: SectionDocument,
+    sectionIndex: number
+  ) => LayoutResult;
 }): {
-  pages: ReaderPage[]
-  sectionEstimatedHeights: number[]
+  pages: ReaderPage[];
+  sectionEstimatedHeights: number[];
 } {
-  const pages: ReaderPage[] = []
-  let pageNumber = 1
+  const pages: ReaderPage[] = [];
+  let pageNumber = 1;
 
   for (let index = 0; index < options.sections.length; index += 1) {
-    const section = options.sections[index]
+    const section = options.sections[index];
     if (!section) {
-      continue
+      continue;
     }
 
     const layout =
       options.sectionLayout && index === options.currentSectionIndex
         ? options.sectionLayout
-        : options.getSectionLayout(section, index)
+        : options.getSectionLayout(section, index);
 
     let currentPage: ReaderPage = {
       pageNumber,
@@ -69,29 +72,29 @@ export function buildPaginatedPages(options: {
       sectionId: section.id,
       sectionHref: section.href,
       blocks: []
-    }
-    let usedHeight = 0
+    };
+    let usedHeight = 0;
 
     if (section.renditionLayout === "pre-paginated") {
-      pages.push(currentPage)
-      pageNumber += 1
-      continue
+      pages.push(currentPage);
+      pageNumber += 1;
+      continue;
     }
 
     for (const layoutBlock of layout.blocks) {
       if (layoutBlock.type === "pretext") {
-        let lineStart = 0
+        let lineStart = 0;
         while (lineStart < layoutBlock.lines.length) {
-          const remainingHeight = options.pageHeight - usedHeight
+          const remainingHeight = options.pageHeight - usedHeight;
           let lineEnd = findPretextLineBreak(
             layoutBlock,
             lineStart,
             remainingHeight
-          )
+          );
 
           if (lineEnd === lineStart && currentPage.blocks.length > 0) {
-            pages.push(currentPage)
-            pageNumber += 1
+            pages.push(currentPage);
+            pageNumber += 1;
             currentPage = {
               pageNumber,
               pageNumberInSection: currentPage.pageNumberInSection + 1,
@@ -100,17 +103,17 @@ export function buildPaginatedPages(options: {
               sectionId: section.id,
               sectionHref: section.href,
               blocks: []
-            }
-            usedHeight = 0
+            };
+            usedHeight = 0;
             lineEnd = findPretextLineBreak(
               layoutBlock,
               lineStart,
               options.pageHeight
-            )
+            );
           }
 
           if (lineEnd === lineStart) {
-            lineEnd = Math.min(layoutBlock.lines.length, lineStart + 1)
+            lineEnd = Math.min(layoutBlock.lines.length, lineStart + 1);
           }
 
           currentPage.blocks.push({
@@ -118,13 +121,17 @@ export function buildPaginatedPages(options: {
             block: layoutBlock,
             lineStart,
             lineEnd
-          })
-          usedHeight += estimatePretextSliceHeight(layoutBlock, lineStart, lineEnd)
-          lineStart = lineEnd
+          });
+          usedHeight += estimatePretextSliceHeight(
+            layoutBlock,
+            lineStart,
+            lineEnd
+          );
+          lineStart = lineEnd;
 
           if (lineStart < layoutBlock.lines.length) {
-            pages.push(currentPage)
-            pageNumber += 1
+            pages.push(currentPage);
+            pageNumber += 1;
             currentPage = {
               pageNumber,
               pageNumberInSection: currentPage.pageNumberInSection + 1,
@@ -133,19 +140,19 @@ export function buildPaginatedPages(options: {
               sectionId: section.id,
               sectionHref: section.href,
               blocks: []
-            }
-            usedHeight = 0
+            };
+            usedHeight = 0;
           }
         }
-        continue
+        continue;
       }
 
       if (
         currentPage.blocks.length > 0 &&
         usedHeight + layoutBlock.estimatedHeight > options.pageHeight
       ) {
-        pages.push(currentPage)
-        pageNumber += 1
+        pages.push(currentPage);
+        pageNumber += 1;
         currentPage = {
           pageNumber,
           pageNumberInSection: currentPage.pageNumberInSection + 1,
@@ -154,29 +161,29 @@ export function buildPaginatedPages(options: {
           sectionId: section.id,
           sectionHref: section.href,
           blocks: []
-        }
-        usedHeight = 0
+        };
+        usedHeight = 0;
       }
 
       currentPage.blocks.push({
         type: "native",
         block: layoutBlock.block
-      })
-      usedHeight += layoutBlock.estimatedHeight
+      });
+      usedHeight += layoutBlock.estimatedHeight;
     }
 
     if (currentPage.blocks.length > 0 || pages.length === 0) {
-      pages.push(currentPage)
-      pageNumber += 1
+      pages.push(currentPage);
+      pageNumber += 1;
     }
   }
 
-  const totalPagesBySection = new Map<string, number>()
+  const totalPagesBySection = new Map<string, number>();
   for (const page of pages) {
     totalPagesBySection.set(
       page.sectionId,
       (totalPagesBySection.get(page.sectionId) ?? 0) + 1
-    )
+    );
   }
 
   return {
@@ -187,47 +194,58 @@ export function buildPaginatedPages(options: {
       offsetInSection: (page.pageNumberInSection - 1) * options.pageHeight
     })),
     sectionEstimatedHeights: options.sections.map((section) => {
-      const sectionPageCount = totalPagesBySection.get(section.id) ?? 1
-      return Math.max(options.pageHeight, sectionPageCount * options.pageHeight)
+      const sectionPageCount = totalPagesBySection.get(section.id) ?? 1;
+      return Math.max(
+        options.pageHeight,
+        sectionPageCount * options.pageHeight
+      );
     })
-  }
+  };
 }
 
 export function buildPageDisplayList(options: {
-  page: ReaderPage
-  section: SectionDocument
-  width: number
-  viewportHeight: number
-  theme: Theme
-  typography: TypographyOptions
-  highlightedBlockIds: Set<string>
-  highlightRangesByBlock?: Map<string, Array<{ start: number; end: number; color: string }>>
-  underlinedBlockIds: Set<string>
-  activeBlockId: string | undefined
-  resolveImageLoaded: (src: string) => boolean
-  resolveImageUrl: (src: string) => string
+  page: ReaderPage;
+  section: SectionDocument;
+  width: number;
+  viewportHeight: number;
+  theme: Theme;
+  typography: TypographyOptions;
+  highlightedBlockIds: Set<string>;
+  highlightRangesByBlock?: Map<
+    string,
+    Array<{ start: number; end: number; color: string }>
+  >;
+  underlinedBlockIds: Set<string>;
+  underlineColorsByBlock?: Map<string, string>;
+  activeBlockId: string | undefined;
+  resolveImageLoaded: (src: string) => boolean;
+  resolveImageUrl: (src: string) => string;
   resolveImageIntrinsicSize?: (
     src: string
-  ) => IntrinsicImageSize | null | undefined
-  estimateBlockHeight: (block: BlockNode) => number
+  ) => IntrinsicImageSize | null | undefined;
+  estimateBlockHeight: (block: BlockNode) => number;
   buildSectionDisplayList: (input: {
-    section: SectionDocument
-    width: number
-    viewportHeight: number
-    blocks: LayoutBlock[]
-    theme: Theme
-    typography: TypographyOptions
-    locatorMap: Map<string, Locator>
-    highlightedBlockIds: Set<string>
-    highlightRangesByBlock?: Map<string, Array<{ start: number; end: number; color: string }>>
-    underlinedBlockIds: Set<string>
-    activeBlockId: string | undefined
-    resolveImageLoaded: (src: string) => boolean
-    resolveImageUrl: (src: string) => string
+    section: SectionDocument;
+    width: number;
+    viewportHeight: number;
+    blocks: LayoutBlock[];
+    theme: Theme;
+    typography: TypographyOptions;
+    locatorMap: Map<string, Locator>;
+    highlightedBlockIds: Set<string>;
+    highlightRangesByBlock?: Map<
+      string,
+      Array<{ start: number; end: number; color: string }>
+    >;
+    underlinedBlockIds: Set<string>;
+    underlineColorsByBlock?: Map<string, string>;
+    activeBlockId: string | undefined;
+    resolveImageLoaded: (src: string) => boolean;
+    resolveImageUrl: (src: string) => string;
     resolveImageIntrinsicSize?: (
       src: string
-    ) => IntrinsicImageSize | null | undefined
-  }) => SectionDisplayList
+    ) => IntrinsicImageSize | null | undefined;
+  }) => SectionDisplayList;
 }): SectionDisplayList {
   const blocks = options.page.blocks.map((slice) =>
     slice.type === "pretext"
@@ -238,9 +256,9 @@ export function buildPageDisplayList(options: {
           block: slice.block,
           estimatedHeight: options.estimateBlockHeight(slice.block)
         } satisfies LayoutBlock)
-  ) as LayoutBlock[]
+  ) as LayoutBlock[];
 
-  const locatorMap = new Map<string, Locator>()
+  const locatorMap = new Map<string, Locator>();
   for (const block of blocks) {
     locatorMap.set(
       block.id,
@@ -253,7 +271,7 @@ export function buildPageDisplayList(options: {
               (options.page.totalPagesInSection - 1)
             : 0
       })
-    )
+    );
   }
 
   return options.buildSectionDisplayList({
@@ -265,15 +283,20 @@ export function buildPageDisplayList(options: {
     typography: options.typography,
     locatorMap,
     highlightedBlockIds: options.highlightedBlockIds,
-    ...(options.highlightRangesByBlock ? { highlightRangesByBlock: options.highlightRangesByBlock } : {}),
+    ...(options.highlightRangesByBlock
+      ? { highlightRangesByBlock: options.highlightRangesByBlock }
+      : {}),
     underlinedBlockIds: options.underlinedBlockIds,
+    ...(options.underlineColorsByBlock
+      ? { underlineColorsByBlock: options.underlineColorsByBlock }
+      : {}),
     activeBlockId: options.activeBlockId,
     resolveImageLoaded: options.resolveImageLoaded,
     resolveImageUrl: options.resolveImageUrl,
     ...(options.resolveImageIntrinsicSize
       ? { resolveImageIntrinsicSize: options.resolveImageIntrinsicSize }
       : {})
-  })
+  });
 }
 
 function sumPretextLineHeights(
@@ -281,18 +304,18 @@ function sumPretextLineHeights(
   start = 0,
   end = lines.length
 ): number {
-  let total = 0
+  let total = 0;
   for (let index = start; index < end; index += 1) {
-    total += lines[index]?.height ?? 0
+    total += lines[index]?.height ?? 0;
   }
-  return total
+  return total;
 }
 
 function getPretextBlockTrailingSpace(block: LayoutPretextBlock): number {
   return Math.max(
     0,
     block.estimatedHeight - sumPretextLineHeights(block.lines)
-  )
+  );
 }
 
 function findPretextLineBreak(
@@ -301,38 +324,38 @@ function findPretextLineBreak(
   availableHeight: number
 ): number {
   if (availableHeight <= 0) {
-    return start
+    return start;
   }
 
-  const fixedTop = start === 0 ? block.paddingTop : 0
-  const fixedBottom = getPretextBlockTrailingAfterContent(block)
-  let totalHeight = fixedTop
-  let index = start
+  const fixedTop = start === 0 ? block.paddingTop : 0;
+  const fixedBottom = getPretextBlockTrailingAfterContent(block);
+  let totalHeight = fixedTop;
+  let index = start;
   while (index < block.lines.length) {
-    const lineHeight = block.lines[index]?.height ?? 0
-    const nextIndex = index + 1
+    const lineHeight = block.lines[index]?.height ?? 0;
+    const nextIndex = index + 1;
     const nextHeight =
       totalHeight +
       lineHeight +
-      (nextIndex === block.lines.length ? fixedBottom : 0)
+      (nextIndex === block.lines.length ? fixedBottom : 0);
     if (
       nextHeight > availableHeight &&
       index === start &&
       lineContainsImage(block.lines[index])
     ) {
-      return start
+      return start;
     }
     if (totalHeight > fixedTop && nextHeight > availableHeight) {
-      break
+      break;
     }
-    totalHeight = nextHeight
-    index = nextIndex
+    totalHeight = nextHeight;
+    index = nextIndex;
     if (totalHeight >= availableHeight) {
-      break
+      break;
     }
   }
 
-  return index
+  return index;
 }
 
 function createPretextSliceBlock(
@@ -340,10 +363,12 @@ function createPretextSliceBlock(
   lineStart: number,
   lineEnd: number
 ): LayoutPretextBlock {
-  const isFirstSlice = lineStart === 0
-  const isLastSlice = lineEnd === block.lines.length
-  const paddingTop = isFirstSlice ? block.paddingTop : 0
-  const trailingAfterContent = isLastSlice ? getPretextBlockTrailingAfterContent(block) : 0
+  const isFirstSlice = lineStart === 0;
+  const isLastSlice = lineEnd === block.lines.length;
+  const paddingTop = isFirstSlice ? block.paddingTop : 0;
+  const trailingAfterContent = isLastSlice
+    ? getPretextBlockTrailingAfterContent(block)
+    : 0;
 
   return {
     ...block,
@@ -355,7 +380,7 @@ function createPretextSliceBlock(
       sumPretextLineHeights(block.lines, lineStart, lineEnd) +
       paddingTop +
       trailingAfterContent
-  }
+  };
 }
 
 function estimatePretextSliceHeight(
@@ -363,11 +388,13 @@ function estimatePretextSliceHeight(
   lineStart: number,
   lineEnd: number
 ): number {
-  return createPretextSliceBlock(block, lineStart, lineEnd).estimatedHeight
+  return createPretextSliceBlock(block, lineStart, lineEnd).estimatedHeight;
 }
 
-function getPretextBlockTrailingAfterContent(block: LayoutPretextBlock): number {
-  return Math.max(0, getPretextBlockTrailingSpace(block) - block.paddingTop)
+function getPretextBlockTrailingAfterContent(
+  block: LayoutPretextBlock
+): number {
+  return Math.max(0, getPretextBlockTrailingSpace(block) - block.paddingTop);
 }
 
 function sumPretextTextLength(
@@ -375,28 +402,28 @@ function sumPretextTextLength(
   start = 0,
   end = lines.length
 ): number {
-  let total = 0
+  let total = 0;
   for (let index = start; index < end; index += 1) {
-    total += sumLineTextLength(lines[index])
+    total += sumLineTextLength(lines[index]);
   }
-  return total
+  return total;
 }
 
 function sumLineTextLength(
   line: LayoutPretextBlock["lines"][number] | undefined
 ): number {
   if (!line) {
-    return 0
+    return 0;
   }
 
   return line.fragments.reduce(
     (total, fragment) => total + Array.from(fragment.text).length,
     0
-  )
+  );
 }
 
 function lineContainsImage(
   line: LayoutPretextBlock["lines"][number] | undefined
 ): boolean {
-  return Boolean(line?.fragments.some((fragment) => fragment.image))
+  return Boolean(line?.fragments.some((fragment) => fragment.image));
 }

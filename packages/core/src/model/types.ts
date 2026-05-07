@@ -435,6 +435,8 @@ export type DecorationStyle =
   | "search-hit"
   | "active";
 
+export type AnnotationStyle = "highlight" | "underline";
+
 export type DecorationRenderHint = "margin-marker" | "note-icon";
 
 export type DecorationExtras = {
@@ -468,6 +470,7 @@ export type Annotation = {
   textRange?: TextRangeSelector;
   quote?: string;
   note?: string;
+  style?: AnnotationStyle;
   color?: string;
   createdAt: string;
   updatedAt: string;
@@ -488,6 +491,17 @@ export type ReaderTextSelectionSnapshot = {
   textRange?: TextRangeSelector;
   rects: VisibleDrawBounds;
   visible: boolean;
+};
+
+export type AnnotationActivatedEvent = {
+  annotation: Annotation;
+  locator: Locator;
+  sectionId: string;
+  blockId?: string;
+  textRange?: TextRangeSelector;
+  quote?: string;
+  point: Point;
+  rects: VisibleDrawBounds;
 };
 
 export type SelectionHighlightActionMode = "highlight" | "remove-highlight";
@@ -700,6 +714,7 @@ export type ReaderEventMap = {
   textSelectionChanged: {
     selection: ReaderTextSelectionSnapshot | null;
   };
+  annotationActivated: AnnotationActivatedEvent;
   externalLinkActivated: {
     href: string;
     scheme: string;
@@ -733,6 +748,9 @@ export type ReaderOptions = {
   typography?: Partial<TypographyOptions>;
   onTextSelectionChanged?: (
     input: ReaderEventMap["textSelectionChanged"]
+  ) => void | Promise<void>;
+  onAnnotationActivated?: (
+    input: ReaderEventMap["annotationActivated"]
   ) => void | Promise<void>;
   onPaginatedCenterTap?: (
     input: ReaderEventMap["paginatedCenterTapped"]

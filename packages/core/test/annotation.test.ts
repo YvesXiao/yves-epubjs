@@ -1,12 +1,12 @@
-import { describe, expect, it } from "vitest"
-import type { Book, SectionDocument } from "../src/model/types"
+import { describe, expect, it } from "vitest";
+import type { Book, SectionDocument } from "../src/model/types";
 import {
   createAnnotation,
   deserializeAnnotation,
   mapAnnotationToDecoration,
   mapAnnotationsToDecorations,
   serializeAnnotation
-} from "../src/runtime/annotation"
+} from "../src/runtime/annotation";
 
 function createBook(section: SectionDocument): Book {
   return {
@@ -24,7 +24,7 @@ function createBook(section: SectionDocument): Book {
     ],
     toc: [],
     sections: [section]
-  }
+  };
 }
 
 describe("annotation helpers", () => {
@@ -41,8 +41,8 @@ describe("annotation helpers", () => {
           inlines: [{ kind: "text", text: "Target paragraph" }]
         }
       ]
-    }
-    const book = createBook(section)
+    };
+    const book = createBook(section);
 
     const annotation = createAnnotation({
       publicationId: "identifier:urn:uuid:annotation-test",
@@ -57,7 +57,7 @@ describe("annotation helpers", () => {
       color: "#f59e0b",
       createdAt: "2026-04-18T11:00:00.000Z",
       updatedAt: "2026-04-18T11:05:00.000Z"
-    })
+    });
 
     expect(annotation.locator).toEqual({
       spineIndex: 0,
@@ -65,9 +65,11 @@ describe("annotation helpers", () => {
       blockId: "text-1",
       cfi: "epubcfi(/6/2!/2[text-1])",
       progressInSection: 0.25
-    })
-    expect(deserializeAnnotation(serializeAnnotation(annotation))).toEqual(annotation)
-  })
+    });
+    expect(deserializeAnnotation(serializeAnnotation(annotation))).toEqual(
+      annotation
+    );
+  });
 
   it("maps annotations into highlight decorations", () => {
     const annotation = {
@@ -83,9 +85,9 @@ describe("annotation helpers", () => {
       color: "#f59e0b",
       createdAt: "2026-04-18T11:00:00.000Z",
       updatedAt: "2026-04-18T11:05:00.000Z"
-    } as const
+    } as const;
 
-    const decoration = mapAnnotationToDecoration(annotation)
+    const decoration = mapAnnotationToDecoration(annotation);
 
     expect(decoration).toEqual({
       id: "annotation:annotation-1",
@@ -97,7 +99,29 @@ describe("annotation helpers", () => {
       },
       style: "highlight",
       color: "#f59e0b"
-    })
-    expect(mapAnnotationsToDecorations([annotation])).toEqual([decoration])
-  })
-})
+    });
+    expect(mapAnnotationsToDecorations([annotation])).toEqual([decoration]);
+  });
+
+  it("preserves underline annotation style and maps it to underline decorations", () => {
+    const annotation = createAnnotation({
+      publicationId: "identifier:urn:uuid:annotation-test",
+      locator: {
+        spineIndex: 0,
+        blockId: "text-1",
+        progressInSection: 0.25
+      },
+      style: "underline",
+      color: "#2563eb",
+      createdAt: "2026-04-18T11:00:00.000Z"
+    });
+
+    expect(deserializeAnnotation(serializeAnnotation(annotation))?.style).toBe(
+      "underline"
+    );
+    expect(mapAnnotationToDecoration(annotation)).toMatchObject({
+      style: "underline",
+      color: "#2563eb"
+    });
+  });
+});

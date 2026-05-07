@@ -29,6 +29,7 @@ export type TextRunDrawOp = DrawOpBase & {
   highlightColor: string | undefined;
   highlightSegments?: TextHighlightSegment[];
   underline: boolean | undefined;
+  underlineColor?: string;
   href: string | undefined;
 };
 
@@ -58,11 +59,7 @@ export type ImageDrawOp = DrawOpBase & {
   background: string;
 };
 
-export type DrawOp =
-  | TextRunDrawOp
-  | RectDrawOp
-  | LineDrawOp
-  | ImageDrawOp;
+export type DrawOp = TextRunDrawOp | RectDrawOp | LineDrawOp | ImageDrawOp;
 
 export type InteractionRegion =
   | {

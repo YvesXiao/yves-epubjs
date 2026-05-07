@@ -1,5 +1,6 @@
 import type {
   Annotation,
+  AnnotationActivatedEvent,
   Book,
   Locator,
   Point,
@@ -9,15 +10,15 @@ import type {
   SectionDocument,
   TextRangeSelector,
   VisibleDrawBounds
-} from "../model/types"
-import { extractBlockText } from "../utils/block-text"
-import { createAnnotation as createReaderAnnotation } from "./annotation"
+} from "../model/types";
+import { extractBlockText } from "../utils/block-text";
+import { createAnnotation as createReaderAnnotation } from "./annotation";
 import {
   findBlockById,
   resolveRenderableBlockId,
   collectSelectableBlocksInReadingOrder
-} from "./reader-block-tree"
-import { normalizeLocator, restoreLocatorWithDiagnostics } from "./locator"
+} from "./reader-block-tree";
+import { normalizeLocator, restoreLocatorWithDiagnostics } from "./locator";
 import {
   cloneTextRangeSelector,
   flattenTextRange,
@@ -25,30 +26,35 @@ import {
   normalizeTextRangeForContext,
   subtractFlattenedRange,
   type SectionTextRangeContext
-} from "./reader-selection"
-import { mapDomTextRangeToViewport } from "./dom-viewport-mapper"
+} from "./reader-selection";
+import { mapDomTextRangeToViewport } from "./dom-viewport-mapper";
 
 export type ResolvedAnnotationRange = {
-  annotation: Annotation
-  locator: Locator
-  spineIndex: number
-  sectionId: string
-  range: TextRangeSelector
-}
+  annotation: Annotation;
+  locator: Locator;
+  spineIndex: number;
+  sectionId: string;
+  range: TextRangeSelector;
+};
+
+export type ResolvedAnnotationActivation = Omit<
+  AnnotationActivatedEvent,
+  "point"
+>;
 
 export type ReaderAnnotationServiceDependencies = {
-  getBook: () => Book | null
-  getAnnotations: () => Annotation[]
-  getPublicationId: () => string | null
-  getContainer: () => HTMLElement | null | undefined
-  getMode: () => ReadingMode
-  getSectionElement: (sectionId: string) => HTMLElement | null
-  mapLocatorToViewport: (locator: Locator) => VisibleDrawBounds
+  getBook: () => Book | null;
+  getAnnotations: () => Annotation[];
+  getPublicationId: () => string | null;
+  getContainer: () => HTMLElement | null | undefined;
+  getMode: () => ReadingMode;
+  getSectionElement: (sectionId: string) => HTMLElement | null;
+  mapLocatorToViewport: (locator: Locator) => VisibleDrawBounds;
   resolveCanvasTextRangeViewportRects: (
     sectionId: string,
     textRange: TextRangeSelector
-  ) => VisibleDrawBounds
-}
+  ) => VisibleDrawBounds;
+};
 
 export class ReaderAnnotationService {
   constructor(
@@ -58,66 +64,66 @@ export class ReaderAnnotationService {
   resolveSelectionHighlightState(
     selection: ReaderTextSelectionSnapshot
   ): ReaderSelectionHighlightState {
-    const book = this.dependencies.getBook()
+    const book = this.dependencies.getBook();
     if (!book || !selection.textRange) {
       return {
         mode: "highlight",
         disabled: false
-      }
+      };
     }
 
-    const section = book.sections[selection.locator.spineIndex]
+    const section = book.sections[selection.locator.spineIndex];
     if (!section) {
       return {
         mode: "highlight",
         disabled: false
-      }
+      };
     }
 
-    const context = this.createSectionTextRangeContext(section)
+    const context = this.createSectionTextRangeContext(section);
     const selectionRange = this.normalizeTextRangeForSection(
       selection.locator.spineIndex,
       selection.textRange
-    )
+    );
     if (!selectionRange) {
       return {
         mode: "highlight",
         disabled: false
-      }
+      };
     }
 
-    const flattenedSelection = flattenTextRange(selectionRange, context)
+    const flattenedSelection = flattenTextRange(selectionRange, context);
     if (!flattenedSelection) {
       return {
         mode: "highlight",
         disabled: false
-      }
+      };
     }
 
-    let remainingRanges = [flattenedSelection]
+    let remainingRanges = [flattenedSelection];
     for (const resolved of this.resolveAnnotationRangesForSection(
       selection.locator.spineIndex
     )) {
-      const flattened = flattenTextRange(resolved.range, context)
+      const flattened = flattenTextRange(resolved.range, context);
       if (!flattened) {
-        continue
+        continue;
       }
 
       remainingRanges = remainingRanges.flatMap((range) =>
         subtractFlattenedRange(range, flattened)
-      )
+      );
       if (remainingRanges.length === 0) {
         return {
           mode: "remove-highlight",
           disabled: false
-        }
+        };
       }
     }
 
     return {
       mode: "highlight",
       disabled: false
-    }
+    };
   }
 
   resolveAnnotationRangesForSection(
@@ -128,35 +134,38 @@ export class ReaderAnnotationService {
       .map((annotation) => this.resolveAnnotationRange(annotation))
       .filter((entry): entry is ResolvedAnnotationRange =>
         Boolean(entry && entry.spineIndex === spineIndex)
-      )
+      );
   }
 
   resolveAnnotationRange(
     annotation: Annotation
   ): ResolvedAnnotationRange | null {
-    const book = this.dependencies.getBook()
+    const book = this.dependencies.getBook();
     if (!book) {
-      return null
+      return null;
     }
 
     const locator = restoreLocatorWithDiagnostics({
       book,
       locator: annotation.locator
-    }).locator
+    }).locator;
     if (!locator) {
-      return null
+      return null;
     }
 
-    const section = book.sections[locator.spineIndex]
+    const section = book.sections[locator.spineIndex];
     if (!section) {
-      return null
+      return null;
     }
 
     const range = annotation.textRange
-      ? this.normalizeTextRangeForSection(locator.spineIndex, annotation.textRange)
-      : this.resolveFullBlockTextRange(section, locator.blockId)
+      ? this.normalizeTextRangeForSection(
+          locator.spineIndex,
+          annotation.textRange
+        )
+      : this.resolveFullBlockTextRange(section, locator.blockId);
     if (!range) {
-      return null
+      return null;
     }
 
     return {
@@ -165,30 +174,30 @@ export class ReaderAnnotationService {
       spineIndex: locator.spineIndex,
       sectionId: section.id,
       range
-    }
+    };
   }
 
   createSectionTextRangeContext(
     section: SectionDocument
   ): SectionTextRangeContext {
-    const blocks = collectSelectableBlocksInReadingOrder(section.blocks)
-    const blockIds: string[] = []
-    const blockTexts = new Map<string, string>()
-    const blockTextLengths = new Map<string, number>()
-    const blockOffsets = new Map<string, number>()
-    let cursor = 0
+    const blocks = collectSelectableBlocksInReadingOrder(section.blocks);
+    const blockIds: string[] = [];
+    const blockTexts = new Map<string, string>();
+    const blockTextLengths = new Map<string, number>();
+    const blockOffsets = new Map<string, number>();
+    let cursor = 0;
 
     for (const block of blocks) {
       if (blockTexts.has(block.id)) {
-        continue
+        continue;
       }
 
-      const text = extractBlockText(block)
-      blockIds.push(block.id)
-      blockTexts.set(block.id, text)
-      blockTextLengths.set(block.id, Array.from(text).length)
-      blockOffsets.set(block.id, cursor)
-      cursor += Array.from(text).length
+      const text = extractBlockText(block);
+      blockIds.push(block.id);
+      blockTexts.set(block.id, text);
+      blockTextLengths.set(block.id, Array.from(text).length);
+      blockOffsets.set(block.id, cursor);
+      cursor += Array.from(text).length;
     }
 
     return {
@@ -197,45 +206,45 @@ export class ReaderAnnotationService {
       blockTextLengths,
       blockOffsets,
       totalLength: cursor
-    }
+    };
   }
 
   normalizeTextRangeForSection(
     spineIndex: number,
     textRange: TextRangeSelector
   ): TextRangeSelector | null {
-    const section = this.dependencies.getBook()?.sections[spineIndex]
+    const section = this.dependencies.getBook()?.sections[spineIndex];
     if (!section) {
-      return null
+      return null;
     }
 
-    const context = this.createSectionTextRangeContext(section)
+    const context = this.createSectionTextRangeContext(section);
     return normalizeTextRangeForContext({
       textRange,
       context,
       resolveBlockId: (blockId) =>
         resolveRenderableBlockId(section.blocks, blockId) ?? blockId
-    })
+    });
   }
 
   resolveFullBlockTextRange(
     section: SectionDocument,
     blockId: string | undefined
   ): TextRangeSelector | null {
-    const normalizedBlockId = blockId?.trim()
+    const normalizedBlockId = blockId?.trim();
     if (!normalizedBlockId) {
-      return null
+      return null;
     }
 
     const renderableBlockId =
       resolveRenderableBlockId(section.blocks, normalizedBlockId) ??
-      normalizedBlockId
-    const block = findBlockById(section.blocks, renderableBlockId)
+      normalizedBlockId;
+    const block = findBlockById(section.blocks, renderableBlockId);
     if (!block) {
-      return null
+      return null;
     }
 
-    const blockTextLength = Array.from(extractBlockText(block)).length
+    const blockTextLength = Array.from(extractBlockText(block)).length;
     return {
       start: {
         blockId: renderableBlockId,
@@ -245,21 +254,22 @@ export class ReaderAnnotationService {
         blockId: renderableBlockId,
         inlineOffset: blockTextLength
       }
-    }
+    };
   }
 
   createAnnotationForResolvedRange(input: {
-    annotation?: Annotation
-    locator: Locator
-    range: TextRangeSelector
-    section: SectionDocument
-    color?: string
-    note?: string
+    annotation?: Annotation;
+    locator: Locator;
+    range: TextRangeSelector;
+    section: SectionDocument;
+    style?: "highlight" | "underline";
+    color?: string;
+    note?: string;
   }): Annotation | null {
     const publicationId =
-      input.annotation?.publicationId ?? this.dependencies.getPublicationId()
+      input.annotation?.publicationId ?? this.dependencies.getPublicationId();
     if (!publicationId) {
-      return null
+      return null;
     }
 
     const rangeLocator = normalizeLocator({
@@ -267,8 +277,9 @@ export class ReaderAnnotationService {
       blockId: input.range.start.blockId,
       inlineOffset: input.range.start.inlineOffset,
       progressInSection: input.locator.progressInSection ?? 0
-    })
-    const quote = this.resolveTextRangeQuote(input.section, input.range)
+    });
+    const quote = this.resolveTextRangeQuote(input.section, input.range);
+    const style = input.style ?? input.annotation?.style;
 
     return createReaderAnnotation({
       publicationId,
@@ -279,141 +290,158 @@ export class ReaderAnnotationService {
       textRange: input.range,
       ...(quote ? { quote } : {}),
       ...(input.note ? { note: input.note } : {}),
+      ...(style ? { style } : {}),
       ...(input.color ? { color: input.color } : {}),
       ...(input.annotation ? { createdAt: input.annotation.createdAt } : {}),
       ...(input.annotation ? { updatedAt: new Date().toISOString() } : {})
-    })
+    });
   }
 
   resolveTextRangeQuote(
     section: SectionDocument,
     textRange: TextRangeSelector
   ): string | undefined {
-    const context = this.createSectionTextRangeContext(section)
+    const context = this.createSectionTextRangeContext(section);
     const normalizedRange = normalizeTextRangeForContext({
       textRange,
       context
-    })
+    });
     if (!normalizedRange) {
-      return undefined
+      return undefined;
     }
 
-    const startIndex = context.blockIds.indexOf(normalizedRange.start.blockId)
-    const endIndex = context.blockIds.indexOf(normalizedRange.end.blockId)
+    const startIndex = context.blockIds.indexOf(normalizedRange.start.blockId);
+    const endIndex = context.blockIds.indexOf(normalizedRange.end.blockId);
     if (startIndex < 0 || endIndex < 0 || endIndex < startIndex) {
-      return undefined
+      return undefined;
     }
 
-    const segments: string[] = []
+    const segments: string[] = [];
     for (let index = startIndex; index <= endIndex; index += 1) {
-      const blockId = context.blockIds[index]
+      const blockId = context.blockIds[index];
       if (!blockId) {
-        continue
+        continue;
       }
 
-      const characters = Array.from(context.blockTexts.get(blockId) ?? "")
+      const characters = Array.from(context.blockTexts.get(blockId) ?? "");
       const start =
         blockId === normalizedRange.start.blockId
           ? normalizedRange.start.inlineOffset
-          : 0
+          : 0;
       const end =
         blockId === normalizedRange.end.blockId
           ? normalizedRange.end.inlineOffset
-          : characters.length
+          : characters.length;
       if (end <= start) {
-        continue
+        continue;
       }
 
-      segments.push(characters.slice(start, end).join(""))
+      segments.push(characters.slice(start, end).join(""));
     }
 
-    const text = segments.join("")
-    return text.trim() ? text : undefined
+    const text = segments.join("");
+    return text.trim() ? text : undefined;
   }
 
   resolveAnnotationViewportRects(
     annotation: Annotation,
     locator: Locator
   ): VisibleDrawBounds {
-    const book = this.dependencies.getBook()
-    const container = this.dependencies.getContainer()
+    const book = this.dependencies.getBook();
+    const container = this.dependencies.getContainer();
     if (!book || !container) {
-      return []
+      return [];
     }
 
-    const section = book.sections[locator.spineIndex]
+    const section = book.sections[locator.spineIndex];
     if (!section) {
-      return []
+      return [];
     }
 
     const textRange = annotation.textRange
-      ? this.normalizeTextRangeForSection(locator.spineIndex, annotation.textRange)
-      : this.resolveFullBlockTextRange(section, locator.blockId)
+      ? this.normalizeTextRangeForSection(
+          locator.spineIndex,
+          annotation.textRange
+        )
+      : this.resolveFullBlockTextRange(section, locator.blockId);
     if (!textRange) {
-      return this.dependencies.mapLocatorToViewport(locator)
+      return this.dependencies.mapLocatorToViewport(locator);
     }
 
-    const sectionElement = this.dependencies.getSectionElement(section.id)
+    const sectionElement = this.dependencies.getSectionElement(section.id);
     if (sectionElement && isRenderedDomSectionElement(sectionElement)) {
       const rects = mapDomTextRangeToViewport({
         container,
         mode: this.dependencies.getMode(),
         sectionElement,
         textRange
-      })
+      });
       if (rects.length > 0) {
-        return rects
+        return rects;
       }
     }
 
     const canvasRects = this.dependencies.resolveCanvasTextRangeViewportRects(
       section.id,
       textRange
-    )
+    );
     return canvasRects.length > 0
       ? canvasRects
-      : this.dependencies.mapLocatorToViewport(locator)
+      : this.dependencies.mapLocatorToViewport(locator);
   }
 
   resolveAnnotationSelectionAtPoint(
     point: Point
   ): ReaderTextSelectionSnapshot | null {
-    const book = this.dependencies.getBook()
+    return this.resolveAnnotationActivationAtPoint(point)?.selection ?? null;
+  }
+
+  resolveAnnotationActivationAtPoint(
+    point: Point
+  ):
+    | (ResolvedAnnotationActivation & {
+        selection: ReaderTextSelectionSnapshot;
+      })
+    | null {
+    const book = this.dependencies.getBook();
     if (!book) {
-      return null
+      return null;
     }
 
-    const annotations = this.dependencies.getAnnotations()
+    const annotations = this.dependencies.getAnnotations();
     for (let index = annotations.length - 1; index >= 0; index -= 1) {
-      const annotation = annotations[index]
+      const annotation = annotations[index];
       if (!annotation) {
-        continue
+        continue;
       }
 
-      const resolved = this.resolveAnnotationRange(annotation)
+      const resolved = this.resolveAnnotationRange(annotation);
       if (!resolved) {
-        continue
+        continue;
       }
 
       const rects = this.resolveAnnotationViewportRects(
         annotation,
         resolved.locator
-      )
+      );
       const hit = rects.some(
         (rect) =>
           point.x >= rect.x &&
           point.x <= rect.x + rect.width &&
           point.y >= rect.y &&
           point.y <= rect.y + rect.height
-      )
+      );
       if (!hit) {
-        continue
+        continue;
       }
 
       const text =
         annotation.quote ??
-        this.resolveTextRangeQuote(book.sections[resolved.spineIndex]!, resolved.range)
-      return {
+        this.resolveTextRangeQuote(
+          book.sections[resolved.spineIndex]!,
+          resolved.range
+        );
+      const selection: ReaderTextSelectionSnapshot = {
         text: text ?? "",
         locator: normalizeLocator({
           ...resolved.locator,
@@ -425,33 +453,55 @@ export class ReaderAnnotationService {
         textRange: cloneTextRangeSelector(resolved.range),
         rects,
         visible: rects.length > 0
-      }
+      };
+      return {
+        annotation: cloneAnnotation(annotation),
+        locator: selection.locator,
+        sectionId: resolved.sectionId,
+        ...(selection.blockId ? { blockId: selection.blockId } : {}),
+        ...(selection.textRange
+          ? { textRange: cloneTextRangeSelector(selection.textRange) }
+          : {}),
+        ...(text ? { quote: text } : {}),
+        rects,
+        selection
+      };
     }
 
-    return null
+    return null;
   }
 }
 
+function cloneAnnotation(annotation: Annotation): Annotation {
+  return {
+    ...annotation,
+    locator: { ...annotation.locator },
+    ...(annotation.textRange
+      ? { textRange: cloneTextRangeSelector(annotation.textRange) }
+      : {})
+  };
+}
+
 export function subtractAnnotationRange(input: {
-  source: TextRangeSelector
-  subtractor: TextRangeSelector
-  context: SectionTextRangeContext
+  source: TextRangeSelector;
+  subtractor: TextRangeSelector;
+  context: SectionTextRangeContext;
 }): TextRangeSelector[] {
-  const source = flattenTextRange(input.source, input.context)
-  const subtractor = flattenTextRange(input.subtractor, input.context)
+  const source = flattenTextRange(input.source, input.context);
+  const subtractor = flattenTextRange(input.subtractor, input.context);
   if (!source || !subtractor) {
-    return [input.source]
+    return [input.source];
   }
 
   return subtractFlattenedRange(source, subtractor).flatMap((range) => {
-    const inflated = inflateFlattenedTextRange(range, input.context)
-    return inflated ? [inflated] : []
-  })
+    const inflated = inflateFlattenedTextRange(range, input.context);
+    return inflated ? [inflated] : [];
+  });
 }
 
 function isRenderedDomSectionElement(element: HTMLElement): boolean {
   return (
     element.matches(".epub-dom-section") ||
     Boolean(element.querySelector(".epub-dom-section"))
-  )
+  );
 }

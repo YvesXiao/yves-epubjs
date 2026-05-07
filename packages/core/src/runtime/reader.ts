@@ -19,6 +19,7 @@ import {
 } from "../container/normalize-input";
 import type {
   Annotation,
+  AnnotationActivatedEvent,
   AnnotationViewportSnapshot,
   Bookmark,
   BlockNode,
@@ -440,6 +441,8 @@ export class EpubReader {
         this.getContainerRelativePoint(event),
       resolveAnnotationSelectionAtPoint: (point) =>
         this.resolveAnnotationSelectionAtPoint(point),
+      emitAnnotationActivated: (point) =>
+        this.emitAnnotationActivatedAtPoint(point),
       setPinnedTextSelectionSnapshot: (snapshot) =>
         this.setPinnedTextSelectionSnapshot(snapshot),
       hasPinnedTextSelectionSnapshot: () =>
@@ -891,6 +894,7 @@ export class EpubReader {
       textRange?: TextRangeSelector;
       quote?: string;
       note?: string;
+      style?: "highlight" | "underline";
       color?: string;
     } = {}
   ): Annotation | null {
@@ -912,6 +916,7 @@ export class EpubReader {
       ...(input.textRange ? { textRange: input.textRange } : {}),
       ...(quote ? { quote } : {}),
       ...(input.note ? { note: input.note } : {}),
+      ...(input.style ? { style: input.style } : {}),
       ...(input.color ? { color: input.color } : {})
     });
   }
@@ -919,6 +924,7 @@ export class EpubReader {
   createAnnotationFromSelection(
     input: {
       note?: string;
+      style?: "highlight" | "underline";
       color?: string;
     } = {}
   ): Annotation | null {
@@ -932,6 +938,7 @@ export class EpubReader {
       quote: selection.text,
       ...(selection.textRange ? { textRange: selection.textRange } : {}),
       ...(input.note ? { note: input.note } : {}),
+      ...(input.style ? { style: input.style } : {}),
       ...(input.color ? { color: input.color } : {})
     });
   }
@@ -968,6 +975,7 @@ export class EpubReader {
   applyCurrentSelectionHighlightAction(
     input: {
       note?: string;
+      style?: "highlight" | "underline";
       color?: string;
     } = {}
   ): {
@@ -996,6 +1004,7 @@ export class EpubReader {
         locator: selection.locator,
         quote: selection.text,
         ...(input.note ? { note: input.note } : {}),
+        ...(input.style ? { style: input.style } : {}),
         ...(input.color ? { color: input.color } : {})
       });
       if (!annotation) {
@@ -1074,6 +1083,7 @@ export class EpubReader {
             locator: resolved.locator,
             range,
             section,
+            ...(annotation.style ? { style: annotation.style } : {}),
             ...(annotation.color ? { color: annotation.color } : {}),
             ...(annotation.note ? { note: annotation.note } : {})
           });
@@ -1123,6 +1133,7 @@ export class EpubReader {
           locator: selection.locator,
           range,
           section,
+          ...(input.style ? { style: input.style } : {}),
           ...(input.color ? { color: input.color } : {}),
           ...(input.note ? { note: input.note } : {})
         });
@@ -2555,6 +2566,8 @@ export class EpubReader {
           highlightRangesByBlock:
             this.getHighlightedCanvasTextRangesForSection(index),
           underlinedBlockIds: this.getUnderlinedCanvasBlockIdsForSection(index),
+          underlineColorsByBlock:
+            this.getUnderlinedCanvasBlockColorsForSection(index),
           activeBlockId: this.getActiveCanvasBlockIdForSection(index)
         });
 
@@ -2657,6 +2670,9 @@ export class EpubReader {
         page.spineIndex
       ),
       underlinedBlockIds: this.getUnderlinedCanvasBlockIdsForSection(
+        page.spineIndex
+      ),
+      underlineColorsByBlock: this.getUnderlinedCanvasBlockColorsForSection(
         page.spineIndex
       ),
       activeBlockId: this.getActiveCanvasBlockIdForSection(page.spineIndex),
@@ -3161,6 +3177,7 @@ export class EpubReader {
     if (annotationSelection) {
       event.preventDefault();
       this.setPinnedTextSelectionSnapshot(annotationSelection);
+      this.emitAnnotationActivatedAtPoint(point);
       return;
     }
 
@@ -3948,6 +3965,40 @@ export class EpubReader {
     );
   }
 
+  private getUnderlinedCanvasBlockColorsForSection(
+    sectionIndex: number
+  ): Map<string, string> {
+    if (!this.book) {
+      return new Map();
+    }
+
+    const section = this.book.sections[sectionIndex];
+    if (!section) {
+      return new Map();
+    }
+
+    const colors = new Map<string, string>();
+    for (const decoration of this.decorationManager.getForSpineIndex(
+      sectionIndex
+    )) {
+      if (decoration.style !== "underline" || !decoration.color) {
+        continue;
+      }
+
+      const blockId = decoration.locator.blockId
+        ? (resolveRenderableBlockId(
+            section.blocks,
+            decoration.locator.blockId
+          ) ?? decoration.locator.blockId)
+        : undefined;
+      if (blockId) {
+        colors.set(blockId, decoration.color);
+      }
+    }
+
+    return colors;
+  }
+
   private resolveCanvasViewportBlockIds(locator: Locator): string[] {
     const blockId = locator.blockId;
     if (!blockId) {
@@ -4089,6 +4140,8 @@ export class EpubReader {
         this.getHighlightedCanvasTextRangesForSection(sectionIndex),
       underlinedBlockIds:
         this.getUnderlinedCanvasBlockIdsForSection(sectionIndex),
+      underlineColorsByBlock:
+        this.getUnderlinedCanvasBlockColorsForSection(sectionIndex),
       activeBlockId: this.getActiveCanvasBlockIdForSection(sectionIndex)
     });
     const targetInteraction = displayList.interactions.find(
@@ -5038,6 +5091,7 @@ export class EpubReader {
     locator: Locator;
     range: TextRangeSelector;
     section: SectionDocument;
+    style?: "highlight" | "underline";
     color?: string;
     note?: string;
   }): Annotation | null {
@@ -5112,6 +5166,28 @@ export class EpubReader {
     point: Point
   ): ReaderTextSelectionSnapshot | null {
     return this.annotationService.resolveAnnotationSelectionAtPoint(point);
+  }
+
+  private emitAnnotationActivatedAtPoint(point: Point): boolean {
+    const activation =
+      this.annotationService.resolveAnnotationActivationAtPoint(point);
+    if (!activation) {
+      return false;
+    }
+
+    const payload = {
+      annotation: activation.annotation,
+      locator: activation.locator,
+      sectionId: activation.sectionId,
+      ...(activation.blockId ? { blockId: activation.blockId } : {}),
+      ...(activation.textRange ? { textRange: activation.textRange } : {}),
+      ...(activation.quote ? { quote: activation.quote } : {}),
+      point: { ...point },
+      rects: activation.rects.map((rect) => ({ ...rect }))
+    } satisfies AnnotationActivatedEvent;
+    this.events.emit("annotationActivated", payload);
+    void this.options.onAnnotationActivated?.(payload);
+    return true;
   }
 
   private syncTextSelectionState(): void {
