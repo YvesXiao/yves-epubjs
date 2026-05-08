@@ -35,7 +35,8 @@ import {
 } from "../utils/text-wrap";
 import {
   buildPretextBlockDisplay,
-  type BlockHighlightRange
+  type BlockHighlightRange,
+  type BlockUnderlineRange
 } from "./display-list-text";
 import {
   insetNativeBlockRect,
@@ -60,6 +61,7 @@ type BuilderOptions = {
   highlightRangesByBlock?: Map<string, BlockHighlightRange[]>;
   underlinedBlockIds?: Set<string>;
   underlineColorsByBlock?: Map<string, string>;
+  underlineRangesByBlock?: Map<string, BlockUnderlineRange[]>;
   activeBlockId: string | undefined;
 };
 
@@ -76,6 +78,7 @@ export class DisplayListBuilder {
 
     for (const block of options.blocks) {
       const underlineColor = options.underlineColorsByBlock?.get(block.id);
+      const underlineRanges = options.underlineRangesByBlock?.get(block.id) ?? [];
       const built =
         block.type === "pretext"
           ? buildPretextBlockDisplay({
@@ -93,6 +96,7 @@ export class DisplayListBuilder {
                 options.highlightRangesByBlock?.get(block.id) ?? [],
               underlined: options.underlinedBlockIds?.has(block.id) ?? false,
               ...(underlineColor ? { underlineColor } : {}),
+              underlineRanges,
               active: options.activeBlockId === block.id
             })
           : this.buildNativeBlock({
@@ -114,6 +118,7 @@ export class DisplayListBuilder {
                 options.highlightRangesByBlock?.get(block.id) ?? [],
               underlined: options.underlinedBlockIds?.has(block.id) ?? false,
               ...(underlineColor ? { underlineColor } : {}),
+              underlineRanges,
               active: options.activeBlockId === block.id
             });
 
@@ -155,6 +160,7 @@ export class DisplayListBuilder {
     highlightRanges: BlockHighlightRange[];
     underlined: boolean;
     underlineColor?: string;
+    underlineRanges: BlockUnderlineRange[];
     active: boolean;
   }): {
     ops: DrawOp[];
@@ -315,6 +321,7 @@ export class DisplayListBuilder {
             ...(input.underlineColor
               ? { underlineColor: input.underlineColor }
               : {}),
+            underlineRanges: input.underlineRanges,
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -358,6 +365,7 @@ export class DisplayListBuilder {
             ...(input.underlineColor
               ? { underlineColor: input.underlineColor }
               : {}),
+            underlineRanges: input.underlineRanges,
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -414,6 +422,7 @@ export class DisplayListBuilder {
             ...(input.underlineColor
               ? { underlineColor: input.underlineColor }
               : {}),
+            underlineRanges: input.underlineRanges,
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -438,6 +447,7 @@ export class DisplayListBuilder {
             ...(input.underlineColor
               ? { underlineColor: input.underlineColor }
               : {}),
+            underlineRanges: input.underlineRanges,
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -466,6 +476,7 @@ export class DisplayListBuilder {
             ...(input.underlineColor
               ? { underlineColor: input.underlineColor }
               : {}),
+            underlineRanges: input.underlineRanges,
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -490,6 +501,7 @@ export class DisplayListBuilder {
             ...(input.underlineColor
               ? { underlineColor: input.underlineColor }
               : {}),
+            underlineRanges: input.underlineRanges,
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -517,6 +529,7 @@ export class DisplayListBuilder {
             ...(input.underlineColor
               ? { underlineColor: input.underlineColor }
               : {}),
+            underlineRanges: input.underlineRanges,
             active: input.active,
             styleProfile: input.styleProfile
           })
@@ -547,6 +560,7 @@ export class DisplayListBuilder {
     highlightRanges: BlockHighlightRange[];
     underlined: boolean;
     underlineColor?: string;
+    underlineRanges: BlockUnderlineRange[];
     active: boolean;
     styleProfile: ReadingStyleProfile;
   }): TextRunDrawOp[] {
@@ -570,78 +584,8 @@ export class DisplayListBuilder {
         line.start,
         line.end
       );
-      return {
-        kind: "text",
-        sectionId: input.section.id,
-        sectionHref: input.section.href,
-        blockId: input.blockId,
-        locator: input.locator,
-        rect: {
-          x: lineX,
-          y: input.top + index * lineHeight,
-          width: lineWidth,
-          height: lineHeight
-        },
-        text: line.text,
-        textStart: line.start,
-        textEnd: line.end,
-        x: lineX,
-        y: input.top + index * lineHeight,
-        width: lineWidth,
-        font: input.font,
-        color: input.color,
-        backgroundColor: undefined,
-        highlightColor: input.highlighted
-          ? input.styleProfile.highlight.search
-          : input.active
-            ? input.styleProfile.highlight.active
-            : undefined,
-        ...(highlightSegments.length ? { highlightSegments } : {}),
-        underline: input.underlined || undefined,
-        ...(input.underlineColor
-          ? { underlineColor: input.underlineColor }
-          : {}),
-        href: undefined
-      };
-    });
-  }
-
-  private buildPreformattedTextOps(input: {
-    text: string;
-    section: SectionDocument;
-    blockId: string;
-    locator: Locator | undefined;
-    x: number;
-    top: number;
-    width: number;
-    height: number;
-    font: string;
-    color: string;
-    textAlign: TextAlign;
-    highlighted: boolean;
-    highlightRanges: BlockHighlightRange[];
-    underlined: boolean;
-    underlineColor?: string;
-    active: boolean;
-    styleProfile: ReadingStyleProfile;
-  }): TextRunDrawOp[] {
-    const fontSize = extractFontSize(input.font);
-    const lineHeight = Math.max(fontSize * 1.45, 18);
-    const lines = wrapPreformattedTextWithOffsets(
-      input.text || "",
-      input.width,
-      input.font
-    );
-    return lines.map((line, index) => {
-      const lineWidth = approximateTextWidth(line.text, input.font);
-      const lineX = this.resolveTextLineStartX(
-        input.textAlign,
-        input.x,
-        input.width,
-        lineWidth
-      );
-      const highlightSegments = resolveLineHighlightSegments(
-        input.highlightRanges,
+      const underlineSegments = resolveLineHighlightSegments(
+        input.underlineRanges,
         line.start,
         line.end
       );
@@ -676,6 +620,89 @@ export class DisplayListBuilder {
         ...(input.underlineColor
           ? { underlineColor: input.underlineColor }
           : {}),
+        ...(underlineSegments.length ? { underlineSegments } : {}),
+        href: undefined
+      };
+    });
+  }
+
+  private buildPreformattedTextOps(input: {
+    text: string;
+    section: SectionDocument;
+    blockId: string;
+    locator: Locator | undefined;
+    x: number;
+    top: number;
+    width: number;
+    height: number;
+    font: string;
+    color: string;
+    textAlign: TextAlign;
+    highlighted: boolean;
+    highlightRanges: BlockHighlightRange[];
+    underlined: boolean;
+    underlineColor?: string;
+    underlineRanges: BlockUnderlineRange[];
+    active: boolean;
+    styleProfile: ReadingStyleProfile;
+  }): TextRunDrawOp[] {
+    const fontSize = extractFontSize(input.font);
+    const lineHeight = Math.max(fontSize * 1.45, 18);
+    const lines = wrapPreformattedTextWithOffsets(
+      input.text || "",
+      input.width,
+      input.font
+    );
+    return lines.map((line, index) => {
+      const lineWidth = approximateTextWidth(line.text, input.font);
+      const lineX = this.resolveTextLineStartX(
+        input.textAlign,
+        input.x,
+        input.width,
+        lineWidth
+      );
+      const highlightSegments = resolveLineHighlightSegments(
+        input.highlightRanges,
+        line.start,
+        line.end
+      );
+      const underlineSegments = resolveLineHighlightSegments(
+        input.underlineRanges,
+        line.start,
+        line.end
+      );
+      return {
+        kind: "text",
+        sectionId: input.section.id,
+        sectionHref: input.section.href,
+        blockId: input.blockId,
+        locator: input.locator,
+        rect: {
+          x: lineX,
+          y: input.top + index * lineHeight,
+          width: lineWidth,
+          height: lineHeight
+        },
+        text: line.text,
+        textStart: line.start,
+        textEnd: line.end,
+        x: lineX,
+        y: input.top + index * lineHeight,
+        width: lineWidth,
+        font: input.font,
+        color: input.color,
+        backgroundColor: undefined,
+        highlightColor: input.highlighted
+          ? input.styleProfile.highlight.search
+          : input.active
+            ? input.styleProfile.highlight.active
+            : undefined,
+        ...(highlightSegments.length ? { highlightSegments } : {}),
+        underline: input.underlined || undefined,
+        ...(input.underlineColor
+          ? { underlineColor: input.underlineColor }
+          : {}),
+        ...(underlineSegments.length ? { underlineSegments } : {}),
         href: undefined
       };
     });
@@ -693,6 +720,7 @@ export class DisplayListBuilder {
     highlighted: boolean;
     underlined: boolean;
     underlineColor?: string;
+    underlineRanges: BlockUnderlineRange[];
     active: boolean;
     styleProfile: ReadingStyleProfile;
   }): TextRunDrawOp[] {
@@ -818,6 +846,7 @@ export class DisplayListBuilder {
     highlighted: boolean;
     underlined: boolean;
     underlineColor?: string;
+    underlineRanges: BlockUnderlineRange[];
     active: boolean;
     styleProfile: ReadingStyleProfile;
   }): DrawOp[] {
@@ -960,6 +989,7 @@ export class DisplayListBuilder {
     highlighted: boolean;
     underlined: boolean;
     underlineColor?: string;
+    underlineRanges: BlockUnderlineRange[];
     active: boolean;
     styleProfile: ReadingStyleProfile;
   }): DrawOp[] {

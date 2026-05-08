@@ -63,4 +63,74 @@ describe("canvas decoration rendering", () => {
     expect(textOps.every((op) => op.underline === true)).toBe(true);
     expect(textOps.every((op) => op.underlineColor === "#2563eb")).toBe(true);
   });
+
+  it("emits underline segments for text range underline decorations", () => {
+    const section: SectionDocument = {
+      id: "section-1",
+      href: "OPS/underline.xhtml",
+      title: "Underline",
+      anchors: {},
+      blocks: [
+        {
+          id: "text-1",
+          kind: "text",
+          inlines: [{ kind: "text", text: "Underline decoration target" }]
+        }
+      ]
+    };
+
+    const layout = new LayoutEngine().layout(
+      {
+        section,
+        spineIndex: 0,
+        viewportWidth: 360,
+        viewportHeight: 600,
+        typography: {
+          fontSize: 18,
+          lineHeight: 1.6,
+          paragraphSpacing: 12
+        },
+        fontFamily: "serif"
+      },
+      "scroll"
+    );
+
+    const displayList = new DisplayListBuilder().buildSection({
+      section,
+      width: 360,
+      viewportHeight: 600,
+      blocks: layout.blocks,
+      theme: {
+        color: "#1f2328",
+        background: "#fffdf7"
+      },
+      typography: {
+        fontSize: 18,
+        lineHeight: 1.6,
+        paragraphSpacing: 12
+      },
+      underlinedBlockIds: new Set(),
+      underlineRangesByBlock: new Map([
+        ["text-1", [{ start: 10, end: 20, color: "#2563eb" }]]
+      ]),
+      activeBlockId: undefined
+    });
+
+    const textOps = displayList.ops.filter(
+      (op): op is TextRunDrawOp => op.kind === "text" && op.blockId === "text-1"
+    );
+    const underlineSegments = textOps.flatMap(
+      (op) => op.underlineSegments ?? []
+    );
+
+    expect(textOps.length).toBeGreaterThan(0);
+    expect(textOps.every((op) => op.underline !== true)).toBe(true);
+    expect(underlineSegments).toEqual([
+      {
+        start: 10,
+        end: 20,
+        color: "#2563eb"
+      }
+    ]);
+  });
 });

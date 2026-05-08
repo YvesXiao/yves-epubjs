@@ -21,6 +21,12 @@ export type BlockHighlightRange = {
   color: string;
 };
 
+export type BlockUnderlineRange = {
+  start: number;
+  end: number;
+  color: string;
+};
+
 export function buildPretextBlockDisplay(input: {
   block: LayoutPretextBlock;
   section: SectionDocument;
@@ -35,6 +41,7 @@ export function buildPretextBlockDisplay(input: {
   highlightRanges: BlockHighlightRange[];
   underlined: boolean;
   underlineColor?: string;
+  underlineRanges: BlockUnderlineRange[];
   active: boolean;
 }): {
   ops: DrawOp[];
@@ -183,6 +190,11 @@ export function buildPretextBlockDisplay(input: {
         blockTextOffset,
         blockTextOffset + fragmentTextLength
       );
+      const underlineSegments = resolveLineHighlightSegments(
+        input.underlineRanges,
+        blockTextOffset,
+        blockTextOffset + fragmentTextLength
+      );
       ops.push({
         kind: "text",
         sectionId: input.section.id,
@@ -213,6 +225,7 @@ export function buildPretextBlockDisplay(input: {
         ...(input.underlined && input.underlineColor
           ? { underlineColor: input.underlineColor }
           : {}),
+        ...(underlineSegments.length ? { underlineSegments } : {}),
         href: fragment.href
       } satisfies TextRunDrawOp);
 

@@ -2568,6 +2568,8 @@ export class EpubReader {
           underlinedBlockIds: this.getUnderlinedCanvasBlockIdsForSection(index),
           underlineColorsByBlock:
             this.getUnderlinedCanvasBlockColorsForSection(index),
+          underlineRangesByBlock:
+            this.getUnderlinedCanvasTextRangesForSection(index),
           activeBlockId: this.getActiveCanvasBlockIdForSection(index)
         });
 
@@ -2673,6 +2675,9 @@ export class EpubReader {
         page.spineIndex
       ),
       underlineColorsByBlock: this.getUnderlinedCanvasBlockColorsForSection(
+        page.spineIndex
+      ),
+      underlineRangesByBlock: this.getUnderlinedCanvasTextRangesForSection(
         page.spineIndex
       ),
       activeBlockId: this.getActiveCanvasBlockIdForSection(page.spineIndex),
@@ -3953,6 +3958,7 @@ export class EpubReader {
       this.decorationManager
         .getForSpineIndex(sectionIndex)
         .filter((decoration) => decoration.style === "underline")
+        .filter((decoration) => !decoration.extras?.textRange)
         .map((decoration) =>
           decoration.locator.blockId
             ? (resolveRenderableBlockId(
@@ -3984,6 +3990,9 @@ export class EpubReader {
       if (decoration.style !== "underline" || !decoration.color) {
         continue;
       }
+      if (decoration.extras?.textRange) {
+        continue;
+      }
 
       const blockId = decoration.locator.blockId
         ? (resolveRenderableBlockId(
@@ -3997,6 +4006,92 @@ export class EpubReader {
     }
 
     return colors;
+  }
+
+  private getUnderlinedCanvasTextRangesForSection(
+    sectionIndex: number
+  ): Map<string, Array<{ start: number; end: number; color: string }>> {
+    if (!this.book) {
+      return new Map();
+    }
+
+    const section = this.book.sections[sectionIndex];
+    if (!section) {
+      return new Map();
+    }
+
+    const rangesByBlock = new Map<
+      string,
+      Array<{ start: number; end: number; color: string }>
+    >();
+
+    for (const decoration of this.decorationManager.getForSpineIndex(
+      sectionIndex
+    )) {
+      const textRange = decoration.extras?.textRange;
+      if (decoration.style !== "underline" || !textRange) {
+        continue;
+      }
+
+      const normalizedRange = normalizeTextRangeSelector(textRange);
+      const blockIds = collectBlockIdsInReadingOrder(section.blocks);
+      const startIndex = blockIds.indexOf(normalizedRange.start.blockId);
+      const endIndex = blockIds.indexOf(normalizedRange.end.blockId);
+      if (startIndex < 0 || endIndex < 0 || endIndex < startIndex) {
+        continue;
+      }
+
+      for (
+        let blockIndex = startIndex;
+        blockIndex <= endIndex;
+        blockIndex += 1
+      ) {
+        const blockId = blockIds[blockIndex];
+        if (!blockId) {
+          continue;
+        }
+
+        const renderableBlockId = resolveRenderableBlockId(
+          section.blocks,
+          blockId
+        );
+        if (!renderableBlockId || renderableBlockId !== blockId) {
+          continue;
+        }
+
+        const block = findBlockById(section.blocks, blockId);
+        const blockTextLength = block
+          ? Array.from(this.extractBlockText(block)).length
+          : 0;
+        const start =
+          blockId === normalizedRange.start.blockId
+            ? Math.max(
+                0,
+                Math.min(blockTextLength, normalizedRange.start.inlineOffset)
+              )
+            : 0;
+        const end =
+          blockId === normalizedRange.end.blockId
+            ? Math.max(
+                start,
+                Math.min(blockTextLength, normalizedRange.end.inlineOffset)
+              )
+            : blockTextLength;
+        if (end <= start) {
+          continue;
+        }
+
+        const entry = rangesByBlock.get(blockId) ?? [];
+        entry.push({
+          start,
+          end,
+          color: decoration.color ?? this.theme.color
+        });
+        rangesByBlock.set(blockId, entry);
+      }
+    }
+
+    return rangesByBlock;
   }
 
   private resolveCanvasViewportBlockIds(locator: Locator): string[] {
@@ -4142,6 +4237,8 @@ export class EpubReader {
         this.getUnderlinedCanvasBlockIdsForSection(sectionIndex),
       underlineColorsByBlock:
         this.getUnderlinedCanvasBlockColorsForSection(sectionIndex),
+      underlineRangesByBlock:
+        this.getUnderlinedCanvasTextRangesForSection(sectionIndex),
       activeBlockId: this.getActiveCanvasBlockIdForSection(sectionIndex)
     });
     const targetInteraction = displayList.interactions.find(
@@ -5165,12 +5262,16 @@ export class EpubReader {
   private resolveAnnotationSelectionAtPoint(
     point: Point
   ): ReaderTextSelectionSnapshot | null {
-    return this.annotationService.resolveAnnotationSelectionAtPoint(point);
+    return this.annotationService.resolveAnnotationSelectionAtPoint(
+      this.toAnnotationViewportPoint(point)
+    );
   }
 
   private emitAnnotationActivatedAtPoint(point: Point): boolean {
     const activation =
-      this.annotationService.resolveAnnotationActivationAtPoint(point);
+      this.annotationService.resolveAnnotationActivationAtPoint(
+        this.toAnnotationViewportPoint(point)
+      );
     if (!activation) {
       return false;
     }
@@ -5188,6 +5289,17 @@ export class EpubReader {
     this.events.emit("annotationActivated", payload);
     void this.options.onAnnotationActivated?.(payload);
     return true;
+  }
+
+  private toAnnotationViewportPoint(point: Point): Point {
+    if (this.mode !== "scroll" || !this.options.container) {
+      return point;
+    }
+
+    return {
+      x: point.x,
+      y: point.y + this.options.container.scrollTop
+    };
   }
 
   private syncTextSelectionState(): void {

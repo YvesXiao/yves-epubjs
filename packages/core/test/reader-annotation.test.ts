@@ -825,6 +825,11 @@ describe("EpubReader annotations", () => {
       configurable: true,
       value: () => new DOMRect(0, 0, 320, 220)
     })
+    Object.defineProperty(container, "scrollTop", {
+      configurable: true,
+      writable: true,
+      value: 120
+    })
     container.innerHTML = `
       <div class="epub-dom-section" data-section-id="section-1">
         <p data-reader-block-id="text-1">abcdef</p>

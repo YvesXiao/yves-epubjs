@@ -15,6 +15,12 @@ export type TextHighlightSegment = {
   color: string;
 };
 
+export type TextUnderlineSegment = {
+  start: number;
+  end: number;
+  color: string;
+};
+
 export type TextRunDrawOp = DrawOpBase & {
   kind: "text";
   text: string;
@@ -30,6 +36,7 @@ export type TextRunDrawOp = DrawOpBase & {
   highlightSegments?: TextHighlightSegment[];
   underline: boolean | undefined;
   underlineColor?: string;
+  underlineSegments?: TextUnderlineSegment[];
   href: string | undefined;
 };
 

@@ -217,6 +217,10 @@ export function buildPageDisplayList(options: {
   >;
   underlinedBlockIds: Set<string>;
   underlineColorsByBlock?: Map<string, string>;
+  underlineRangesByBlock?: Map<
+    string,
+    Array<{ start: number; end: number; color: string }>
+  >;
   activeBlockId: string | undefined;
   resolveImageLoaded: (src: string) => boolean;
   resolveImageUrl: (src: string) => string;
@@ -239,6 +243,10 @@ export function buildPageDisplayList(options: {
     >;
     underlinedBlockIds: Set<string>;
     underlineColorsByBlock?: Map<string, string>;
+    underlineRangesByBlock?: Map<
+      string,
+      Array<{ start: number; end: number; color: string }>
+    >;
     activeBlockId: string | undefined;
     resolveImageLoaded: (src: string) => boolean;
     resolveImageUrl: (src: string) => string;
@@ -289,6 +297,9 @@ export function buildPageDisplayList(options: {
     underlinedBlockIds: options.underlinedBlockIds,
     ...(options.underlineColorsByBlock
       ? { underlineColorsByBlock: options.underlineColorsByBlock }
+      : {}),
+    ...(options.underlineRangesByBlock
+      ? { underlineRangesByBlock: options.underlineRangesByBlock }
       : {}),
     activeBlockId: options.activeBlockId,
     resolveImageLoaded: options.resolveImageLoaded,

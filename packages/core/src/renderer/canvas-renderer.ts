@@ -481,6 +481,31 @@ export class CanvasRenderer {
       context.lineTo(op.x + op.width, underlineY);
       context.stroke();
     }
+    if (op.underlineSegments?.length) {
+      const underlineY = Math.min(
+        op.y + op.rect.height - 3,
+        baselineY + Math.max(fontSize * 0.08, 1)
+      );
+      context.lineWidth = 1;
+      for (const segment of op.underlineSegments) {
+        const segmentText = sliceByCharacterRange(
+          op.text,
+          segment.start,
+          segment.end
+        );
+        if (!segmentText) {
+          continue;
+        }
+        const prefixText = sliceByCharacterRange(op.text, 0, segment.start);
+        const segmentX = op.rect.x + approximateTextWidth(prefixText, op.font);
+        const segmentWidth = approximateTextWidth(segmentText, op.font);
+        context.strokeStyle = segment.color;
+        context.beginPath();
+        context.moveTo(segmentX, underlineY);
+        context.lineTo(segmentX + Math.max(1, segmentWidth), underlineY);
+        context.stroke();
+      }
+    }
     context.restore();
   }
 
