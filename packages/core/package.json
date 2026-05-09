@@ -1,6 +1,6 @@
 {
   "name": "@yves-epub/core",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Browser EPUB reader engine with parsing, hybrid rendering, navigation,search, bookmarks, annotations, and reader preferences.",
   "license": "MIT",
   "repository": {
