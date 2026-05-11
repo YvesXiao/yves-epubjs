@@ -33,6 +33,7 @@ export function App(): JSX.Element {
     themeKey,
     mode,
     publisherStyles,
+    publisherColorOverride,
     experimentalRtl,
     fontSize,
     fontFamily,
@@ -61,6 +62,7 @@ export function App(): JSX.Element {
     handleThemeChange,
     handleModeChange,
     handlePublisherStylesChange,
+    handlePublisherColorOverrideChange,
     handleExperimentalRtlChange,
     handleFontSizeChange,
     handleFontFamilyChange,
@@ -430,6 +432,21 @@ export function App(): JSX.Element {
                           onChange={async (value) => {
                             await handlePublisherStylesChange(
                               value as "enabled" | "disabled"
+                            );
+                          }}
+                        />
+                      </label>
+                      <label className="field-shell">
+                        <span className="field-label">Publisher Colors</span>
+                        <CustomSelect
+                          value={publisherColorOverride}
+                          options={[
+                            { value: "none", label: "Preserve" },
+                            { value: "foreground", label: "Reader Text" }
+                          ]}
+                          onChange={async (value) => {
+                            await handlePublisherColorOverrideChange(
+                              value as "none" | "foreground"
                             );
                           }}
                         />

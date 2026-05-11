@@ -18,6 +18,7 @@ import {
   type ReadingNavigationContext,
   type ReadingSpreadContext,
   type ReaderSettings,
+  type PublisherColorOverride,
   type PublisherStylesMode,
   type ReaderSelectionHighlightState,
   type ReaderTextSelectionSnapshot,
@@ -90,6 +91,7 @@ type DemoPreferenceState = {
   themeKey: ThemeKey;
   mode: "scroll" | "paginated";
   publisherStyles: PublisherStylesMode;
+  publisherColorOverride: PublisherColorOverride;
   experimentalRtl: boolean;
   fontSize: number;
   fontFamily: string;
@@ -129,6 +131,7 @@ export function useReaderController(
   themeKey: ThemeKey;
   mode: "scroll" | "paginated";
   publisherStyles: PublisherStylesMode;
+  publisherColorOverride: PublisherColorOverride;
   experimentalRtl: boolean;
   fontSize: number;
   fontFamily: string;
@@ -157,6 +160,9 @@ export function useReaderController(
   handleThemeChange: (nextThemeKey: ThemeKey) => Promise<void>;
   handleModeChange: (nextMode: "scroll" | "paginated") => Promise<void>;
   handlePublisherStylesChange: (nextMode: PublisherStylesMode) => Promise<void>;
+  handlePublisherColorOverrideChange: (
+    nextMode: PublisherColorOverride
+  ) => Promise<void>;
   handleExperimentalRtlChange: (enabled: boolean) => Promise<void>;
   handleFontSizeChange: (nextSize: number) => Promise<void>;
   handleFontFamilyChange: (nextFamily: string) => Promise<void>;
@@ -192,6 +198,10 @@ export function useReaderController(
   const [publisherStyles, setPublisherStyles] = useState<PublisherStylesMode>(
     initialPreferenceStateRef.current.publisherStyles
   );
+  const [publisherColorOverride, setPublisherColorOverride] =
+    useState<PublisherColorOverride>(
+      initialPreferenceStateRef.current.publisherColorOverride
+    );
   const [experimentalRtl, setExperimentalRtl] = useState(
     initialPreferenceStateRef.current.experimentalRtl
   );
@@ -225,6 +235,7 @@ export function useReaderController(
     setThemeKey(resolveThemeKey(settings.theme));
     setMode(settings.mode);
     setPublisherStyles(settings.publisherStyles);
+    setPublisherColorOverride(settings.publisherColorOverride);
     setExperimentalRtl(settings.experimentalRtl);
     setFontSize(settings.typography.fontSize);
     setFontFamily(settings.typography.fontFamily ?? defaultFontFamily());
@@ -524,6 +535,14 @@ export function useReaderController(
     });
   }
 
+  async function handlePublisherColorOverrideChange(
+    nextMode: PublisherColorOverride
+  ): Promise<void> {
+    await readerRef.current?.submitPreferences({
+      publisherColorOverride: nextMode
+    });
+  }
+
   async function handleExperimentalRtlChange(enabled: boolean): Promise<void> {
     await readerRef.current?.submitPreferences({
       experimentalRtl: enabled
@@ -729,6 +748,7 @@ export function useReaderController(
     themeKey,
     mode,
     publisherStyles,
+    publisherColorOverride,
     experimentalRtl,
     fontSize,
     fontFamily,
@@ -757,6 +777,7 @@ export function useReaderController(
     handleThemeChange,
     handleModeChange,
     handlePublisherStylesChange,
+    handlePublisherColorOverrideChange,
     handleExperimentalRtlChange,
     handleFontSizeChange,
     handleFontFamilyChange,
@@ -792,6 +813,7 @@ function getInitialDemoPreferenceState(): DemoPreferenceState {
     themeKey: resolveThemeKey(settings.theme),
     mode: settings.mode,
     publisherStyles: settings.publisherStyles,
+    publisherColorOverride: settings.publisherColorOverride,
     experimentalRtl: settings.experimentalRtl,
     fontSize: settings.typography.fontSize,
     fontFamily: settings.typography.fontFamily ?? defaultFontFamily(),
