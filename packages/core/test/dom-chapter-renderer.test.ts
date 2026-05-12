@@ -387,6 +387,11 @@ describe("DomChapterRenderer", () => {
     expect(css).toContain("height: auto;");
     expect(css).toContain("display: block;");
     expect(css).toContain("margin: 0 auto;");
+    const paragraphInlineImageSelector =
+      ".epub-dom-section:not(.epub-dom-section-fxl) :where(p, li, dt, dd, th, td, figcaption, caption) img:not(:only-child) {";
+    expect(css).toContain(paragraphInlineImageSelector);
+    expect(css).toContain("width: auto;");
+    expect(css).toContain("vertical-align: middle;");
     const inlineImageSelector =
       '.epub-dom-section:not(.epub-dom-section-fxl) :is(a.footnote, a.noteref, a[epub\\:type~="noteref"], a[role="doc-noteref"], sup, sub, small) img {';
     expect(css).toContain(inlineImageSelector);
@@ -396,6 +401,9 @@ describe("DomChapterRenderer", () => {
     expect(
       css.indexOf(".epub-dom-section:not(.epub-dom-section-fxl) img {")
     ).toBeLessThan(css.indexOf(inlineImageSelector));
+    expect(css.indexOf(paragraphInlineImageSelector)).toBeLessThan(
+      css.indexOf(inlineImageSelector)
+    );
     expect(css).toContain("display: inline-block;");
     expect(css).toContain("max-height: 1.5em;");
   });
