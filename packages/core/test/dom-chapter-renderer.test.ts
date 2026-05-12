@@ -374,6 +374,19 @@ describe("DomChapterRenderer", () => {
       "max-height: min(900px, calc(var(--reader-content-viewport-height, 100vh) * 0.78));"
     );
     expect(css).toContain(".epub-dom-section:not(.epub-dom-section-fxl) img {");
+    const generalImageRule =
+      css.match(
+        /\.epub-dom-section:not\(\.epub-dom-section-fxl\) img \{[^}]+\}/
+      )?.[0] ?? "";
+    expect(generalImageRule).not.toContain("height: auto;");
+    expect(generalImageRule).not.toContain("display: block;");
+    expect(generalImageRule).not.toContain("margin: 0 auto;");
+    expect(css).toContain(
+      ".epub-dom-section:not(.epub-dom-section-fxl) :where(p, div, figure) > img:only-child {"
+    );
+    expect(css).toContain("height: auto;");
+    expect(css).toContain("display: block;");
+    expect(css).toContain("margin: 0 auto;");
     const inlineImageSelector =
       '.epub-dom-section:not(.epub-dom-section-fxl) :is(a.footnote, a.noteref, a[epub\\:type~="noteref"], a[role="doc-noteref"], sup, sub, small) img {';
     expect(css).toContain(inlineImageSelector);
