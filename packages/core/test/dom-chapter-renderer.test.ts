@@ -373,16 +373,18 @@ describe("DomChapterRenderer", () => {
     expect(css).toContain(
       "max-height: min(900px, calc(var(--reader-content-viewport-height, 100vh) * 0.78));"
     );
-    expect(css).toContain(".epub-dom-section:not(.epub-dom-section-fxl) img {");
+    const generalMediaSelector =
+      ".epub-dom-section:not(.epub-dom-section-fxl) :where(img, svg, object, video, canvas) {";
+    expect(css).toContain(generalMediaSelector);
     const generalImageRule =
       css.match(
-        /\.epub-dom-section:not\(\.epub-dom-section-fxl\) img \{[^}]+\}/
+        /\.epub-dom-section:not\(\.epub-dom-section-fxl\) :where\(img, svg, object, video, canvas\) \{[^}]+\}/
       )?.[0] ?? "";
     expect(generalImageRule).not.toContain("height: auto;");
     expect(generalImageRule).not.toContain("display: block;");
     expect(generalImageRule).not.toContain("margin: 0 auto;");
     expect(css).toContain(
-      ".epub-dom-section:not(.epub-dom-section-fxl) :where(p, div, figure) > img:only-child {"
+      ".epub-dom-section:not(.epub-dom-section-fxl) :where(p, div, figure) > :where(img, svg, object, video, canvas):only-child {"
     );
     expect(css).toContain("height: auto;");
     expect(css).toContain("display: block;");
@@ -398,9 +400,9 @@ describe("DomChapterRenderer", () => {
     expect(css).not.toContain(
       '.epub-dom-section :where(a.footnote, a.noteref, a[epub\\:type~="noteref"], a[role="doc-noteref"], sup, sub, small) img {'
     );
-    expect(
-      css.indexOf(".epub-dom-section:not(.epub-dom-section-fxl) img {")
-    ).toBeLessThan(css.indexOf(inlineImageSelector));
+    expect(css.indexOf(generalMediaSelector)).toBeLessThan(
+      css.indexOf(inlineImageSelector)
+    );
     expect(css.indexOf(paragraphInlineImageSelector)).toBeLessThan(
       css.indexOf(inlineImageSelector)
     );
@@ -469,7 +471,9 @@ describe("DomChapterRenderer", () => {
       renditionLayout: "pre-paginated"
     });
 
-    expect(css).toContain(".epub-dom-section:not(.epub-dom-section-fxl) img {");
+    expect(css).toContain(
+      ".epub-dom-section:not(.epub-dom-section-fxl) :where(img, svg, object, video, canvas) {"
+    );
     expect(css).not.toContain(".epub-dom-section img {");
     expect(css).toContain(".epub-dom-section-fxl {");
   });

@@ -222,6 +222,7 @@ export function measurePaginatedDomPageOffsets(
   )
   const maxOffset = Math.max(0, sectionHeight - pageHeight)
   const lineBands = collectPaginatedDomReadableLineBands(sectionElement)
+  const mediaBands = collectPaginatedDomMediaBands(sectionElement)
   if (lineBands.length === 0) {
     const offsets = [0]
     for (let offset = pageHeight; offset < sectionHeight; offset += pageHeight) {
@@ -236,6 +237,13 @@ export function measurePaginatedDomPageOffsets(
   let currentOffset = 0
   while (currentOffset < maxOffset - 0.5) {
     const pageBottom = currentOffset + pageHeight
+    const minimumAdvance = getMinimumDomPageAdvance(pageHeight)
+    const mediaBreak = findMediaBreakBeforePageBottom({
+      mediaBands,
+      currentOffset,
+      pageBottom,
+      minimumAdvance
+    })
     const lastFullyVisibleLine = [...lineBands]
       .reverse()
       .find(
@@ -247,10 +255,10 @@ export function measurePaginatedDomPageOffsets(
       : lineBands.find((band) => band.top > currentOffset + 0.5)
     const fallbackOffset = Math.min(sectionHeight, currentOffset + pageHeight)
     const candidateOffset =
-      nextLine && nextLine.top <= fallbackOffset + DOM_PAGE_EDGE_TOLERANCE
+      mediaBreak ??
+      (nextLine && nextLine.top <= fallbackOffset + DOM_PAGE_EDGE_TOLERANCE
         ? nextLine.top
-        : fallbackOffset
-    const minimumAdvance = getMinimumDomPageAdvance(pageHeight)
+        : fallbackOffset)
     const nextOffset = Math.min(
       sectionHeight,
       candidateOffset - currentOffset < minimumAdvance
@@ -275,6 +283,24 @@ export function measurePaginatedDomPageOffsets(
   }
 
   return offsets
+}
+
+function findMediaBreakBeforePageBottom(input: {
+  mediaBands: Array<{ top: number; bottom: number }>
+  currentOffset: number
+  pageBottom: number
+  minimumAdvance: number
+}): number | null {
+  const breakableTopMin = input.currentOffset + input.minimumAdvance
+  const breakableTopMax = input.pageBottom - DOM_PAGE_EDGE_TOLERANCE
+  const crossingMedia = input.mediaBands.find(
+    (band) =>
+      band.top >= breakableTopMin &&
+      band.top < breakableTopMax &&
+      band.bottom > input.pageBottom + DOM_PAGE_EDGE_TOLERANCE
+  )
+
+  return crossingMedia?.top ?? null
 }
 
 export function resolvePaginatedDomPageIndex(
@@ -343,6 +369,19 @@ export function collectPaginatedDomReadableLineBands(
     }
   }
 
+  addBands(bands, collectPaginatedDomMediaBands(sectionElement))
+
+  return [...bands.values()].sort((left, right) =>
+    left.top === right.top ? left.bottom - right.bottom : left.top - right.top
+  )
+}
+
+function collectPaginatedDomMediaBands(
+  sectionElement: HTMLElement
+): Array<{ top: number; bottom: number }> {
+  const sectionRect = sectionElement.getBoundingClientRect()
+  const bands = new Map<string, { top: number; bottom: number }>()
+
   for (const element of collectDomMediaElements(sectionElement)) {
     const rect = element.getBoundingClientRect()
     if (rect.height <= 0 || rect.width <= 0) {
@@ -359,6 +398,18 @@ export function collectPaginatedDomReadableLineBands(
   return [...bands.values()].sort((left, right) =>
     left.top === right.top ? left.bottom - right.bottom : left.top - right.top
   )
+}
+
+function addBands(
+  target: Map<string, { top: number; bottom: number }>,
+  bands: Array<{ top: number; bottom: number }>
+): void {
+  for (const band of bands) {
+    const key = `${band.top.toFixed(2)}:${band.bottom.toFixed(2)}`
+    if (!target.has(key)) {
+      target.set(key, band)
+    }
+  }
 }
 
 function measureDomRangeLineBands(root: HTMLElement): DOMRect[] {
