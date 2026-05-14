@@ -9,6 +9,18 @@ import {
 import { isDomInlineImageElement } from "./image-render-classification"
 
 const DOM_PAGE_EDGE_TOLERANCE = 0.5
+const DOM_LARGE_MEDIA_PAGE_RATIO = 0.68
+
+type DomMediaBand = {
+  top: number
+  bottom: number
+  standalonePage: boolean
+}
+
+type DomMediaPageBreak = {
+  offset: number
+  force: boolean
+}
 
 export type DomPaginationSyncResult = {
   pages: ReaderPage[]
@@ -106,6 +118,7 @@ export class ReaderDomPaginationService {
         sectionElement,
         input.pageHeight
       )
+      const mediaBands = collectPaginatedDomMediaBands(sectionElement)
       const pageCount = Math.max(1, pageOffsets.length)
       const seenBlockIdsByPage = Array.from(
         { length: pageCount },
@@ -120,7 +133,7 @@ export class ReaderDomPaginationService {
       const measuredElements = Array.from(
         sectionElement.querySelectorAll<HTMLElement>("[data-reader-block-id]")
       )
-      if (measuredElements.length === 0) {
+      if (measuredElements.length === 0 && mediaBands.length === 0) {
         return null
       }
 
@@ -188,16 +201,32 @@ export class ReaderDomPaginationService {
         sectionHeight,
         pageCount * input.pageHeight
       )
-      const resolvedPage = input.locator
+      const previousPage = findCurrentPageForSection({
+        pages: input.pages,
+        currentPageNumber: input.currentPageNumber,
+        sectionId: input.section.id
+      })
+      const measuredStandalonePage = previousPage
+        ? findMeasuredStandaloneMediaPage({
+            pages,
+            sectionId: input.section.id,
+            previousOffset: previousPage.offsetInSection ?? 0,
+            pageHeight: input.pageHeight,
+            mediaBands
+          })
+        : null
+      const currentPage = findCurrentPageForSection({
+        pages,
+        currentPageNumber: input.currentPageNumber,
+        sectionId: input.section.id
+      })
+      const locatorPage = input.locator
         ? findPageForLocator(pages, {
             ...input.locator,
             spineIndex: input.currentSectionIndex
           })
-        : findCurrentPageForSection({
-            pages,
-            currentPageNumber: input.currentPageNumber,
-            sectionId: input.section.id
-          })
+        : null
+      const resolvedPage = currentPage ?? measuredStandalonePage ?? locatorPage
 
       return {
         pages,
@@ -230,7 +259,13 @@ export function measurePaginatedDomPageOffsets(
         offsets.push(offset)
       }
     }
-    return offsets
+    return enforceStandaloneMediaPageOffsets({
+      offsets,
+      mediaBands,
+      sectionHeight,
+      pageHeight,
+      lineBands: []
+    })
   }
 
   const offsets = [0]
@@ -238,10 +273,12 @@ export function measurePaginatedDomPageOffsets(
   while (currentOffset < maxOffset - 0.5) {
     const pageBottom = currentOffset + pageHeight
     const minimumAdvance = getMinimumDomPageAdvance(pageHeight)
-    const mediaBreak = findMediaBreakBeforePageBottom({
+    const mediaBreak = findMediaPageBreak({
       mediaBands,
+      lineBands,
       currentOffset,
       pageBottom,
+      pageHeight,
       minimumAdvance
     })
     const lastFullyVisibleLine = [...lineBands]
@@ -255,13 +292,13 @@ export function measurePaginatedDomPageOffsets(
       : lineBands.find((band) => band.top > currentOffset + 0.5)
     const fallbackOffset = Math.min(sectionHeight, currentOffset + pageHeight)
     const candidateOffset =
-      mediaBreak ??
+      mediaBreak?.offset ??
       (nextLine && nextLine.top <= fallbackOffset + DOM_PAGE_EDGE_TOLERANCE
         ? nextLine.top
         : fallbackOffset)
     const nextOffset = Math.min(
       sectionHeight,
-      candidateOffset - currentOffset < minimumAdvance
+      !mediaBreak?.force && candidateOffset - currentOffset < minimumAdvance
         ? fallbackOffset
         : Math.max(currentOffset + 1, candidateOffset)
     )
@@ -282,25 +319,183 @@ export function measurePaginatedDomPageOffsets(
     currentOffset = nextOffset
   }
 
-  return offsets
+  return enforceStandaloneMediaPageOffsets({
+    offsets,
+    mediaBands,
+    sectionHeight,
+    pageHeight,
+    lineBands
+  })
 }
 
-function findMediaBreakBeforePageBottom(input: {
-  mediaBands: Array<{ top: number; bottom: number }>
+function findMeasuredStandaloneMediaPage(input: {
+  pages: ReaderPage[]
+  sectionId: string
+  previousOffset: number
+  pageHeight: number
+  mediaBands: DomMediaBand[]
+}): ReaderPage | null {
+  const previousPageBottom = input.previousOffset + input.pageHeight
+  const visibleStandaloneMedia = input.mediaBands
+    .filter((band) => band.standalonePage)
+    .map((band) => ({
+      band,
+      visibleHeight:
+        Math.min(band.bottom, previousPageBottom) -
+        Math.max(band.top, input.previousOffset)
+    }))
+    .filter((entry) => entry.visibleHeight > DOM_PAGE_EDGE_TOLERANCE)
+    .sort((left, right) => {
+      if (left.visibleHeight !== right.visibleHeight) {
+        return right.visibleHeight - left.visibleHeight
+      }
+      return left.band.top - right.band.top
+    })[0]?.band
+  if (!visibleStandaloneMedia) {
+    return null
+  }
+
+  const mediaOffset = normalizeDomPageOffset(visibleStandaloneMedia.top)
+  return (
+    input.pages.find(
+      (page) =>
+        page.sectionId === input.sectionId &&
+        typeof page.offsetInSection === "number" &&
+        Math.abs(page.offsetInSection - mediaOffset) <= DOM_PAGE_EDGE_TOLERANCE
+    ) ?? null
+  )
+}
+
+function enforceStandaloneMediaPageOffsets(input: {
+  offsets: number[]
+  mediaBands: DomMediaBand[]
+  sectionHeight: number
+  pageHeight: number
+  lineBands: Array<{ top: number; bottom: number }>
+}): number[] {
+  const standaloneMediaBands = input.mediaBands.filter(
+    (band) => band.standalonePage
+  )
+  if (standaloneMediaBands.length === 0) {
+    return input.offsets
+  }
+
+  const nextOffsets = new Set<number>()
+  for (const offset of input.offsets) {
+    if (!isOffsetInsideStandaloneMedia(offset, standaloneMediaBands)) {
+      nextOffsets.add(normalizeDomPageOffset(offset))
+    }
+  }
+
+  for (const band of standaloneMediaBands) {
+    const offset = normalizeDomPageOffset(band.top)
+    if (
+      offset <= DOM_PAGE_EDGE_TOLERANCE ||
+      !shouldKeepPaginatedDomPageOffset(
+        offset,
+        input.sectionHeight,
+        input.pageHeight,
+        input.lineBands
+      )
+    ) {
+      continue
+    }
+    nextOffsets.add(offset)
+  }
+
+  nextOffsets.add(0)
+
+  return Array.from(nextOffsets).sort((left, right) => left - right)
+}
+
+function isOffsetInsideStandaloneMedia(
+  offset: number,
+  mediaBands: DomMediaBand[]
+): boolean {
+  return mediaBands.some(
+    (band) =>
+      offset > band.top + DOM_PAGE_EDGE_TOLERANCE &&
+      offset < band.bottom - DOM_PAGE_EDGE_TOLERANCE
+  )
+}
+
+function normalizeDomPageOffset(offset: number): number {
+  return Math.max(0, Math.round(offset * 100) / 100)
+}
+
+function findMediaPageBreak(input: {
+  mediaBands: DomMediaBand[]
+  lineBands: Array<{ top: number; bottom: number }>
   currentOffset: number
   pageBottom: number
+  pageHeight: number
   minimumAdvance: number
-}): number | null {
-  const breakableTopMin = input.currentOffset + input.minimumAdvance
-  const breakableTopMax = input.pageBottom - DOM_PAGE_EDGE_TOLERANCE
-  const crossingMedia = input.mediaBands.find(
+}): DomMediaPageBreak | null {
+  const currentStandaloneMedia = input.mediaBands.find(
     (band) =>
-      band.top >= breakableTopMin &&
-      band.top < breakableTopMax &&
-      band.bottom > input.pageBottom + DOM_PAGE_EDGE_TOLERANCE
+      band.standalonePage &&
+      band.top <= input.currentOffset + DOM_PAGE_EDGE_TOLERANCE &&
+      band.bottom > input.currentOffset + input.minimumAdvance
+  )
+  const currentStandaloneNextBand = currentStandaloneMedia
+    ? input.lineBands.find(
+        (band) =>
+          band.top >= currentStandaloneMedia.bottom - DOM_PAGE_EDGE_TOLERANCE
+      )
+    : null
+  if (currentStandaloneNextBand) {
+    return {
+      offset: currentStandaloneNextBand.top,
+      force: true
+    }
+  }
+
+  const currentPageMedia = input.mediaBands.find(
+    (band) =>
+      !band.standalonePage &&
+      band.top <= input.currentOffset + DOM_PAGE_EDGE_TOLERANCE &&
+      band.bottom > input.currentOffset + input.minimumAdvance &&
+      band.bottom < input.pageBottom - DOM_PAGE_EDGE_TOLERANCE &&
+      isLargeDomMediaBand(band, input.pageHeight)
   )
 
-  return crossingMedia?.top ?? null
+  const currentPageBreak = currentPageMedia
+    ? {
+        offset: currentPageMedia.bottom,
+        force: currentPageMedia.standalonePage
+      }
+    : null
+  if (currentPageBreak) {
+    return currentPageBreak
+  }
+
+  const breakableTopMin = input.currentOffset + DOM_PAGE_EDGE_TOLERANCE
+  const breakableTopMax = input.pageBottom - DOM_PAGE_EDGE_TOLERANCE
+  const crossingMedia = input.mediaBands.find((band) => {
+    if (band.top < breakableTopMin || band.top >= breakableTopMax) {
+      return false
+    }
+
+    return (
+      band.standalonePage ||
+      band.bottom > input.pageBottom + DOM_PAGE_EDGE_TOLERANCE ||
+      isLargeDomMediaBand(band, input.pageHeight)
+    )
+  })
+
+  return crossingMedia
+    ? {
+        offset: crossingMedia.top,
+        force: crossingMedia.standalonePage
+      }
+    : null
+}
+
+function isLargeDomMediaBand(
+  band: DomMediaBand,
+  pageHeight: number
+): boolean {
+  return band.bottom - band.top >= pageHeight * DOM_LARGE_MEDIA_PAGE_RATIO
 }
 
 export function resolvePaginatedDomPageIndex(
@@ -325,6 +520,13 @@ function shouldKeepPaginatedDomPageOffset(
 ): boolean {
   const remainingHeight = sectionHeight - offset
   if (remainingHeight <= DOM_PAGE_EDGE_TOLERANCE) {
+    return false
+  }
+
+  if (
+    lineBands.length > 0 &&
+    !lineBands.some((band) => band.bottom > offset + DOM_PAGE_EDGE_TOLERANCE)
+  ) {
     return false
   }
 
@@ -378,25 +580,84 @@ export function collectPaginatedDomReadableLineBands(
 
 function collectPaginatedDomMediaBands(
   sectionElement: HTMLElement
-): Array<{ top: number; bottom: number }> {
+): DomMediaBand[] {
   const sectionRect = sectionElement.getBoundingClientRect()
-  const bands = new Map<string, { top: number; bottom: number }>()
+  const bands = new Map<string, DomMediaBand>()
+  const measuredWrappers = new Set<HTMLElement>()
 
-  for (const element of collectDomMediaElements(sectionElement)) {
+  for (const element of sectionElement.querySelectorAll<HTMLElement>(
+    ".epub-dom-media-wrapper"
+  )) {
     const rect = element.getBoundingClientRect()
-    if (rect.height <= 0 || rect.width <= 0) {
+    if (!hasVisibleDomRect(rect)) {
       continue
     }
-    const top = Math.max(0, rect.top - sectionRect.top)
-    const bottom = Math.max(top, rect.bottom - sectionRect.top)
-    const key = `${top.toFixed(2)}:${bottom.toFixed(2)}`
-    if (!bands.has(key)) {
-      bands.set(key, { top, bottom })
+    measuredWrappers.add(element)
+    addDomMediaBand(bands, sectionRect, rect, true)
+  }
+
+  for (const element of collectDomMediaElements(sectionElement)) {
+    if (isStandaloneDomMediaWrapper(element)) {
+      continue
     }
+
+    const closestWrapper = element.closest<HTMLElement>(
+      ".epub-dom-media-wrapper"
+    )
+    if (closestWrapper && measuredWrappers.has(closestWrapper)) {
+      continue
+    }
+
+    const rect = element.getBoundingClientRect()
+    if (!hasVisibleDomRect(rect)) {
+      continue
+    }
+    addDomMediaBand(
+      bands,
+      sectionRect,
+      rect,
+      Boolean(closestWrapper) || isStandaloneDomMediaElement(element)
+    )
   }
 
   return [...bands.values()].sort((left, right) =>
-    left.top === right.top ? left.bottom - right.bottom : left.top - right.top
+    left.top === right.top ? right.bottom - left.bottom : left.top - right.top
+  )
+}
+
+function addDomMediaBand(
+  bands: Map<string, DomMediaBand>,
+  sectionRect: DOMRect,
+  rect: DOMRect,
+  standalonePage: boolean
+): void {
+  const top = Math.max(0, rect.top - sectionRect.top)
+  const bottom = Math.max(top, rect.bottom - sectionRect.top)
+  const key = `${top.toFixed(2)}:${bottom.toFixed(2)}`
+  const band = { top, bottom, standalonePage }
+  if (!bands.has(key)) {
+    bands.set(key, band)
+    return
+  }
+
+  const existing = bands.get(key)
+  if (existing && band.standalonePage && !existing.standalonePage) {
+    bands.set(key, band)
+  }
+}
+
+function hasVisibleDomRect(rect: DOMRect): boolean {
+  return rect.height > 0 && rect.width > 0
+}
+
+function isStandaloneDomMediaWrapper(element: HTMLElement): boolean {
+  return element.classList.contains("epub-dom-media-wrapper")
+}
+
+function isStandaloneDomMediaElement(element: HTMLElement): boolean {
+  return (
+    isStandaloneDomMediaWrapper(element) ||
+    Boolean(element.closest(".epub-dom-media-wrapper"))
   )
 }
 
@@ -407,7 +668,7 @@ function addBands(
   for (const band of bands) {
     const key = `${band.top.toFixed(2)}:${band.bottom.toFixed(2)}`
     if (!target.has(key)) {
-      target.set(key, band)
+      target.set(key, { top: band.top, bottom: band.bottom })
     }
   }
 }
@@ -437,7 +698,7 @@ function collectDomReadableBlockElements(
 function collectDomMediaElements(sectionElement: HTMLElement): HTMLElement[] {
   return Array.from(
     sectionElement.querySelectorAll<HTMLElement>(
-      "img, svg, image, object, video, canvas, figure"
+      "img, svg, image, object, video, canvas, figure, .epub-dom-media-wrapper"
     )
   ).filter((element) => !isDomInlineImageElement(element))
 }

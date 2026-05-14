@@ -1133,6 +1133,9 @@ describe("EpubReader hybrid navigation", () => {
           if (this.id === "chart-image") {
             return new DOMRect(0, 120, 200, 140);
           }
+          if (this.id === "chart-wrap") {
+            return new DOMRect(0, 120, 200, 140);
+          }
           if (this.id === "after") {
             return new DOMRect(0, 280, 220, 40);
           }

@@ -374,6 +374,23 @@ describe("DomChapterRenderer", () => {
     );
     expect(css).toContain("display: block !important;");
     expect(css).toContain(
+      ".epub-dom-page-viewport .epub-dom-section:not(.epub-dom-section-fxl) .epub-dom-media-wrapper {"
+    );
+    expect(css).toContain("display: flex !important;");
+    expect(css).toContain(
+      "height: var(--reader-content-viewport-height, 100vh) !important;"
+    );
+    expect(css).toContain(
+      "min-height: var(--reader-content-viewport-height, 100vh);"
+    );
+    expect(css).toContain("overflow: hidden;");
+    expect(css).toContain(
+      ".epub-dom-page-viewport .epub-dom-section:not(.epub-dom-section-fxl) .epub-dom-media-wrapper > :where(img, svg, object, video, canvas) {"
+    );
+    expect(css).toContain(
+      "max-height: min(900px, calc(var(--reader-content-viewport-height, 100vh) * 0.95)) !important;"
+    );
+    expect(css).toContain(
       ".epub-dom-section:not(.epub-dom-section-fxl) .epub-dom-media-wrapper > :where(h1, h2, h3, h4, h5, h6, figcaption, caption) {"
     );
     expect(css).toContain("writing-mode: horizontal-tb;");
