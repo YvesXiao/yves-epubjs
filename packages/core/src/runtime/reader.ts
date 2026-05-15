@@ -259,6 +259,15 @@ export class EpubReader {
   private pages: ReaderPage[];
   private currentPageNumber: number;
   private sectionEstimatedHeights: number[];
+  private readonly measuredDomPaginationBySectionId: Map<
+    string,
+    {
+      pages: ReaderPage[];
+      sectionEstimatedHeight: number;
+      width: number;
+      height: number;
+    }
+  >;
   private scrollWindowStart: number;
   private scrollWindowEnd: number;
   private lastVisibleBounds: VisibleDrawBounds;
@@ -332,6 +341,7 @@ export class EpubReader {
     this.currentSectionIndex = this.sessionState.position.currentSectionIndex;
     this.pages = this.sessionState.position.pages;
     this.currentPageNumber = this.sessionState.position.currentPageNumber;
+    this.measuredDomPaginationBySectionId = new Map();
     this.pendingModeSwitchLocator =
       this.sessionState.position.pendingModeSwitchLocator;
     this.lastMeasuredWidth = this.sessionState.render.lastMeasuredWidth;
@@ -636,6 +646,7 @@ export class EpubReader {
     this.currentSectionIndex = startLocator?.spineIndex ?? 0;
     this.pages = [];
     this.sectionEstimatedHeights = [];
+    this.measuredDomPaginationBySectionId.clear();
     this.currentPageNumber = 1;
     this.lastMeasuredWidth = 0;
     this.lastMeasuredHeight = 0;
@@ -1638,6 +1649,7 @@ export class EpubReader {
     this.locator = null;
     this.pages = [];
     this.sectionEstimatedHeights = [];
+    this.measuredDomPaginationBySectionId.clear();
     this.currentPageNumber = 1;
     this.scrollWindowStart = -1;
     this.scrollWindowEnd = -1;
@@ -1937,6 +1949,7 @@ export class EpubReader {
     if (didChange) {
       await this.waitForFonts();
       this.pages = [];
+      this.measuredDomPaginationBySectionId.clear();
       if (this.book) {
         this.pendingModeSwitchLocator = capturedModeSwitchLocator;
         this.applyPendingModeSwitchLocator();
@@ -2413,6 +2426,18 @@ export class EpubReader {
       return null;
     }
 
+    const measurement = this.getPaginationMeasurement();
+    const measuredSectionPages = result.pages.filter(
+      (page) => page.sectionId === section.id
+    );
+    if (measuredSectionPages.length > 0) {
+      this.measuredDomPaginationBySectionId.set(section.id, {
+        pages: measuredSectionPages.map((page) => ({ ...page })),
+        sectionEstimatedHeight: result.sectionEstimatedHeight,
+        width: measurement.width,
+        height: measurement.height
+      });
+    }
     this.pages = result.pages;
     this.sectionEstimatedHeights[this.currentSectionIndex] =
       result.sectionEstimatedHeight;
@@ -3182,6 +3207,7 @@ export class EpubReader {
       }
 
       this.pages = [];
+      this.measuredDomPaginationBySectionId.clear();
       this.renderCurrentSection("preserve");
     });
 
@@ -3739,8 +3765,69 @@ export class EpubReader {
         )
     });
 
-    this.sectionEstimatedHeights = plan.sectionEstimatedHeights;
-    this.pages = plan.pages;
+    const measuredPlan = this.applyMeasuredDomPagination(plan);
+    this.sectionEstimatedHeights = measuredPlan.sectionEstimatedHeights;
+    this.pages = measuredPlan.pages;
+  }
+
+  private applyMeasuredDomPagination(plan: {
+    pages: ReaderPage[];
+    sectionEstimatedHeights: number[];
+  }): {
+    pages: ReaderPage[];
+    sectionEstimatedHeights: number[];
+  } {
+    if (
+      !this.book ||
+      this.measuredDomPaginationBySectionId.size === 0 ||
+      this.mode !== "paginated"
+    ) {
+      return plan;
+    }
+
+    const { width, height } = this.getPaginationMeasurement();
+    const sections = this.getSectionsForRender();
+    const sectionEstimatedHeights = [...plan.sectionEstimatedHeights];
+    const nextPages: ReaderPage[] = [];
+
+    for (let index = 0; index < sections.length; index += 1) {
+      const section = sections[index];
+      if (!section) {
+        continue;
+      }
+
+      const cached = this.measuredDomPaginationBySectionId.get(section.id);
+      const canUseCached =
+        cached &&
+        Math.abs(cached.width - width) < 1 &&
+        Math.abs(cached.height - height) < 1;
+      const sourcePages = canUseCached
+        ? cached.pages
+        : plan.pages.filter((page) => page.spineIndex === index);
+      const totalPagesInSection = Math.max(1, sourcePages.length);
+
+      if (canUseCached) {
+        sectionEstimatedHeights[index] = cached.sectionEstimatedHeight;
+      }
+
+      for (let pageIndex = 0; pageIndex < sourcePages.length; pageIndex += 1) {
+        const page = sourcePages[pageIndex]!;
+        nextPages.push({
+          ...page,
+          pageNumber: nextPages.length + 1,
+          pageNumberInSection: pageIndex + 1,
+          totalPagesInSection,
+          spineIndex: index,
+          sectionId: section.id,
+          sectionHref: section.href
+        });
+      }
+    }
+
+    return {
+      pages: nextPages,
+      sectionEstimatedHeights
+    };
   }
 
   private getPageHeight(): number {
