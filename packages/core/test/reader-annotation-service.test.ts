@@ -127,21 +127,220 @@ describe("ReaderAnnotationService", () => {
       quote: "Hello"
     });
   });
+
+  it("activates annotations from rendered decoration overlay geometry", () => {
+    const section = createTextSection("s1", "Hello world");
+    const annotation: Annotation = {
+      id: "annotation-1",
+      publicationId: "book-1",
+      locator: {
+        spineIndex: 0,
+        blockId: "text-1"
+      },
+      style: "underline",
+      textRange: {
+        start: {
+          blockId: "text-1",
+          inlineOffset: 0
+        },
+        end: {
+          blockId: "text-1",
+          inlineOffset: 5
+        }
+      },
+      quote: "Hello",
+      createdAt: "2026-04-24T00:00:00.000Z",
+      updatedAt: "2026-04-24T00:00:00.000Z"
+    };
+    const container = document.createElement("div");
+    const sectionElement = document.createElement("div");
+    const overlay = document.createElement("span");
+    sectionElement.className = "epub-dom-section";
+    overlay.dataset.epubDecorationId = "annotation:annotation-1";
+    overlay.dataset.epubDecorationStyle = "underline";
+    sectionElement.appendChild(overlay);
+    container.appendChild(sectionElement);
+
+    Object.defineProperty(container, "getBoundingClientRect", {
+      configurable: true,
+      value: () => new DOMRect(0, 0, 300, 200)
+    });
+    Object.defineProperty(overlay, "getBoundingClientRect", {
+      configurable: true,
+      value: () => new DOMRect(24, 50, 120, 2)
+    });
+
+    const service = createService({
+      book: createBook([section]),
+      annotations: [annotation],
+      container,
+      sectionElement
+    });
+
+    expect(
+      service.resolveAnnotationActivationAtPoint({ x: 40, y: 42 })
+    ).toMatchObject({
+      annotation: {
+        id: "annotation-1",
+        style: "underline"
+      },
+      rects: [
+        {
+          x: 24,
+          y: 50,
+          width: 120,
+          height: 2
+        }
+      ]
+    });
+  });
+
+  it("activates annotations directly from rendered decoration ids", () => {
+    const section = createTextSection("s1", "Hello world");
+    const annotation: Annotation = {
+      id: "annotation-1",
+      publicationId: "book-1",
+      locator: {
+        spineIndex: 0,
+        blockId: "text-1"
+      },
+      style: "underline",
+      textRange: {
+        start: {
+          blockId: "text-1",
+          inlineOffset: 0
+        },
+        end: {
+          blockId: "text-1",
+          inlineOffset: 5
+        }
+      },
+      quote: "Hello",
+      createdAt: "2026-04-24T00:00:00.000Z",
+      updatedAt: "2026-04-24T00:00:00.000Z"
+    };
+    const container = document.createElement("div");
+    const sectionElement = document.createElement("div");
+    const overlay = document.createElement("span");
+    sectionElement.className = "epub-dom-section";
+    overlay.dataset.epubDecorationId = "annotation:annotation-1";
+    overlay.dataset.epubDecorationStyle = "underline";
+    sectionElement.appendChild(overlay);
+    container.appendChild(sectionElement);
+
+    Object.defineProperty(container, "getBoundingClientRect", {
+      configurable: true,
+      value: () => new DOMRect(0, 0, 300, 200)
+    });
+    Object.defineProperty(overlay, "getBoundingClientRect", {
+      configurable: true,
+      value: () => new DOMRect(24, 50, 120, 2)
+    });
+
+    const service = createService({
+      book: createBook([section]),
+      annotations: [annotation],
+      container,
+      sectionElement
+    });
+
+    expect(
+      service.resolveAnnotationActivationByDecorationId(
+        "annotation:annotation-1"
+      )
+    ).toMatchObject({
+      annotation: {
+        id: "annotation-1",
+        style: "underline"
+      },
+      quote: "Hello",
+      rects: [
+        {
+          x: 24,
+          y: 50,
+          width: 120,
+          height: 2
+        }
+      ]
+    });
+  });
+
+  it("activates decoration ids when stored annotation ranges cannot be resolved", () => {
+    const section = createTextSection("s1", "Hello world");
+    const annotation: Annotation = {
+      id: "annotation-1",
+      publicationId: "book-1",
+      locator: {
+        spineIndex: 0,
+        blockId: "text-1"
+      },
+      style: "underline",
+      quote: "Stored quote",
+      createdAt: "2026-04-24T00:00:00.000Z",
+      updatedAt: "2026-04-24T00:00:00.000Z"
+    };
+    const container = document.createElement("div");
+    const sectionElement = document.createElement("div");
+    const overlay = document.createElement("span");
+    sectionElement.className = "epub-dom-section";
+    overlay.dataset.epubDecorationId = "annotation:annotation-1";
+    overlay.dataset.epubDecorationStyle = "underline";
+    sectionElement.appendChild(overlay);
+    container.appendChild(sectionElement);
+
+    Object.defineProperty(container, "getBoundingClientRect", {
+      configurable: true,
+      value: () => new DOMRect(0, 0, 300, 200)
+    });
+    Object.defineProperty(overlay, "getBoundingClientRect", {
+      configurable: true,
+      value: () => new DOMRect(24, 50, 120, 2)
+    });
+
+    const service = createService({
+      book: createBook([section]),
+      annotations: [annotation],
+      container,
+      sectionElement
+    });
+
+    expect(
+      service.resolveAnnotationActivationByDecorationId(
+        "annotation:annotation-1"
+      )
+    ).toMatchObject({
+      annotation: {
+        id: "annotation-1",
+        style: "underline"
+      },
+      quote: "Stored quote",
+      rects: [
+        {
+          x: 24,
+          y: 50,
+          width: 120,
+          height: 2
+        }
+      ]
+    });
+  });
 });
 
 function createService(input: {
   book: Book;
   annotations?: Annotation[];
   rects?: Array<{ x: number; y: number; width: number; height: number }>;
+  container?: HTMLElement;
+  sectionElement?: HTMLElement;
 }): ReaderAnnotationService {
-  const container = document.createElement("div");
+  const container = input.container ?? document.createElement("div");
   return new ReaderAnnotationService({
     getBook: () => input.book,
     getAnnotations: () => input.annotations ?? [],
     getPublicationId: () => "book-1",
     getContainer: () => container,
     getMode: () => "scroll",
-    getSectionElement: () => null,
+    getSectionElement: () => input.sectionElement ?? null,
     mapLocatorToViewport: () => input.rects ?? [],
     resolveCanvasTextRangeViewportRects: () => []
   });

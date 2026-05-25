@@ -84,6 +84,7 @@ import { ReaderNavigationController } from "./reader-navigation-controller";
 import { ReaderRenderOrchestrator } from "./reader-render-orchestrator";
 import {
   ReaderAnnotationService,
+  type ResolvedAnnotationActivation,
   type ResolvedAnnotationRange
 } from "./reader-annotation-service";
 import { ReaderDomPaginationService } from "./reader-dom-pagination-service";
@@ -5480,7 +5481,7 @@ export class EpubReader {
     );
   }
 
-  private emitAnnotationActivatedAtPoint(point: Point): boolean {
+  emitAnnotationActivatedAtPoint(point: Point): boolean {
     const activation =
       this.annotationService.resolveAnnotationActivationAtPoint(
         this.toAnnotationViewportPoint(point)
@@ -5489,6 +5490,31 @@ export class EpubReader {
       return false;
     }
 
+    return this.emitAnnotationActivationPayload(activation, point);
+  }
+
+  emitAnnotationActivatedForDecoration(
+    decorationId: string,
+    point?: Point
+  ): boolean {
+    const activation =
+      this.annotationService.resolveAnnotationActivationByDecorationId(
+        decorationId
+      );
+    if (!activation) {
+      return false;
+    }
+
+    return this.emitAnnotationActivationPayload(
+      activation,
+      point ?? this.getAnnotationActivationFallbackPoint(activation.rects)
+    );
+  }
+
+  private emitAnnotationActivationPayload(
+    activation: ResolvedAnnotationActivation,
+    point: Point
+  ): boolean {
     const payload = {
       annotation: activation.annotation,
       locator: activation.locator,
@@ -5502,6 +5528,22 @@ export class EpubReader {
     this.events.emit("annotationActivated", payload);
     void this.options.onAnnotationActivated?.(payload);
     return true;
+  }
+
+  private getAnnotationActivationFallbackPoint(
+    rects: VisibleDrawBounds
+  ): Point {
+    const firstRect = rects.find(
+      (rect) => rect.width > 0 && rect.height > 0
+    );
+    if (!firstRect) {
+      return { x: 0, y: 0 };
+    }
+
+    return {
+      x: firstRect.x + firstRect.width / 2,
+      y: firstRect.y + firstRect.height / 2
+    };
   }
 
   private toAnnotationViewportPoint(point: Point): Point {

@@ -28,6 +28,7 @@ import {
   type SectionTextRangeContext
 } from "./reader-selection";
 import { mapDomTextRangeToViewport } from "./dom-viewport-mapper";
+import { getDomDecorationViewportRects } from "./dom-decoration";
 
 export type ResolvedAnnotationRange = {
   annotation: Annotation;
@@ -390,10 +391,153 @@ export class ReaderAnnotationService {
       : this.dependencies.mapLocatorToViewport(locator);
   }
 
+  resolveAnnotationRenderedDecorationViewportRects(
+    annotation: Annotation,
+    locator: Locator,
+    point?: Point
+  ): VisibleDrawBounds {
+    const container = this.dependencies.getContainer();
+    if (!container) {
+      return [];
+    }
+
+    const section = this.dependencies.getBook()?.sections[locator.spineIndex];
+    if (!section) {
+      return [];
+    }
+
+    const sectionElement = this.dependencies.getSectionElement(section.id);
+    if (!sectionElement || !isRenderedDomSectionElement(sectionElement)) {
+      return [];
+    }
+
+    return getDomDecorationViewportRects({
+      container,
+      sectionElement,
+      mode: this.dependencies.getMode(),
+      decorationId: getAnnotationDecorationId(annotation),
+      ...(point ? { point } : {})
+    });
+  }
+
   resolveAnnotationSelectionAtPoint(
     point: Point
   ): ReaderTextSelectionSnapshot | null {
     return this.resolveAnnotationActivationAtPoint(point)?.selection ?? null;
+  }
+
+  resolveAnnotationActivationByDecorationId(
+    decorationId: string
+  ):
+    | (ResolvedAnnotationActivation & {
+        selection: ReaderTextSelectionSnapshot;
+      })
+    | null {
+    const id = decorationId.trim();
+    if (!id) {
+      return null;
+    }
+
+    const book = this.dependencies.getBook();
+    if (!book) {
+      return null;
+    }
+
+    const annotations = this.dependencies.getAnnotations();
+    const annotation = annotations.find(
+      (item) => getAnnotationDecorationId(item) === id
+    );
+    if (!annotation) {
+      return null;
+    }
+
+    const resolved = this.resolveAnnotationRange(annotation);
+    if (!resolved) {
+      const locator: Locator = normalizeLocator({
+        ...annotation.locator,
+        spineIndex: annotation.locator.spineIndex ?? 0
+      }) as Locator;
+      const section = book.sections[locator.spineIndex];
+      if (!section) {
+        return null;
+      }
+
+      const rects = this.resolveAnnotationRenderedDecorationViewportRects(
+        annotation,
+        locator
+      );
+      if (rects.length === 0) {
+        return null;
+      }
+
+      const selection: ReaderTextSelectionSnapshot = {
+        text: annotation.quote ?? "",
+        locator,
+        sectionId: section.id,
+        ...(locator.blockId ? { blockId: locator.blockId } : {}),
+        ...(annotation.textRange
+          ? { textRange: cloneTextRangeSelector(annotation.textRange) }
+          : {}),
+        rects,
+        visible: true
+      };
+
+      return {
+        annotation: cloneAnnotation(annotation),
+        locator,
+        sectionId: section.id,
+        ...(locator.blockId ? { blockId: locator.blockId } : {}),
+        ...(annotation.textRange
+          ? { textRange: cloneTextRangeSelector(annotation.textRange) }
+          : {}),
+        ...(annotation.quote ? { quote: annotation.quote } : {}),
+        rects,
+        selection
+      };
+    }
+
+    const renderedDecorationRects =
+      this.resolveAnnotationRenderedDecorationViewportRects(
+        annotation,
+        resolved.locator
+      );
+    const rects =
+      renderedDecorationRects.length > 0
+        ? renderedDecorationRects
+        : this.resolveAnnotationViewportRects(annotation, resolved.locator);
+    const text =
+      annotation.quote ??
+      this.resolveTextRangeQuote(
+        book.sections[resolved.spineIndex]!,
+        resolved.range
+      );
+
+    const selection: ReaderTextSelectionSnapshot = {
+      text: text ?? "",
+      locator: normalizeLocator({
+        ...resolved.locator,
+        blockId: resolved.range.start.blockId,
+        inlineOffset: resolved.range.start.inlineOffset
+      }),
+      sectionId: resolved.sectionId,
+      blockId: resolved.range.start.blockId,
+      textRange: cloneTextRangeSelector(resolved.range),
+      rects,
+      visible: rects.length > 0
+    };
+
+    return {
+      annotation: cloneAnnotation(annotation),
+      locator: selection.locator,
+      sectionId: resolved.sectionId,
+      ...(selection.blockId ? { blockId: selection.blockId } : {}),
+      ...(selection.textRange
+        ? { textRange: cloneTextRangeSelector(selection.textRange) }
+        : {}),
+      ...(text ? { quote: text } : {}),
+      rects,
+      selection
+    };
   }
 
   resolveAnnotationActivationAtPoint(
@@ -420,11 +564,20 @@ export class ReaderAnnotationService {
         continue;
       }
 
-      const rects = this.resolveAnnotationViewportRects(
-        annotation,
-        resolved.locator
-      );
-      const hit = rects.some(
+      const renderedDecorationHitRects =
+        this.resolveAnnotationRenderedDecorationViewportRects(
+          annotation,
+          resolved.locator,
+          point
+        );
+      const rects =
+        renderedDecorationHitRects.length > 0
+          ? this.resolveAnnotationRenderedDecorationViewportRects(
+              annotation,
+              resolved.locator
+            )
+          : this.resolveAnnotationViewportRects(annotation, resolved.locator);
+      const hit = renderedDecorationHitRects.length > 0 || rects.some(
         (rect) =>
           point.x >= rect.x &&
           point.x <= rect.x + rect.width &&
@@ -480,6 +633,10 @@ function cloneAnnotation(annotation: Annotation): Annotation {
       ? { textRange: cloneTextRangeSelector(annotation.textRange) }
       : {})
   };
+}
+
+function getAnnotationDecorationId(annotation: Annotation): string {
+  return `annotation:${annotation.id}`;
 }
 
 export function subtractAnnotationRange(input: {

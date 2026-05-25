@@ -1,4 +1,4 @@
-import type { Decoration } from "../model/types";
+import type { Decoration, ReadingMode, Rect } from "../model/types";
 import { mapDomTextRangeToViewport } from "./dom-viewport-mapper";
 import { findRenderedAnchorTarget } from "./navigation-target";
 import { toTransparentHighlightColor } from "./reader-domain";
@@ -6,6 +6,9 @@ import { toTransparentHighlightColor } from "./reader-domain";
 const DECORATION_STYLE_TAG_SELECTOR = "style[data-epub-dom-decorations='true']";
 const DECORATION_OVERLAY_LAYER_SELECTOR =
   "[data-epub-dom-decoration-layer='true']";
+const DECORATION_DATA_SELECTOR = "[data-epub-decoration-id]";
+const DECORATION_UNDERLINE_HIT_TOLERANCE_X = 4;
+const DECORATION_UNDERLINE_HIT_TOLERANCE_Y = 10;
 const DECORATION_CLASSES = [
   "epub-dom-decoration-highlight",
   "epub-dom-decoration-underline",
@@ -44,6 +47,7 @@ export function applyDomDecorations(input: {
     }
 
     const target = resolveDomDecorationTarget(input.sectionElement, decoration);
+    bindDomDecorationMetadata(target, decoration);
     target.classList.add(toDomDecorationClass(decoration.style));
     const hintClass = toDomDecorationHintClass(decoration);
     if (hintClass) {
@@ -79,6 +83,48 @@ export function clearDomDecorations(
       element.style.removeProperty("--epub-decoration-color");
       element.style.removeProperty("--epub-decoration-highlight-color");
     });
+  scope
+    .querySelectorAll<HTMLElement>(DECORATION_DATA_SELECTOR)
+    .forEach((element) => {
+      delete element.dataset.epubDecorationId;
+      delete element.dataset.epubDecorationGroup;
+      delete element.dataset.epubDecorationStyle;
+    });
+}
+
+export function getDomDecorationViewportRects(input: {
+  container: HTMLElement;
+  sectionElement: HTMLElement;
+  mode: ReadingMode;
+  decorationId: string;
+  point?: RectPoint;
+}): Rect[] {
+  const selector = `[data-epub-decoration-id="${escapeAttributeSelectorValue(
+    input.decorationId
+  )}"]`;
+  const elements = Array.from(
+    input.sectionElement.querySelectorAll<HTMLElement>(selector)
+  );
+
+  return elements
+    .map((element) => {
+      const rect = measureDecorationElementRect({
+        container: input.container,
+        element,
+        mode: input.mode
+      });
+      if (!input.point) {
+        return rect;
+      }
+      return pointHitsDecorationRect({
+        element,
+        point: input.point,
+        rect
+      })
+        ? rect
+        : null;
+    })
+    .filter((rect): rect is Rect => Boolean(rect));
 }
 
 function ensureDomDecorationStyleTag(container: HTMLElement): void {
@@ -192,6 +238,7 @@ function renderPreciseTextRangeDecoration(
   for (const rect of rects) {
     const overlay = document.createElement("span");
     overlay.className = "epub-dom-decoration-overlay-rect";
+    bindDomDecorationMetadata(overlay, decoration);
     if (decoration.style === "underline") {
       overlay.classList.add("is-underline");
     }
@@ -216,6 +263,58 @@ function renderPreciseTextRangeDecoration(
     layer.appendChild(overlay);
   }
   return true;
+}
+
+function bindDomDecorationMetadata(
+  element: HTMLElement,
+  decoration: Decoration
+): void {
+  element.dataset.epubDecorationId = decoration.id;
+  element.dataset.epubDecorationGroup = decoration.group;
+  element.dataset.epubDecorationStyle = decoration.style;
+}
+
+type RectPoint = {
+  x: number;
+  y: number;
+};
+
+function measureDecorationElementRect(input: {
+  container: HTMLElement;
+  element: HTMLElement;
+  mode: ReadingMode;
+}): Rect {
+  const containerRect = input.container.getBoundingClientRect();
+  const elementRect = input.element.getBoundingClientRect();
+
+  return {
+    x: elementRect.left - containerRect.left + input.container.scrollLeft,
+    y:
+      input.mode === "scroll"
+        ? elementRect.top - containerRect.top + input.container.scrollTop
+        : elementRect.top - containerRect.top,
+    width: elementRect.width,
+    height: elementRect.height
+  };
+}
+
+function pointHitsDecorationRect(input: {
+  element: HTMLElement;
+  point: RectPoint;
+  rect: Rect;
+}): boolean {
+  const isUnderline =
+    input.element.dataset.epubDecorationStyle === "underline" ||
+    input.element.classList.contains("is-underline");
+  const toleranceX = isUnderline ? DECORATION_UNDERLINE_HIT_TOLERANCE_X : 0;
+  const toleranceY = isUnderline ? DECORATION_UNDERLINE_HIT_TOLERANCE_Y : 0;
+
+  return (
+    input.point.x >= input.rect.x - toleranceX &&
+    input.point.x <= input.rect.x + input.rect.width + toleranceX &&
+    input.point.y >= input.rect.y - toleranceY &&
+    input.point.y <= input.rect.y + input.rect.height + toleranceY
+  );
 }
 
 function applyDomDecorationColor(

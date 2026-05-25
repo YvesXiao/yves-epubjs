@@ -258,6 +258,9 @@ describe("dom decorations", () => {
     expect(overlay).toBeTruthy();
     expect(overlay?.style.background).toBe("rgb(239, 68, 68)");
     expect(overlay?.style.height).toBe("2px");
+    expect(overlay?.dataset.epubDecorationId).toBe("annotation-range-1");
+    expect(overlay?.dataset.epubDecorationGroup).toBe("annotations");
+    expect(overlay?.dataset.epubDecorationStyle).toBe("underline");
 
     document.createRange = originalCreateRange;
   });
