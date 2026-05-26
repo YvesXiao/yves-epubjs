@@ -53,6 +53,52 @@ describe("EpubReader annotations", () => {
     expect(annotation?.note).toBe("Remember this")
   })
 
+  it("creates annotations from stored text ranges and derives exact quote text", () => {
+    const container = document.createElement("div")
+    const reader = new EpubReader({ container, mode: "scroll" })
+    const section: SectionDocument = {
+      id: "section-1",
+      href: "OPS/chapter-1.xhtml",
+      title: "Chapter 1",
+      anchors: {},
+      blocks: [
+        {
+          id: "text-1",
+          kind: "text",
+          inlines: [{ kind: "text", text: "Alpha exact quote target omega." }]
+        }
+      ]
+    }
+    ;(reader as unknown as { book: Book; sourceName: string | null }).book = {
+      metadata: { title: "Annotations" },
+      manifest: [],
+      spine: [{ idref: "item-1", href: section.href, linear: true }],
+      toc: [],
+      sections: [section]
+    }
+    ;(reader as unknown as { book: Book; sourceName: string | null }).sourceName = "sample.epub"
+
+    const annotation = reader.createAnnotation({
+      locator: {
+        spineIndex: 0,
+        blockId: "text-1",
+        inlineOffset: 6,
+        progressInSection: 0
+      },
+      textRange: {
+        start: { blockId: "text-1", inlineOffset: 6 },
+        end: { blockId: "text-1", inlineOffset: 17 }
+      },
+      style: "underline"
+    })
+
+    expect(annotation?.quote).toBe("exact quote")
+    expect(annotation?.textRange).toEqual({
+      start: { blockId: "text-1", inlineOffset: 6 },
+      end: { blockId: "text-1", inlineOffset: 17 }
+    })
+  })
+
   it("stores annotations and exposes them as annotation decorations", () => {
     const container = document.createElement("div")
     const reader = new EpubReader({ container, mode: "scroll" })

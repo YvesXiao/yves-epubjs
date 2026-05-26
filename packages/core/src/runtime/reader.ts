@@ -970,7 +970,11 @@ export class EpubReader {
     if (!publicationId || !locator) {
       return null;
     }
-    const quote = input.quote ?? this.resolveAnnotationQuote(locator);
+    const quote =
+      input.quote ??
+      (input.textRange
+        ? this.resolveAnnotationTextRangeQuote(locator, input.textRange)
+        : this.resolveAnnotationQuote(locator));
 
     return createReaderAnnotation({
       publicationId,
@@ -4348,6 +4352,18 @@ export class EpubReader {
 
     const text = collectBlockText(block).replace(/\s+/g, " ").trim();
     return text || undefined;
+  }
+
+  private resolveAnnotationTextRangeQuote(
+    locator: Locator,
+    textRange: TextRangeSelector
+  ): string | undefined {
+    const section = this.book?.sections[locator.spineIndex];
+    if (!section) {
+      return undefined;
+    }
+
+    return this.annotationService.resolveTextRangeQuote(section, textRange);
   }
 
   private getLocatorScrollAlignment(): "start" | "center" {
