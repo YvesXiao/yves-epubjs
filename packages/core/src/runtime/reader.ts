@@ -4382,12 +4382,111 @@ export class EpubReader {
     return rectTop - this.options.container.clientHeight / 2 + rectHeight / 2;
   }
 
+  private findRenderedDomBlockTarget(
+    sectionElement: HTMLElement,
+    blockId: string | undefined
+  ): HTMLElement | null {
+    const normalizedBlockId = blockId?.trim();
+    if (!normalizedBlockId) {
+      return null;
+    }
+
+    const directMatch =
+      sectionElement.dataset.readerBlockId?.trim() === normalizedBlockId ||
+      sectionElement.id.trim() === normalizedBlockId
+        ? sectionElement
+        : null;
+    if (directMatch) {
+      return directMatch;
+    }
+
+    for (const element of sectionElement.querySelectorAll<HTMLElement>(
+      "[data-reader-block-id], [id]"
+    )) {
+      if (
+        element.dataset.readerBlockId?.trim() === normalizedBlockId ||
+        element.id.trim() === normalizedBlockId
+      ) {
+        return element;
+      }
+    }
+
+    return null;
+  }
+
+  private resolveRenderedDomTextPosition(
+    sectionElement: HTMLElement,
+    blockId: string | undefined,
+    inlineOffset: number
+  ): {
+    node: Text;
+    offset: number;
+  } | null {
+    const blockElement = this.findRenderedDomBlockTarget(sectionElement, blockId);
+    if (!blockElement) {
+      return null;
+    }
+
+    const textNodes = collectTextNodes(blockElement);
+    if (textNodes.length === 0) {
+      return null;
+    }
+
+    let remaining = Math.max(0, Math.trunc(inlineOffset));
+    for (const textNode of textNodes) {
+      const length = textNode.textContent?.length ?? 0;
+      if (remaining <= length) {
+        return {
+          node: textNode,
+          offset: remaining
+        };
+      }
+      remaining -= length;
+    }
+
+    const lastNode = textNodes.at(-1);
+    return lastNode
+      ? {
+          node: lastNode,
+          offset: lastNode.textContent?.length ?? 0
+        }
+      : null;
+  }
+
   private scrollToLocatorBlock(): boolean {
     if (!this.options.container || !this.locator?.blockId) {
       return false;
     }
 
     const section = this.book?.sections[this.currentSectionIndex];
+    const sectionElement = section ? this.getSectionElement(section.id) : null;
+    if (sectionElement && isRenderedDomSectionElement(sectionElement)) {
+      const target = this.findRenderedDomBlockTarget(
+        sectionElement,
+        this.locator.blockId
+      );
+      if (target) {
+        const containerRect = this.options.container.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        if (targetRect.width <= 0 && targetRect.height <= 0) {
+          return false;
+        }
+        const absoluteRectTop =
+          this.options.container.scrollTop + targetRect.top - containerRect.top;
+        this.setProgrammaticScrollTop(
+          Math.max(
+            0,
+            this.resolveScrollTopForRect(
+              absoluteRectTop,
+              targetRect.height,
+              this.getLocatorScrollAlignment()
+            )
+          )
+        );
+        return true;
+      }
+    }
+
     const targetBlockIds = this.resolveCanvasViewportBlockIds({
       ...this.locator,
       spineIndex: this.currentSectionIndex
@@ -4504,13 +4603,22 @@ export class EpubReader {
       return false;
     }
 
-    const textPosition = resolveCanvasTextPosition({
-      container: this.options.container,
-      sectionId: section.id,
-      blockId: this.locator.blockId,
-      inlineOffset: this.locator.inlineOffset,
-      bias: "start"
-    });
+    const sectionElement = this.getSectionElement(section.id);
+    const textPosition =
+      resolveCanvasTextPosition({
+        container: this.options.container,
+        sectionId: section.id,
+        blockId: this.locator.blockId,
+        inlineOffset: this.locator.inlineOffset,
+        bias: "start"
+      }) ??
+      (sectionElement && isRenderedDomSectionElement(sectionElement)
+        ? this.resolveRenderedDomTextPosition(
+            sectionElement,
+            this.locator.blockId,
+            this.locator.inlineOffset
+          )
+        : null);
     if (!textPosition) {
       return false;
     }
@@ -4538,7 +4646,7 @@ export class EpubReader {
       rangeRect.height > 0
         ? rangeRect
         : (textPosition.node.parentElement?.getBoundingClientRect() ?? null);
-    if (!rect) {
+    if (!rect || (rect.width <= 0 && rect.height <= 0)) {
       return false;
     }
 

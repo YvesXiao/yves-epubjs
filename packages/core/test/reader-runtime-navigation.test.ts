@@ -87,6 +87,36 @@ const DOM_CHAPTER = `<?xml version="1.0" encoding="utf-8"?>
     </body>
   </html>`
 
+const DOM_SCROLL_TARGET_MARKER =
+  "Target paragraph for dom scroll locator verification."
+
+function createScrollableDomChapter(title: string): string {
+  const beforeParagraphs = Array.from({ length: 28 }, (_, index) => {
+    return `<p>Lead paragraph ${index + 1} in ${title}. This paragraph keeps the DOM chapter tall enough for scroll relocation coverage.</p>`
+  }).join("")
+  const afterParagraphs = Array.from({ length: 12 }, (_, index) => {
+    return `<p>Tail paragraph ${index + 1} in ${title}. This paragraph keeps extra content after the target block.</p>`
+  }).join("")
+
+  return `<?xml version="1.0" encoding="utf-8"?>
+    <html xmlns="http://www.w3.org/1999/xhtml">
+      <head><title>${title}</title></head>
+      <body>
+        <section>
+          <h1>${title}</h1>
+          <table>
+            <tr><th>Name</th><th>Value</th></tr>
+            <tr><td>Alpha</td><td>1</td></tr>
+            <tr><td>Beta</td><td>2</td></tr>
+          </table>
+          ${beforeParagraphs}
+          <p>${DOM_SCROLL_TARGET_MARKER} The navigation target carries enough text to exercise inline offsets reliably across DOM text nodes.</p>
+          ${afterParagraphs}
+        </section>
+      </body>
+    </html>`
+}
+
 describe("EpubReader runtime navigation", () => {
   it("notifies section relocation hooks and isolates hook failures", async () => {
     const container = document.createElement("div")
@@ -615,6 +645,317 @@ describe("EpubReader runtime navigation", () => {
       } else {
         delete (document as { elementFromPoint?: unknown }).elementFromPoint
       }
+    }
+  })
+
+  it("scrolls to deep DOM block locators in scroll mode using rendered DOM geometry", async () => {
+    const container = document.createElement("div")
+    const originalGetBoundingClientRect = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "getBoundingClientRect"
+    )
+    Object.defineProperty(container, "clientWidth", {
+      configurable: true,
+      value: 320
+    })
+    Object.defineProperty(container, "clientHeight", {
+      configurable: true,
+      value: 240
+    })
+    Object.defineProperty(container, "scrollTop", {
+      configurable: true,
+      writable: true,
+      value: 0
+    })
+    Object.defineProperty(container, "scrollLeft", {
+      configurable: true,
+      writable: true,
+      value: 0
+    })
+    Object.defineProperty(container, "getBoundingClientRect", {
+      configurable: true,
+      value: () => ({
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        bottom: 240,
+        right: 320,
+        width: 320,
+        height: 240,
+        toJSON() {
+          return this
+        }
+      })
+    })
+    document.body.appendChild(container)
+
+    const input = createSharedChapterRenderInput({
+      href: "OPS/dom-scroll-block.xhtml",
+      content: createScrollableDomChapter("DOM Scroll Block")
+    })
+    const section: SectionDocument = {
+      ...toCanvasChapterRenderInput(input).section,
+      id: "section-1"
+    }
+    const book = createBookFromSections({
+      title: "DOM Scroll Block",
+      sections: [section]
+    })
+    const reader = new EpubReader({ container, mode: "scroll" })
+    installReaderBook({
+      reader,
+      book,
+      chapterRenderInputs: [input]
+    })
+
+    try {
+      await reader.render()
+      expect(reader.getRenderMetrics().backend).toBe("dom")
+
+      const sectionWrapper = container.querySelector<HTMLElement>(
+        'article[data-section-id="section-1"]'
+      )
+      const domSection = container.querySelector<HTMLElement>(
+        '.epub-dom-section[data-section-id="section-1"]'
+      )
+      const targetBlock = Array.from(
+        domSection?.querySelectorAll<HTMLElement>("[data-reader-block-id]") ?? []
+      ).find((element) =>
+        element.textContent?.includes(DOM_SCROLL_TARGET_MARKER)
+      )
+      const targetBlockId = targetBlock?.dataset.readerBlockId
+
+      expect(sectionWrapper).toBeTruthy()
+      expect(domSection).toBeTruthy()
+      expect(targetBlock).toBeTruthy()
+      expect(targetBlockId).toBeTruthy()
+
+      Object.defineProperty(sectionWrapper!, "offsetTop", {
+        configurable: true,
+        value: 0
+      })
+      Object.defineProperty(sectionWrapper!, "offsetHeight", {
+        configurable: true,
+        value: 2600
+      })
+      Object.defineProperty(domSection!, "offsetHeight", {
+        configurable: true,
+        value: 2600
+      })
+      Object.defineProperty(domSection!, "scrollHeight", {
+        configurable: true,
+        value: 2600
+      })
+      Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
+        configurable: true,
+        value() {
+          if (
+            this.dataset.readerBlockId === targetBlockId ||
+            this.id === targetBlockId
+          ) {
+            return {
+              x: 12,
+              y: 1800 - container.scrollTop,
+              top: 1800 - container.scrollTop,
+              left: 12,
+              bottom: 1920 - container.scrollTop,
+              right: 308,
+              width: 296,
+              height: 120,
+              toJSON() {
+                return this
+              }
+            }
+          }
+
+          return originalGetBoundingClientRect?.value?.call(this) ?? {
+            x: 0,
+            y: 0,
+            top: 0,
+            left: 0,
+            bottom: 0,
+            right: 0,
+            width: 0,
+            height: 0,
+            toJSON() {
+              return this
+            }
+          }
+        }
+      })
+
+      await reader.goToLocation({
+        spineIndex: 0,
+        blockId: targetBlockId!
+      })
+
+      expect(container.scrollTop).toBe(1784)
+      expect(targetBlock?.getBoundingClientRect().top).toBe(16)
+      expect(reader.getCurrentLocation()?.blockId).toBe(targetBlockId)
+    } finally {
+      if (originalGetBoundingClientRect) {
+        Object.defineProperty(
+          HTMLElement.prototype,
+          "getBoundingClientRect",
+          originalGetBoundingClientRect
+        )
+      }
+    }
+  })
+
+  it("uses DOM text geometry for inline scroll locators when the chapter is DOM-rendered", async () => {
+    const container = document.createElement("div")
+    Object.defineProperty(container, "clientWidth", {
+      configurable: true,
+      value: 320
+    })
+    Object.defineProperty(container, "clientHeight", {
+      configurable: true,
+      value: 240
+    })
+    Object.defineProperty(container, "scrollTop", {
+      configurable: true,
+      writable: true,
+      value: 0
+    })
+    Object.defineProperty(container, "scrollLeft", {
+      configurable: true,
+      writable: true,
+      value: 0
+    })
+    Object.defineProperty(container, "getBoundingClientRect", {
+      configurable: true,
+      value: () => ({
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        bottom: 240,
+        right: 320,
+        width: 320,
+        height: 240,
+        toJSON() {
+          return this
+        }
+      })
+    })
+    document.body.appendChild(container)
+
+    const input = createSharedChapterRenderInput({
+      href: "OPS/dom-scroll-inline.xhtml",
+      content: createScrollableDomChapter("DOM Scroll Inline")
+    })
+    const section: SectionDocument = {
+      ...toCanvasChapterRenderInput(input).section,
+      id: "section-1"
+    }
+    const book = createBookFromSections({
+      title: "DOM Scroll Inline",
+      sections: [section]
+    })
+    const reader = new EpubReader({ container, mode: "scroll" })
+    installReaderBook({
+      reader,
+      book,
+      chapterRenderInputs: [input]
+    })
+
+    const originalCreateRange = document.createRange.bind(document)
+    let recordedStartOffset = -1
+
+    try {
+      await reader.render()
+      expect(reader.getRenderMetrics().backend).toBe("dom")
+
+      const sectionWrapper = container.querySelector<HTMLElement>(
+        'article[data-section-id="section-1"]'
+      )
+      const domSection = container.querySelector<HTMLElement>(
+        '.epub-dom-section[data-section-id="section-1"]'
+      )
+      const targetBlock = Array.from(
+        domSection?.querySelectorAll<HTMLElement>("[data-reader-block-id]") ?? []
+      ).find((element) =>
+        element.textContent?.includes(DOM_SCROLL_TARGET_MARKER)
+      )
+      const targetBlockId = targetBlock?.dataset.readerBlockId
+
+      expect(sectionWrapper).toBeTruthy()
+      expect(domSection).toBeTruthy()
+      expect(targetBlock).toBeTruthy()
+      expect(targetBlockId).toBeTruthy()
+
+      Object.defineProperty(sectionWrapper!, "offsetTop", {
+        configurable: true,
+        value: 0
+      })
+      Object.defineProperty(sectionWrapper!, "offsetHeight", {
+        configurable: true,
+        value: 2600
+      })
+      Object.defineProperty(domSection!, "offsetHeight", {
+        configurable: true,
+        value: 2600
+      })
+      Object.defineProperty(domSection!, "scrollHeight", {
+        configurable: true,
+        value: 2600
+      })
+      Object.defineProperty(targetBlock!, "getBoundingClientRect", {
+        configurable: true,
+        value: () => ({
+          x: 12,
+          y: 1800 - container.scrollTop,
+          top: 1800 - container.scrollTop,
+          left: 12,
+          bottom: 1920 - container.scrollTop,
+          right: 308,
+          width: 296,
+          height: 120,
+          toJSON() {
+            return this
+          }
+        })
+      })
+
+      const targetTextNode = targetBlock?.firstChild
+      expect(targetTextNode).toBeInstanceOf(Text)
+
+      document.createRange = (() =>
+        ({
+          setStart(_node: Node, offset: number) {
+            recordedStartOffset = offset
+          },
+          setEnd() {},
+          getBoundingClientRect() {
+            return {
+              x: 24,
+              y: 1900 - container.scrollTop,
+              top: 1900 - container.scrollTop,
+              left: 24,
+              bottom: 1924 - container.scrollTop,
+              right: 160,
+              width: 136,
+              height: 24,
+              toJSON() {
+                return this
+              }
+            }
+          }
+        }) as unknown as Range) as typeof document.createRange
+
+      await reader.goToLocation({
+        spineIndex: 0,
+        blockId: targetBlockId!,
+        inlineOffset: 80
+      })
+
+      expect(recordedStartOffset).toBe(80)
+      expect(container.scrollTop).toBe(1884)
+      expect(reader.getCurrentLocation()?.inlineOffset).toBe(80)
+    } finally {
+      document.createRange = originalCreateRange
     }
   })
 })
