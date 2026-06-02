@@ -1,0 +1,26 @@
+{
+  "backend": "canvas",
+  "textRunRect": {
+    "x": 312,
+    "y": 259.859375,
+    "width": 645.359375,
+    "height": 24
+  },
+  "font": "18px / 24px \"Iowan Old Style\", \"Palatino Linotype\", serif",
+  "lineHeight": "24px",
+  "measured": {
+    "actualBoundingBoxAscent": 15,
+    "actualBoundingBoxDescent": 2,
+    "fontBoundingBoxAscent": 19,
+    "fontBoundingBoxDescent": 5
+  },
+  "rangeRects": [
+    {
+      "x": 453.359375,
+      "y": 259.859375,
+      "width": 504.015625,
+      "height": 24
+    }
+  ],
+  "text": "● 二维数组中没有查找的数字（查找的数字大于数组中的最大值，查找的数字小于"
+}
