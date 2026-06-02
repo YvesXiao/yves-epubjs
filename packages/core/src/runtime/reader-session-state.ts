@@ -52,6 +52,7 @@ export type ReaderSessionState = {
     pages: ReaderPage[];
     currentPageNumber: number;
     pendingModeSwitchLocator: Locator | null;
+    preferLocatorOnNextDomPaginationSync: boolean;
   };
   render: {
     lastMeasuredWidth: number;
@@ -80,6 +81,9 @@ export type ReaderSessionState = {
     pinnedTextSelectionSnapshot: ReaderTextSelectionSnapshot | null;
   };
 };
+
+export type ReaderNavigationSessionState = ReaderSessionState["position"];
+export type ReaderRenderSessionState = ReaderSessionState["render"];
 
 export function createReaderSessionState(input: {
   preferences: ReaderPreferences;
@@ -118,7 +122,8 @@ export function createReaderSessionState(input: {
       currentSectionIndex: 0,
       pages: [],
       currentPageNumber: 1,
-      pendingModeSwitchLocator: null
+      pendingModeSwitchLocator: null,
+      preferLocatorOnNextDomPaginationSync: false
     },
     render: {
       lastMeasuredWidth: 0,

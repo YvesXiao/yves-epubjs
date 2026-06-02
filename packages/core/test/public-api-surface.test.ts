@@ -58,6 +58,9 @@ const INTERNAL_EXPORT_DENYLIST = [
   "./runtime/reader-dom-pagination-service",
   "./runtime/reader-scroll-position-service",
   "./runtime/reader-render-orchestrator",
+  "./runtime/reader-render-session",
+  "./runtime/reader-navigation-session",
+  "./runtime/dom-sanitizer",
   "./runtime/render-flow-types",
   "./model/locator-domain",
   "./utils/url-boundary"

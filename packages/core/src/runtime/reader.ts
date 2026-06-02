@@ -101,6 +101,8 @@ import {
   createReaderSessionState,
   type ReaderSessionState
 } from "./reader-session-state";
+import { ReaderNavigationSession } from "./reader-navigation-session";
+import { ReaderRenderSession } from "./reader-render-session";
 import {
   createSharedChapterRenderInput,
   type SharedChapterRenderInput
@@ -236,6 +238,8 @@ export class EpubReader {
   private readonly domPaginationService = new ReaderDomPaginationService();
   private readonly scrollPositionService = new ReaderScrollPositionService();
   private readonly sessionState: ReaderSessionState;
+  private readonly navigationSession: ReaderNavigationSession;
+  private readonly renderSession: ReaderRenderSession;
 
   private book: Book | null;
   private sourceName: string | null;
@@ -245,7 +249,6 @@ export class EpubReader {
     exists(path: string): boolean;
   } | null;
   private chapterRenderInputs: SharedChapterRenderInput[];
-  private locator: Locator | null;
   private sectionIndexById: Map<string, number>;
   private preferences: ReaderPreferences;
   private mode: "scroll" | "paginated";
@@ -256,13 +259,7 @@ export class EpubReader {
   private debugMode: boolean;
   private theme: Theme;
   private typography: TypographyOptions;
-  private currentSectionIndex: number;
   private resizeObserver: ResizeObserver | null = null;
-  private lastMeasuredWidth: number;
-  private lastMeasuredHeight: number;
-  private pages: ReaderPage[];
-  private currentPageNumber: number;
-  private sectionEstimatedHeights: number[];
   private readonly measuredDomPaginationBySectionId: Map<
     string,
     {
@@ -272,28 +269,6 @@ export class EpubReader {
       height: number;
     }
   >;
-  private scrollWindowStart: number;
-  private scrollWindowEnd: number;
-  private lastVisibleBounds: VisibleDrawBounds;
-  private lastInteractionRegions: InteractionRegion[];
-  private lastRenderedSectionIds: string[];
-  private lastScrollRenderWindows: Map<
-    string,
-    Array<{ top: number; height: number }>
-  >;
-  private lastRenderMetrics: RenderMetrics;
-  private renderVersion: number;
-  private lastChapterRenderDecision: ChapterRenderDecision | null;
-  private readonly imageIntrinsicSizeCache: Map<
-    string,
-    IntrinsicImageSize | null
-  >;
-  private readonly pendingImageIntrinsicSizePaths: Set<string>;
-  private lastLocatorRestoreDiagnostics: LocatorRestoreDiagnostics | null;
-  private lastFixedLayoutRenderSignature: string | null;
-  private lastPresentationRenderSignature: string | null;
-  private pendingModeSwitchLocator: Locator | null;
-  private preferLocatorOnNextDomPaginationSync: boolean;
   private textSelectionSnapshot: ReaderTextSelectionSnapshot | null;
   private pinnedTextSelectionSnapshot: ReaderTextSelectionSnapshot | null;
   private readonly handleDocumentSelectionChange = (): void => {
@@ -303,6 +278,192 @@ export class EpubReader {
   private static readonly SCROLL_WINDOW_RADIUS = 1;
   private static readonly SCROLL_SLICE_OVERSCAN_MULTIPLIER = 0.75;
   private static readonly PAGINATED_CLICK_NAV_ZONE_RATIO = 0.28;
+
+  private get locator(): Locator | null {
+    return this.navigationSession.locator;
+  }
+
+  private set locator(value: Locator | null) {
+    this.navigationSession.locator = value;
+  }
+
+  private get currentSectionIndex(): number {
+    return this.navigationSession.currentSectionIndex;
+  }
+
+  private set currentSectionIndex(value: number) {
+    this.navigationSession.currentSectionIndex = value;
+  }
+
+  private get pages(): ReaderPage[] {
+    return this.navigationSession.pages;
+  }
+
+  private set pages(value: ReaderPage[]) {
+    this.navigationSession.pages = value;
+  }
+
+  private get currentPageNumber(): number {
+    return this.navigationSession.currentPageNumber;
+  }
+
+  private set currentPageNumber(value: number) {
+    this.navigationSession.currentPageNumber = value;
+  }
+
+  private get pendingModeSwitchLocator(): Locator | null {
+    return this.navigationSession.pendingModeSwitchLocator;
+  }
+
+  private set pendingModeSwitchLocator(value: Locator | null) {
+    this.navigationSession.pendingModeSwitchLocator = value;
+  }
+
+  private get preferLocatorOnNextDomPaginationSync(): boolean {
+    return this.navigationSession.preferLocatorOnNextDomPaginationSync;
+  }
+
+  private set preferLocatorOnNextDomPaginationSync(value: boolean) {
+    this.navigationSession.preferLocatorOnNextDomPaginationSync = value;
+  }
+
+  private get lastMeasuredWidth(): number {
+    return this.renderSession.lastMeasuredWidth;
+  }
+
+  private set lastMeasuredWidth(value: number) {
+    this.renderSession.lastMeasuredWidth = value;
+  }
+
+  private get lastMeasuredHeight(): number {
+    return this.renderSession.lastMeasuredHeight;
+  }
+
+  private set lastMeasuredHeight(value: number) {
+    this.renderSession.lastMeasuredHeight = value;
+  }
+
+  private get sectionEstimatedHeights(): number[] {
+    return this.renderSession.sectionEstimatedHeights;
+  }
+
+  private set sectionEstimatedHeights(value: number[]) {
+    this.renderSession.sectionEstimatedHeights = value;
+  }
+
+  private get scrollWindowStart(): number {
+    return this.renderSession.scrollWindowStart;
+  }
+
+  private set scrollWindowStart(value: number) {
+    this.renderSession.scrollWindowStart = value;
+  }
+
+  private get scrollWindowEnd(): number {
+    return this.renderSession.scrollWindowEnd;
+  }
+
+  private set scrollWindowEnd(value: number) {
+    this.renderSession.scrollWindowEnd = value;
+  }
+
+  private get lastVisibleBounds(): VisibleDrawBounds {
+    return this.renderSession.lastVisibleBounds;
+  }
+
+  private set lastVisibleBounds(value: VisibleDrawBounds) {
+    this.renderSession.lastVisibleBounds = value;
+  }
+
+  private get lastInteractionRegions(): InteractionRegion[] {
+    return this.renderSession.lastInteractionRegions;
+  }
+
+  private set lastInteractionRegions(value: InteractionRegion[]) {
+    this.renderSession.lastInteractionRegions = value;
+  }
+
+  private get lastRenderedSectionIds(): string[] {
+    return this.renderSession.lastRenderedSectionIds;
+  }
+
+  private set lastRenderedSectionIds(value: string[]) {
+    this.renderSession.lastRenderedSectionIds = value;
+  }
+
+  private get lastScrollRenderWindows(): Map<
+    string,
+    Array<{ top: number; height: number }>
+  > {
+    return this.renderSession.lastScrollRenderWindows;
+  }
+
+  private set lastScrollRenderWindows(
+    value: Map<string, Array<{ top: number; height: number }>>
+  ) {
+    this.renderSession.lastScrollRenderWindows = value;
+  }
+
+  private get lastRenderMetrics(): RenderMetrics {
+    return this.renderSession.lastRenderMetrics;
+  }
+
+  private set lastRenderMetrics(value: RenderMetrics) {
+    this.renderSession.lastRenderMetrics = value;
+  }
+
+  private get renderVersion(): number {
+    return this.renderSession.renderVersion;
+  }
+
+  private set renderVersion(value: number) {
+    this.renderSession.renderVersion = value;
+  }
+
+  private get lastChapterRenderDecision(): ChapterRenderDecision | null {
+    return this.renderSession.lastChapterRenderDecision;
+  }
+
+  private set lastChapterRenderDecision(value: ChapterRenderDecision | null) {
+    this.renderSession.lastChapterRenderDecision = value;
+  }
+
+  private get imageIntrinsicSizeCache(): Map<
+    string,
+    IntrinsicImageSize | null
+  > {
+    return this.renderSession.imageIntrinsicSizeCache;
+  }
+
+  private get pendingImageIntrinsicSizePaths(): Set<string> {
+    return this.renderSession.pendingImageIntrinsicSizePaths;
+  }
+
+  private get lastLocatorRestoreDiagnostics(): LocatorRestoreDiagnostics | null {
+    return this.renderSession.lastLocatorRestoreDiagnostics;
+  }
+
+  private set lastLocatorRestoreDiagnostics(
+    value: LocatorRestoreDiagnostics | null
+  ) {
+    this.renderSession.lastLocatorRestoreDiagnostics = value;
+  }
+
+  private get lastFixedLayoutRenderSignature(): string | null {
+    return this.renderSession.lastFixedLayoutRenderSignature;
+  }
+
+  private set lastFixedLayoutRenderSignature(value: string | null) {
+    this.renderSession.lastFixedLayoutRenderSignature = value;
+  }
+
+  private get lastPresentationRenderSignature(): string | null {
+    return this.renderSession.lastPresentationRenderSignature;
+  }
+
+  private set lastPresentationRenderSignature(value: string | null) {
+    this.renderSession.lastPresentationRenderSignature = value;
+  }
 
   constructor(private readonly options: ReaderOptions = {}) {
     const preferences = mergeReaderPreferences(
@@ -327,6 +488,10 @@ export class EpubReader {
       theme: { ...settings.theme },
       typography: { ...settings.typography }
     });
+    this.navigationSession = new ReaderNavigationSession(
+      this.sessionState.position
+    );
+    this.renderSession = new ReaderRenderSession(this.sessionState.render);
     this.book = this.sessionState.document.book;
     this.sourceName = this.sessionState.document.sourceName;
     this.resources = this.sessionState.document.resources;
@@ -342,41 +507,7 @@ export class EpubReader {
     this.debugMode = this.sessionState.view.debugMode;
     this.theme = this.sessionState.view.theme;
     this.typography = this.sessionState.view.typography;
-    this.locator = this.sessionState.position.locator;
-    this.currentSectionIndex = this.sessionState.position.currentSectionIndex;
-    this.pages = this.sessionState.position.pages;
-    this.currentPageNumber = this.sessionState.position.currentPageNumber;
     this.measuredDomPaginationBySectionId = new Map();
-    this.pendingModeSwitchLocator =
-      this.sessionState.position.pendingModeSwitchLocator;
-    this.preferLocatorOnNextDomPaginationSync = false;
-    this.lastMeasuredWidth = this.sessionState.render.lastMeasuredWidth;
-    this.lastMeasuredHeight = this.sessionState.render.lastMeasuredHeight;
-    this.sectionEstimatedHeights =
-      this.sessionState.render.sectionEstimatedHeights;
-    this.scrollWindowStart = this.sessionState.render.scrollWindowStart;
-    this.scrollWindowEnd = this.sessionState.render.scrollWindowEnd;
-    this.lastVisibleBounds = this.sessionState.render.lastVisibleBounds;
-    this.lastInteractionRegions =
-      this.sessionState.render.lastInteractionRegions;
-    this.lastRenderedSectionIds =
-      this.sessionState.render.lastRenderedSectionIds;
-    this.lastScrollRenderWindows =
-      this.sessionState.render.lastScrollRenderWindows;
-    this.lastRenderMetrics = this.sessionState.render.lastRenderMetrics;
-    this.renderVersion = this.sessionState.render.renderVersion;
-    this.lastChapterRenderDecision =
-      this.sessionState.render.lastChapterRenderDecision;
-    this.imageIntrinsicSizeCache =
-      this.sessionState.render.imageIntrinsicSizeCache;
-    this.pendingImageIntrinsicSizePaths =
-      this.sessionState.render.pendingImageIntrinsicSizePaths;
-    this.lastLocatorRestoreDiagnostics =
-      this.sessionState.render.lastLocatorRestoreDiagnostics;
-    this.lastFixedLayoutRenderSignature =
-      this.sessionState.render.lastFixedLayoutRenderSignature;
-    this.lastPresentationRenderSignature =
-      this.sessionState.render.lastPresentationRenderSignature;
     this.textSelectionSnapshot =
       this.sessionState.selection.textSelectionSnapshot;
     this.pinnedTextSelectionSnapshot =
@@ -548,7 +679,7 @@ export class EpubReader {
         this.syncFixedLayoutContainerState(
           value as DomChapterRenderInput | null
         ),
-      nextRenderVersion: () => ++this.renderVersion,
+      nextRenderVersion: () => this.renderSession.nextRenderVersion(),
       getPaginationMeasurement: () => this.getPaginationMeasurement(),
       layoutPaginatedSection: (section, spineIndex, measurement) =>
         this.layoutEngine.layout(
@@ -634,8 +765,6 @@ export class EpubReader {
     this.rebuildSectionIndex();
     this.sourceName = normalized.sourceName ?? null;
     this.resources = parsed.resources;
-    this.imageIntrinsicSizeCache.clear();
-    this.pendingImageIntrinsicSizePaths.clear();
     this.annotations = [];
     this.revokeObjectUrls();
     this.chapterRenderInputs = parsed.sectionContents.map((entry) =>
@@ -648,32 +777,9 @@ export class EpubReader {
           href: parsed.book.metadata.startHref
         })
       : null;
-    this.locator = startLocator;
-    this.currentSectionIndex = startLocator?.spineIndex ?? 0;
-    this.pages = [];
-    this.sectionEstimatedHeights = [];
+    this.navigationSession.resetForOpen(startLocator);
+    this.renderSession.resetForOpen();
     this.measuredDomPaginationBySectionId.clear();
-    this.currentPageNumber = 1;
-    this.lastMeasuredWidth = 0;
-    this.lastMeasuredHeight = 0;
-    this.lastPresentationRenderSignature = null;
-    this.scrollWindowStart = -1;
-    this.scrollWindowEnd = -1;
-    this.renderVersion += 1;
-    this.lastVisibleBounds = [];
-    this.lastInteractionRegions = [];
-    this.lastRenderedSectionIds = [];
-    this.lastScrollRenderWindows.clear();
-    this.lastRenderMetrics = {
-      backend: "canvas",
-      visibleSectionCount: 0,
-      visibleDrawOpCount: 0,
-      highlightedDrawOpCount: 0,
-      totalCanvasHeight: 0
-    };
-    this.lastChapterRenderDecision = null;
-    this.lastLocatorRestoreDiagnostics = null;
-    this.lastFixedLayoutRenderSignature = null;
     this.updateTextSelectionSnapshot(null);
     this.decorationManager.clearAll();
     this.scrollCoordinator.reset();
@@ -1697,29 +1803,11 @@ export class EpubReader {
     this.book = null;
     this.layoutEngine.clearCache();
     this.resources = null;
-    this.imageIntrinsicSizeCache.clear();
-    this.pendingImageIntrinsicSizePaths.clear();
     this.chapterRenderInputs = [];
-    this.locator = null;
-    this.pages = [];
-    this.sectionEstimatedHeights = [];
+    this.navigationSession.resetForDestroy();
+    this.renderSession.resetForDestroy();
     this.measuredDomPaginationBySectionId.clear();
-    this.currentPageNumber = 1;
-    this.scrollWindowStart = -1;
-    this.scrollWindowEnd = -1;
-    this.lastVisibleBounds = [];
-    this.lastInteractionRegions = [];
-    this.lastRenderedSectionIds = [];
-    this.lastScrollRenderWindows.clear();
     this.textSelectionSnapshot = null;
-    this.lastRenderMetrics = {
-      backend: "canvas",
-      visibleSectionCount: 0,
-      visibleDrawOpCount: 0,
-      highlightedDrawOpCount: 0,
-      totalCanvasHeight: 0
-    };
-    this.lastChapterRenderDecision = null;
     this.scrollCoordinator.clearAll();
     this.revokeObjectUrls();
     if (this.options.container) {
@@ -2161,7 +2249,10 @@ export class EpubReader {
     section: SectionDocument,
     renderVersion: number
   ): void {
-    if (!this.options.container || renderVersion !== this.renderVersion) {
+    if (
+      !this.options.container ||
+      !this.renderSession.isCurrentRenderVersion(renderVersion)
+    ) {
       return;
     }
 
@@ -2205,7 +2296,7 @@ export class EpubReader {
     if (
       !this.options.container ||
       !this.book ||
-      renderVersion !== this.renderVersion
+      !this.renderSession.isCurrentRenderVersion(renderVersion)
     ) {
       return;
     }
@@ -2629,7 +2720,7 @@ export class EpubReader {
     if (
       !this.options.container ||
       !page ||
-      renderVersion !== this.renderVersion
+      !this.renderSession.isCurrentRenderVersion(renderVersion)
     ) {
       return;
     }
@@ -2664,7 +2755,7 @@ export class EpubReader {
     if (
       !this.book ||
       !this.options.container ||
-      renderVersion !== this.renderVersion
+      !this.renderSession.isCurrentRenderVersion(renderVersion)
     ) {
       return;
     }
@@ -4430,7 +4521,10 @@ export class EpubReader {
     node: Text;
     offset: number;
   } | null {
-    const blockElement = this.findRenderedDomBlockTarget(sectionElement, blockId);
+    const blockElement = this.findRenderedDomBlockTarget(
+      sectionElement,
+      blockId
+    );
     if (!blockElement) {
       return null;
     }
@@ -5665,9 +5759,7 @@ export class EpubReader {
   private getAnnotationActivationFallbackPoint(
     rects: VisibleDrawBounds
   ): Point {
-    const firstRect = rects.find(
-      (rect) => rect.width > 0 && rect.height > 0
-    );
+    const firstRect = rects.find((rect) => rect.width > 0 && rect.height > 0);
     if (!firstRect) {
       return { x: 0, y: 0 };
     }

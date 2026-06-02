@@ -206,7 +206,7 @@ describe("EpubReader external links", () => {
     ])
   })
 
-  it("blocks unsafe external schemes without invoking the host callback", async () => {
+  it("strips unsafe external schemes before DOM link handling", async () => {
     const container = createContainer()
     const callback = vi.fn()
     const { book, sharedInput } = createDomLinkBook("javascript:alert(1)")
@@ -234,23 +234,22 @@ describe("EpubReader external links", () => {
     })
 
     await reader.render()
-    container
-      .querySelector<HTMLAnchorElement>("a[href='javascript:alert(1)']")
-      ?.dispatchEvent(
-        new MouseEvent("click", {
-          bubbles: true,
-          cancelable: true
-        })
-      )
+    const link = container.querySelector<HTMLAnchorElement>(
+      ".epub-dom-section a"
+    )
+
+    expect(link).toBeTruthy()
+    expect(link?.getAttribute("href")).toBeNull()
+
+    link?.dispatchEvent(
+      new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true
+      })
+    )
     await Promise.resolve()
 
     expect(callback).not.toHaveBeenCalled()
-    expect(blocked).toEqual([
-      {
-        href: "javascript:alert(1)",
-        scheme: "javascript",
-        reason: "unsafe-scheme"
-      }
-    ])
+    expect(blocked).toEqual([])
   })
 })
