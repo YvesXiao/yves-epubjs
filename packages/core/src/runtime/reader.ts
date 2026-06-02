@@ -4,23 +4,12 @@ import { CanvasRenderer } from "../renderer/canvas-renderer";
 import { DisplayListBuilder } from "../renderer/display-list-builder";
 import {
   DomChapterRenderer,
-  serializeDomPageViewportAttributes,
   type DomChapterRenderInput
 } from "../renderer/dom-chapter-renderer";
-import {
-  DEFAULT_READER_BASELINE_STYLE_PROFILE,
-  buildReadingStyleCssVariables,
-  buildReadingStyleProfile
-} from "../renderer/reading-style-profile";
 import { BookParser } from "../parser/book-parser";
-import {
-  normalizeEpubInput,
-  type EpubInput
-} from "../container/normalize-input";
-import { resolveResourcePath } from "../container/resource-path";
+import { type EpubInput } from "../container/normalize-input";
 import type {
   Annotation,
-  AnnotationActivatedEvent,
   AnnotationViewportSnapshot,
   Bookmark,
   BlockNode,
@@ -35,7 +24,6 @@ import type {
   PublisherColorOverride,
   PublisherStylesMode,
   PublicationAccessibilitySnapshot,
-  ReadingMode,
   RenderMetrics,
   RenderDiagnostics,
   ReaderEvent,
@@ -68,16 +56,7 @@ import type {
   InteractionRegion,
   SectionDisplayList
 } from "../renderer/draw-ops";
-import {
-  extractBlockText as collectBlockText,
-  extractInlineText as collectInlineText
-} from "../utils/block-text";
-import {
-  extractIntrinsicImageSize,
-  type IntrinsicImageSize
-} from "../utils/image-intrinsic-size";
-import { buildChapterAnalysisInput } from "./chapter-analysis-input";
-import { analyzeChapterRenderMode } from "./chapter-render-analyzer";
+import { type IntrinsicImageSize } from "../utils/image-intrinsic-size";
 import { ChapterRenderDecisionCache } from "./chapter-render-decision-cache";
 import { ReaderInteractionController } from "./reader-interaction-controller";
 import { ReaderNavigationController } from "./reader-navigation-controller";
@@ -94,10 +73,6 @@ import {
 } from "./reader-scroll-position-service";
 import type { RenderBehavior } from "./render-flow-types";
 import {
-  mapCanvasTextLayerClientPointToLocator,
-  resolveCanvasTextPosition
-} from "./canvas-text-locator";
-import {
   createReaderSessionState,
   type ReaderSessionState
 } from "./reader-session-state";
@@ -107,111 +82,26 @@ import { ReaderViewSession } from "./reader-view-session";
 import { ReaderSelectionSession } from "./reader-selection-session";
 import { ReaderNavigationSession } from "./reader-navigation-session";
 import { ReaderRenderSession } from "./reader-render-session";
-import {
-  createSharedChapterRenderInput,
-  type SharedChapterRenderInput
-} from "./chapter-render-input";
-import {
-  createBlockLocator,
-  flattenTocTargets,
-  findRenderedAnchorTarget,
-  resolveBookHrefLocator
-} from "./navigation-target";
-import { normalizeLocator, restoreLocatorWithDiagnostics } from "./locator";
-import {
-  createBookmark as createReaderBookmark,
-  derivePublicationId
-} from "./bookmark";
-import {
-  createAnnotation as createReaderAnnotation,
-  mapAnnotationsToDecorations
-} from "./annotation";
+import { type SharedChapterRenderInput } from "./chapter-render-input";
 import {
   DEFAULT_READER_SETTINGS,
-  deserializeReaderPreferences,
   mergeReaderPreferences,
-  normalizeReaderPreferences,
-  resolveReaderSettings,
-  serializeReaderPreferences
+  resolveReaderSettings
 } from "./preferences";
 import {
-  collectBlockIdsInReadingOrder,
-  normalizeTextRangeSelector,
-  toTransparentHighlightColor
-} from "./reader-domain";
-import {
-  collectSelectableBlocksInReadingOrder,
-  findBlockById,
-  resolveRenderableBlockId
-} from "./reader-block-tree";
-import {
-  cloneReaderTextSelectionSnapshot,
-  flattenTextRange,
   hasActiveTextSelection,
-  inflateFlattenedTextRange,
-  resolveLeadingSelectionTarget,
-  subtractFlattenedRange,
   type SectionTextRangeContext
 } from "./reader-selection";
-import { stripPublisherStylesFromSection } from "./publisher-styles";
-import {
-  resolveReadingLanguageContext,
-  resolveReadingNavigationContext
-} from "./reading-language";
-import {
-  resolveReadingSpreadContext,
-  resolveSyntheticSpreadViewportPartition
-} from "./reading-spread";
-import {
-  buildPublicationAccessibilitySnapshot,
-  buildSectionAccessibilitySnapshot
-} from "./accessibility";
 import { DecorationManager } from "./decoration-manager";
-import { applyDomDecorations } from "./dom-decoration";
-import {
-  findDomHitTargetAtPoint,
-  mapDomLocatorToViewport,
-  mapDomPointToLocator
-} from "./dom-viewport-mapper";
-import {
-  classifyNavigationHref,
-  resolveEmbeddedResourceUrl
-} from "./external-boundary";
-import { resolveDomClickInteraction } from "./dom-interaction-model";
-import { findRenderedSearchResultTarget } from "./dom-search-result-target";
-import { resolveRenderBackendCapabilities } from "./render-backend-capabilities";
-import { buildSearchResultsForSection } from "./search-results";
-import {
-  buildPageDisplayList,
-  buildPaginatedPages,
-  type ReaderPage
-} from "./paginated-render-plan";
-import {
-  createLocatorForPage as createPaginatedPageLocator,
-  findCurrentPageForSection as findPaginatedCurrentPageForSection,
-  findPageByNumber as findPaginatedPageByNumber,
-  findPageForLocator as findPaginatedPageForLocator,
-  getVisiblePaginatedSpreads as getReaderVisiblePaginatedSpreads,
-  resolveCurrentPageNumberFromSection,
-  resolveCurrentPaginatedSpread as resolveReaderCurrentPaginatedSpread,
-  resolveDisplayPageNumberToLeafPage as resolveReaderDisplayPageNumberToLeafPage,
-  resolvePaginatedSpread as resolveReaderPaginatedSpread,
-  resolveProgressForCurrentLocator,
-  resolveRenderedPage as resolveReaderRenderedPage,
-  resolveSpreadNavigationTarget as resolveReaderSpreadNavigationTarget,
-  type PaginatedSpread
-} from "./reader-pagination";
-import { buildScrollRenderPlan } from "./scroll-render-plan";
-import {
-  createDomChapterRenderInput,
-  resolveFixedLayoutFrame
-} from "./dom-render-input-factory";
+import { type ReaderPage } from "./paginated-render-plan";
+import { type PaginatedSpread } from "./reader-pagination";
 import {
   RenderableResourceManager,
   type RenderableResourceConsumer
 } from "./renderable-resource-manager";
 import { ScrollCoordinator } from "./scroll-coordinator";
-
+import { ReaderRuntimeController } from "./reader-runtime-controller";
+import { clampProgress, isEditableTarget } from "./reader-runtime-helpers";
 export type PaginationInfo = {
   currentPage: number;
   totalPages: number;
@@ -247,6 +137,7 @@ export class EpubReader {
   private readonly navigationSession: ReaderNavigationSession;
   private readonly renderSession: ReaderRenderSession;
   private readonly selectionSession: ReaderSelectionSession;
+  private readonly runtimeController: ReaderRuntimeController;
   private resizeObserver: ResizeObserver | null = null;
   private readonly measuredDomPaginationBySectionId: Map<
     string,
@@ -606,7 +497,9 @@ export class EpubReader {
       theme: { ...settings.theme },
       typography: { ...settings.typography }
     });
-    this.documentSession = new ReaderDocumentSession(this.sessionState.document);
+    this.documentSession = new ReaderDocumentSession(
+      this.sessionState.document
+    );
     this.annotationSession = new ReaderAnnotationSession(
       this.sessionState.annotations
     );
@@ -846,6 +739,7 @@ export class EpubReader {
         this.syncPositionFromScroll(emitEvent),
       emitSectionRendered: (section) => this.emitSectionRendered(section)
     });
+    this.runtimeController = new ReaderRuntimeController(this);
     this.attachResizeObserver();
     this.attachScrollListener();
     this.attachPointerListener();
@@ -854,319 +748,117 @@ export class EpubReader {
   }
 
   async open(input: EpubInput): Promise<Book> {
-    const normalized = await normalizeEpubInput(input);
-    const parserInput = {
-      data: normalized.data
-    } as {
-      data: Uint8Array;
-      sourceName?: string;
-    };
-
-    if (normalized.sourceName) {
-      parserInput.sourceName = normalized.sourceName;
-    }
-
-    const parsed = await this.parser.parseDetailed(parserInput);
-    this.layoutEngine.clearCache();
-    const chapterRenderInputs = parsed.sectionContents.map((entry) =>
-      createSharedChapterRenderInput(entry)
-    );
-    this.documentSession.resetForOpen({
-      book: parsed.book,
-      sourceName: normalized.sourceName ?? null,
-      resources: parsed.resources,
-      chapterRenderInputs
-    });
-    this.annotationSession.reset();
-    this.revokeObjectUrls();
-    const startLocator = parsed.book.metadata.startHref
-      ? resolveBookHrefLocator({
-          book: parsed.book,
-          currentSectionIndex: 0,
-          href: parsed.book.metadata.startHref
-        })
-      : null;
-    this.navigationSession.resetForOpen(startLocator);
-    this.renderSession.resetForOpen();
-    this.measuredDomPaginationBySectionId.clear();
-    this.selectionSession.reset();
-    this.decorationManager.clearAll();
-    this.scrollCoordinator.reset();
-    if (this.options.container) {
-      this.options.container.scrollTop = 0;
-      this.options.container.scrollLeft = 0;
-    }
-    this.events.emit("opened", { book: parsed.book });
-    return parsed.book;
+    return this.runtimeController.open(input);
   }
 
   async render(): Promise<void> {
-    await this.waitForFonts();
-    this.renderCurrentSection();
-
-    this.events.emit("rendered", { mode: this.mode });
+    return this.runtimeController.render();
   }
 
   async next(): Promise<void> {
-    if (!this.book) {
-      return;
-    }
-
-    if (this.mode === "scroll") {
-      await this.goToScrollSection(this.currentSectionIndex + 2);
-      return;
-    }
-
-    this.ensurePages();
-    const spreadTargetPage =
-      this.mode === "paginated"
-        ? this.resolveSpreadNavigationTarget("next")
-        : null;
-    if (typeof spreadTargetPage === "number") {
-      await this.goToLeafPage(spreadTargetPage);
-      return;
-    }
-    const nextPage = Math.min(
-      this.currentPageNumber + 1,
-      this.pages.length || 1
-    );
-    await this.goToLeafPage(nextPage);
+    return this.runtimeController.next();
   }
 
   async prev(): Promise<void> {
-    if (!this.book) {
-      return;
-    }
-
-    if (this.mode === "scroll") {
-      await this.goToScrollSection(this.currentSectionIndex);
-      return;
-    }
-
-    this.ensurePages();
-    if (this.isAtRenderedPaginatedDomSectionStart()) {
-      this.preferLocatorOnNextDomPaginationSync = true;
-      await this.goToLocation({
-        spineIndex: this.currentSectionIndex - 1,
-        progressInSection: 1
-      });
-      return;
-    }
-    const spreadTargetPage =
-      this.mode === "paginated"
-        ? this.resolveSpreadNavigationTarget("previous")
-        : null;
-    if (typeof spreadTargetPage === "number") {
-      await this.goToLeafPage(spreadTargetPage);
-      return;
-    }
-    const currentPage = this.findPageByNumber(this.currentPageNumber);
-    if (
-      currentPage &&
-      currentPage.pageNumberInSection <= 1 &&
-      currentPage.spineIndex > 0
-    ) {
-      this.preferLocatorOnNextDomPaginationSync = true;
-      await this.goToLocation({
-        spineIndex: currentPage.spineIndex - 1,
-        progressInSection: 1
-      });
-      return;
-    }
-    const previousPage = Math.max(this.currentPageNumber - 1, 1);
-    await this.goToLeafPage(previousPage);
+    return this.runtimeController.prev();
   }
 
   private isAtRenderedPaginatedDomSectionStart(): boolean {
-    if (!this.book || !this.options.container || this.mode !== "paginated") {
-      return false;
-    }
-
-    if (this.currentSectionIndex <= 0) {
-      return false;
-    }
-
-    const section = this.book.sections[this.currentSectionIndex];
-    if (!section) {
-      return false;
-    }
-
-    const sectionElement =
-      this.options.container.querySelector<HTMLElement>(".epub-dom-section");
-    if (!sectionElement || sectionElement.dataset.sectionId !== section.id) {
-      return false;
-    }
-
-    return Math.abs(readTranslateY(sectionElement)) <= 1;
+    return this.runtimeController.isAtRenderedPaginatedDomSectionStart();
   }
 
   async goToLocation(locator: Locator): Promise<void> {
-    await this.navigationController.goToLocation(locator);
+    return this.runtimeController.goToLocation(locator);
   }
 
   async restoreLocation(
     locator: Locator | SerializedLocator
   ): Promise<boolean> {
-    return this.navigationController.restoreLocation(locator);
+    return this.runtimeController.restoreLocation(locator);
   }
 
   async restoreBookmark(bookmark: Bookmark): Promise<boolean> {
-    return this.navigationController.restoreBookmark(bookmark);
+    return this.runtimeController.restoreBookmark(bookmark);
   }
 
   async goToTocItem(id: string): Promise<void> {
-    await this.navigationController.goToTocItem(id);
+    return this.runtimeController.goToTocItem(id);
   }
 
   async setTheme(theme: Partial<Theme>): Promise<void> {
-    await this.submitPreferences({
-      theme
-    });
+    return this.runtimeController.setTheme(theme);
   }
 
   async setTypography(options: Partial<TypographyOptions>): Promise<void> {
-    await this.submitPreferences({
-      typography: options
-    });
+    return this.runtimeController.setTypography(options);
   }
 
   async setMode(mode: "scroll" | "paginated"): Promise<void> {
-    await this.submitPreferences({
-      mode
-    });
+    return this.runtimeController.setMode(mode);
   }
 
   async submitPreferences(
     preferences: ReaderPreferences
   ): Promise<ReaderSettings> {
-    return this.applyPreferences(
-      mergeReaderPreferences(this.preferences, preferences)
-    );
+    return this.runtimeController.submitPreferences(preferences);
   }
 
   async restorePreferences(
     preferences: ReaderPreferences | string | null | undefined
   ): Promise<ReaderSettings> {
-    if (typeof preferences === "string") {
-      const restored = deserializeReaderPreferences(preferences);
-      return restored ? this.applyPreferences(restored) : this.getSettings();
-    }
-
-    return this.applyPreferences(normalizeReaderPreferences(preferences));
+    return this.runtimeController.restorePreferences(preferences);
   }
 
   serializePreferences(): string {
-    return serializeReaderPreferences(this.preferences);
+    return this.runtimeController.serializePreferences();
   }
 
   async goToPage(pageNumber: number): Promise<void> {
-    await this.navigationController.goToPage(pageNumber);
+    return this.runtimeController.goToPage(pageNumber);
   }
 
   private async goToScrollSection(sectionNumber: number): Promise<void> {
-    await this.navigationController.goToScrollSection(sectionNumber);
+    return this.runtimeController.goToScrollSection(sectionNumber);
   }
 
   private async goToLeafPage(pageNumber: number): Promise<void> {
-    await this.navigationController.goToLeafPage(pageNumber);
+    return this.runtimeController.goToLeafPage(pageNumber);
   }
 
   async search(query: string): Promise<SearchResult[]> {
-    if (!this.book || !query.trim()) {
-      this.decorationManager.clearExplicitGroup("search-results");
-      if (this.book) {
-        this.renderCurrentSection("preserve");
-      }
-      return [];
-    }
-
-    const results: SearchResult[] = [];
-    const searchDecorations: Decoration[] = [];
-
-    for (let index = 0; index < this.book.sections.length; index += 1) {
-      const section = this.book.sections[index];
-      if (!section) {
-        continue;
-      }
-
-      const sectionResults = buildSearchResultsForSection({
-        section,
-        spineIndex: index,
-        query
-      });
-      for (const result of sectionResults) {
-        results.push(result);
-        searchDecorations.push({
-          id: `search:${result.sectionId}:${searchDecorations.length + 1}`,
-          group: "search-results",
-          locator: result.locator,
-          style: "search-hit"
-        });
-      }
-    }
-
-    this.decorationManager.setExplicitGroup(
-      "search-results",
-      searchDecorations
-    );
-    this.renderCurrentSection("preserve");
-    this.events.emit("searchCompleted", { query, results });
-    return results;
+    return this.runtimeController.search(query);
   }
 
   async goToSearchResult(result: SearchResult): Promise<void> {
-    await this.goToLocation(result.locator);
-    this.realignDomSearchResult(result);
+    return this.runtimeController.goToSearchResult(result);
   }
 
   getCurrentLocation(): Locator | null {
-    return this.locator ? normalizeLocator(this.locator) : null;
+    return this.runtimeController.getCurrentLocation();
   }
 
   getReadingProgress(): ReadingProgressSnapshot | null {
-    return this.navigationController.getReadingProgress();
+    return this.runtimeController.getReadingProgress();
   }
 
   async goToProgress(progress: number): Promise<Locator | null> {
-    return this.navigationController.goToProgress(progress);
+    return this.runtimeController.goToProgress(progress);
   }
 
   setDecorations(input: { group: string; decorations: Decoration[] }): void {
-    this.decorationManager.setExplicitGroup(input.group, input.decorations);
-    if (this.book) {
-      this.renderCurrentSection("preserve");
-    }
+    return this.runtimeController.setDecorations(input);
   }
 
   clearDecorations(group?: string): void {
-    if (group) {
-      this.decorationManager.clearExplicitGroup(group);
-    } else {
-      this.decorationManager.clearAllExplicit();
-    }
-
-    if (this.book) {
-      this.renderCurrentSection("preserve");
-    }
+    return this.runtimeController.clearDecorations(group);
   }
 
   getDecorations(group?: string): Decoration[] {
-    return group
-      ? this.decorationManager.getGroup(group)
-      : this.decorationManager.getAll();
+    return this.runtimeController.getDecorations(group);
   }
 
   setDebugMode(enabled: boolean): void {
-    const nextDebugMode = Boolean(enabled);
-    if (this.debugMode === nextDebugMode) {
-      return;
-    }
-
-    this.debugMode = nextDebugMode;
-    this.syncDerivedDecorationGroups();
-    if (this.book) {
-      this.renderCurrentSection("preserve");
-    }
+    return this.runtimeController.setDebugMode(enabled);
   }
 
   createAnnotation(
@@ -1179,31 +871,7 @@ export class EpubReader {
       color?: string;
     } = {}
   ): Annotation | null {
-    if (!this.book) {
-      return null;
-    }
-
-    const publicationId = this.getPublicationId();
-    const locator = input.locator ?? this.getCurrentLocation();
-    if (!publicationId || !locator) {
-      return null;
-    }
-    const quote =
-      input.quote ??
-      (input.textRange
-        ? this.resolveAnnotationTextRangeQuote(locator, input.textRange)
-        : this.resolveAnnotationQuote(locator));
-
-    return createReaderAnnotation({
-      publicationId,
-      locator,
-      book: this.book,
-      ...(input.textRange ? { textRange: input.textRange } : {}),
-      ...(quote ? { quote } : {}),
-      ...(input.note ? { note: input.note } : {}),
-      ...(input.style ? { style: input.style } : {}),
-      ...(input.color ? { color: input.color } : {})
-    });
+    return this.runtimeController.createAnnotation(input);
   }
 
   createAnnotationFromSelection(
@@ -1213,48 +881,19 @@ export class EpubReader {
       color?: string;
     } = {}
   ): Annotation | null {
-    const selection = this.getCurrentTextSelectionSnapshot();
-    if (!selection) {
-      return null;
-    }
-
-    return this.createAnnotation({
-      locator: selection.locator,
-      quote: selection.text,
-      ...(selection.textRange ? { textRange: selection.textRange } : {}),
-      ...(input.note ? { note: input.note } : {}),
-      ...(input.style ? { style: input.style } : {}),
-      ...(input.color ? { color: input.color } : {})
-    });
+    return this.runtimeController.createAnnotationFromSelection(input);
   }
 
   getCurrentTextSelection(): ReaderTextSelection | null {
-    const selection = this.getCurrentTextSelectionSnapshot();
-    if (!selection) {
-      return null;
-    }
-
-    return {
-      text: selection.text,
-      locator: { ...selection.locator },
-      sectionId: selection.sectionId,
-      ...(selection.blockId ? { blockId: selection.blockId } : {})
-    };
+    return this.runtimeController.getCurrentTextSelection();
   }
 
   getCurrentTextSelectionSnapshot(): ReaderTextSelectionSnapshot | null {
-    const selection = this.resolveCurrentTextSelectionSnapshot();
-    this.updateTextSelectionSnapshot(selection);
-    return cloneReaderTextSelectionSnapshot(selection);
+    return this.runtimeController.getCurrentTextSelectionSnapshot();
   }
 
   getCurrentSelectionHighlightState(): ReaderSelectionHighlightState | null {
-    const selection = this.getCurrentTextSelectionSnapshot();
-    if (!selection) {
-      return null;
-    }
-
-    return this.resolveSelectionHighlightState(selection);
+    return this.runtimeController.getCurrentSelectionHighlightState();
   }
 
   applyCurrentSelectionHighlightAction(
@@ -1267,676 +906,110 @@ export class EpubReader {
     mode: "highlight" | "remove-highlight";
     changedCount: number;
   } | null {
-    if (!this.book) {
-      return null;
-    }
-
-    const selection = this.getCurrentTextSelectionSnapshot();
-    if (!selection) {
-      return null;
-    }
-
-    const state = this.resolveSelectionHighlightState(selection);
-    if (!selection.textRange) {
-      if (state.mode !== "highlight") {
-        return {
-          mode: state.mode,
-          changedCount: 0
-        };
-      }
-
-      const annotation = this.createAnnotation({
-        locator: selection.locator,
-        quote: selection.text,
-        ...(input.note ? { note: input.note } : {}),
-        ...(input.style ? { style: input.style } : {}),
-        ...(input.color ? { color: input.color } : {})
-      });
-      if (!annotation) {
-        return {
-          mode: state.mode,
-          changedCount: 0
-        };
-      }
-
-      this.addAnnotation(annotation);
-      return {
-        mode: state.mode,
-        changedCount: 1
-      };
-    }
-
-    const section = this.book.sections[selection.locator.spineIndex];
-    if (!section) {
-      return null;
-    }
-
-    const context = this.createSectionTextRangeContext(section);
-    const selectionRange = this.normalizeTextRangeForSection(
-      selection.locator.spineIndex,
-      selection.textRange
-    );
-    if (!selectionRange) {
-      return null;
-    }
-
-    if (state.mode === "remove-highlight") {
-      const matchingAnnotations = this.resolveAnnotationRangesForSection(
-        selection.locator.spineIndex
-      );
-      const nextAnnotations: Annotation[] = [];
-      let changedCount = 0;
-
-      for (const annotation of this.annotations) {
-        const resolved = matchingAnnotations.find(
-          (entry) => entry.annotation.id === annotation.id
-        );
-        if (!resolved) {
-          nextAnnotations.push(annotation);
-          continue;
-        }
-
-        const flattenedAnnotation = flattenTextRange(resolved.range, context);
-        const flattenedSelection = flattenTextRange(selectionRange, context);
-        if (!flattenedAnnotation || !flattenedSelection) {
-          nextAnnotations.push(annotation);
-          continue;
-        }
-
-        const remaining = subtractFlattenedRange(
-          flattenedAnnotation,
-          flattenedSelection
-        );
-        if (
-          remaining.length === 1 &&
-          remaining[0]!.start === flattenedAnnotation.start &&
-          remaining[0]!.end === flattenedAnnotation.end
-        ) {
-          nextAnnotations.push(annotation);
-          continue;
-        }
-
-        changedCount += 1;
-        for (const piece of remaining) {
-          const range = inflateFlattenedTextRange(piece, context);
-          if (!range) {
-            continue;
-          }
-
-          const rebuilt = this.createAnnotationForResolvedRange({
-            annotation,
-            locator: resolved.locator,
-            range,
-            section,
-            ...(annotation.style ? { style: annotation.style } : {}),
-            ...(annotation.color ? { color: annotation.color } : {}),
-            ...(annotation.note ? { note: annotation.note } : {})
-          });
-          if (rebuilt) {
-            nextAnnotations.push(rebuilt);
-          }
-        }
-      }
-
-      this.setAnnotations(nextAnnotations);
-      return {
-        mode: state.mode,
-        changedCount
-      };
-    }
-
-    const flattenedSelection = flattenTextRange(selectionRange, context);
-    if (!flattenedSelection) {
-      return null;
-    }
-
-    let remainingRanges = [flattenedSelection];
-    for (const resolved of this.resolveAnnotationRangesForSection(
-      selection.locator.spineIndex
-    )) {
-      const flattened = flattenTextRange(resolved.range, context);
-      if (!flattened) {
-        continue;
-      }
-
-      remainingRanges = remainingRanges.flatMap((range) =>
-        subtractFlattenedRange(range, flattened)
-      );
-      if (remainingRanges.length === 0) {
-        break;
-      }
-    }
-
-    const addedAnnotations = remainingRanges
-      .map((range) => inflateFlattenedTextRange(range, context))
-      .flatMap((range) => {
-        if (!range) {
-          return [];
-        }
-
-        const annotation = this.createAnnotationForResolvedRange({
-          locator: selection.locator,
-          range,
-          section,
-          ...(input.style ? { style: input.style } : {}),
-          ...(input.color ? { color: input.color } : {}),
-          ...(input.note ? { note: input.note } : {})
-        });
-        return annotation ? [annotation] : [];
-      });
-
-    for (const annotation of addedAnnotations) {
-      this.addAnnotation(annotation);
-    }
-
-    return {
-      mode: state.mode,
-      changedCount: addedAnnotations.length
-    };
+    return this.runtimeController.applyCurrentSelectionHighlightAction(input);
   }
 
   clearCurrentTextSelection(): void {
-    if (
-      typeof window !== "undefined" &&
-      typeof window.getSelection === "function"
-    ) {
-      window.getSelection()?.removeAllRanges();
-    }
-    this.setPinnedTextSelectionSnapshot(null);
+    return this.runtimeController.clearCurrentTextSelection();
   }
 
   addAnnotation(annotation: Annotation): void {
-    const publicationId = this.getPublicationId();
-    if (!publicationId || annotation.publicationId !== publicationId) {
-      return;
-    }
-
-    this.annotationSession.append(annotation);
-    this.syncAnnotationDecorations();
+    return this.runtimeController.addAnnotation(annotation);
   }
 
   setAnnotations(annotations: Annotation[]): void {
-    const publicationId = this.getPublicationId();
-    this.annotations = publicationId
-      ? annotations.filter(
-          (annotation) => annotation.publicationId === publicationId
-        )
-      : [];
-    this.syncAnnotationDecorations();
+    return this.runtimeController.setAnnotations(annotations);
   }
 
   getAnnotations(): Annotation[] {
-    return this.annotations.map((annotation) => ({
-      ...annotation,
-      locator: { ...annotation.locator }
-    }));
+    return this.runtimeController.getAnnotations();
   }
 
   getAnnotationViewportSnapshots(): AnnotationViewportSnapshot[] {
-    const book = this.book;
-    if (!book) {
-      return [];
-    }
-
-    return this.annotations.map((annotation) => {
-      const restored = restoreLocatorWithDiagnostics({
-        book,
-        locator: annotation.locator
-      }).locator;
-      const rects = restored
-        ? this.resolveAnnotationViewportRects(annotation, restored)
-        : [];
-
-      return {
-        annotation: {
-          ...annotation,
-          locator: { ...annotation.locator }
-        },
-        resolvedLocator: restored ? { ...restored } : null,
-        rects,
-        visible: rects.length > 0
-      };
-    });
+    return this.runtimeController.getAnnotationViewportSnapshots();
   }
 
   clearAnnotations(): void {
-    this.annotations = [];
-    this.syncAnnotationDecorations();
+    return this.runtimeController.clearAnnotations();
   }
 
   private updateLocator(locator: Locator | null): void {
-    this.locator = locator ? normalizeLocator(locator) : null;
-    this.syncDerivedDecorationGroups();
+    return this.runtimeController.updateLocator(locator);
   }
 
   private hitTestDom(point: Point): HitTestResult | null {
-    if (!this.book || !this.options.container) {
-      return null;
-    }
-
-    const sectionEntry = this.findRenderedDomSectionAtPoint(point);
-    if (!sectionEntry) {
-      return null;
-    }
-
-    const hitTarget = findDomHitTargetAtPoint({
-      container: this.options.container,
-      sectionElement: sectionEntry.sectionElement,
-      point
-    });
-    const locator = mapDomPointToLocator({
-      container: this.options.container,
-      sectionElement: sectionEntry.sectionElement,
-      section: sectionEntry.section,
-      spineIndex: sectionEntry.sectionIndex,
-      point
-    });
-    const normalizedLocator = normalizeLocator(locator);
-    const blockId = normalizedLocator.blockId ?? sectionEntry.section.id;
-    const link = hitTarget?.target.closest("a[href]");
-    if (link instanceof HTMLAnchorElement && hitTarget) {
-      return {
-        kind: "link",
-        rect: hitTarget.rect,
-        sectionId: sectionEntry.section.id,
-        blockId,
-        href: link.getAttribute("href")?.trim() ?? "",
-        locator: normalizedLocator,
-        text: link.textContent?.trim() || undefined
-      };
-    }
-
-    const image =
-      hitTarget?.target.tagName.toLowerCase() === "img" ||
-      hitTarget?.target.tagName.toLowerCase() === "image"
-        ? hitTarget.target
-        : hitTarget?.target.closest("img, image");
-    if (image instanceof HTMLElement) {
-      const imageRect =
-        hitTarget?.target === image
-          ? hitTarget.rect
-          : {
-              ...hitTarget!.rect
-            };
-      const src =
-        image.getAttribute("src")?.trim() ??
-        image.getAttribute("xlink:href")?.trim() ??
-        image.getAttribute("href")?.trim() ??
-        "";
-      return {
-        kind: "image",
-        rect: imageRect,
-        sectionId: sectionEntry.section.id,
-        blockId,
-        src,
-        alt: image.getAttribute("alt")?.trim() || undefined,
-        locator: normalizedLocator
-      };
-    }
-
-    if (!hitTarget) {
-      return null;
-    }
-
-    return {
-      kind: "block",
-      rect: hitTarget.rect,
-      sectionId: sectionEntry.section.id,
-      blockId,
-      locator: normalizedLocator,
-      text: hitTarget.target.textContent?.trim() || undefined
-    };
+    return this.runtimeController.hitTestDom(point);
   }
 
   hitTest(point: Point): HitTestResult | null {
-    if (!this.options.container) {
-      return null;
-    }
-
-    if (this.mode === "scroll") {
-      const scrollHit = this.hitTestScrollableCanvas(point);
-      if (scrollHit) {
-        return scrollHit;
-      }
-    }
-
-    const hit = this.canvasRenderer.hitTest(
-      {
-        sections: this.collectRenderedCanvasSections(),
-        bounds: this.lastVisibleBounds,
-        drawOpCount: this.lastRenderMetrics.visibleDrawOpCount,
-        totalCanvasHeight: this.lastRenderMetrics.totalCanvasHeight
-      },
-      point,
-      this.mode === "scroll" ? this.options.container.scrollTop : 0
-    );
-
-    if (hit) {
-      return hit;
-    }
-
-    return this.hitTestDom(point);
+    return this.runtimeController.hitTest(point);
   }
 
   private hitTestScrollableCanvas(point: Point): HitTestResult | null {
-    if (!this.options.container) {
-      return null;
-    }
-
-    const absoluteY = point.y + this.options.container.scrollTop;
-    const sectionOffsetX = new Map<string, number>();
-    return (
-      [...this.lastInteractionRegions].reverse().find((interaction) => {
-        let offsetX = sectionOffsetX.get(interaction.sectionId);
-        if (offsetX === undefined) {
-          offsetX = this.getScrollableCanvasSectionOffsetX(
-            interaction.sectionId
-          );
-          sectionOffsetX.set(interaction.sectionId, offsetX);
-        }
-        const localX = point.x - offsetX;
-        return (
-          localX >= interaction.rect.x &&
-          localX <= interaction.rect.x + interaction.rect.width &&
-          absoluteY >= interaction.rect.y &&
-          absoluteY <= interaction.rect.y + interaction.rect.height
-        );
-      }) ?? null
-    );
+    return this.runtimeController.hitTestScrollableCanvas(point);
   }
 
   private getScrollableCanvasSectionOffsetX(sectionId: string): number {
-    if (!this.options.container) {
-      return 0;
-    }
-
-    const sectionElement = this.getSectionElement(sectionId);
-    const canvasElement =
-      sectionElement?.querySelector<HTMLElement>(".epub-text-layer-section") ??
-      sectionElement?.querySelector<HTMLElement>(".epub-canvas-section");
-    if (!canvasElement) {
-      return 0;
-    }
-
-    const containerRect = this.options.container.getBoundingClientRect();
-    const canvasRect = canvasElement.getBoundingClientRect();
-    return (
-      canvasRect.left - containerRect.left + this.options.container.scrollLeft
-    );
+    return this.runtimeController.getScrollableCanvasSectionOffsetX(sectionId);
   }
 
   private resolveDomLinkHref(sectionHref: string, href: string): string {
-    const resolution = classifyNavigationHref(href);
-    if (resolution.kind !== "internal") {
-      return href;
-    }
-
-    return resolveResourcePath(sectionHref, href);
+    return this.runtimeController.resolveDomLinkHref(sectionHref, href);
   }
 
   getVisibleDrawBounds(): VisibleDrawBounds {
-    return [...this.lastVisibleBounds];
+    return this.runtimeController.getVisibleDrawBounds();
   }
 
   getRenderMetrics(): RenderMetrics {
-    return { ...this.lastRenderMetrics };
+    return this.runtimeController.getRenderMetrics();
   }
 
   getRenderDiagnostics(): RenderDiagnostics | null {
-    if (!this.book || !this.lastChapterRenderDecision) {
-      return null;
-    }
-
-    const section = this.book.sections[this.currentSectionIndex];
-    const capabilities = resolveRenderBackendCapabilities({
-      backend: this.lastChapterRenderDecision.mode,
-      mode: this.mode
-    });
-    const spreadContext = this.getReadingSpreadContext();
-    return {
-      mode: this.lastChapterRenderDecision.mode,
-      score: this.lastChapterRenderDecision.score,
-      reasons: [...this.lastChapterRenderDecision.reasons],
-      ...(section?.renditionLayout
-        ? { renditionLayout: section.renditionLayout }
-        : {}),
-      ...(spreadContext
-        ? {
-            renditionSpread: spreadContext.renditionSpread,
-            spreadMode: spreadContext.spreadMode,
-            pageSpreadPlacement: spreadContext.pageSpreadPlacement,
-            syntheticSpreadActive: spreadContext.syntheticSpreadActive,
-            viewportSlotCount: spreadContext.viewportSlotCount
-          }
-        : {}),
-      publisherStyles: this.publisherStyles,
-      ...capabilities,
-      alignmentTarget: "dom-baseline",
-      styleProfile: DEFAULT_READER_BASELINE_STYLE_PROFILE,
-      ...(section?.id ? { sectionId: section.id } : {}),
-      ...(section?.href ? { sectionHref: section.href } : {})
-    };
+    return this.runtimeController.getRenderDiagnostics();
   }
 
   getVisibleSectionDiagnostics(): VisibleSectionDiagnostics[] {
-    if (!this.book) {
-      return [];
-    }
-
-    const visibleSectionIds = this.lastRenderedSectionIds.length
-      ? this.lastRenderedSectionIds
-      : this.book.sections[this.currentSectionIndex]?.id
-        ? [this.book.sections[this.currentSectionIndex]!.id]
-        : [];
-
-    const diagnostics: VisibleSectionDiagnostics[] = [];
-    for (const sectionId of visibleSectionIds) {
-      const sectionIndex = this.getSectionIndexById(sectionId);
-      if (sectionIndex < 0) {
-        continue;
-      }
-
-      const section = this.book.sections[sectionIndex];
-      if (!section) {
-        continue;
-      }
-
-      const decision = this.resolveChapterRenderDecision(sectionIndex);
-      const capabilities = resolveRenderBackendCapabilities({
-        backend: decision.mode,
-        mode: this.mode
-      });
-      const spreadContext =
-        this.resolveReadingSpreadContextForSectionIndex(sectionIndex);
-      diagnostics.push({
-        mode: decision.mode,
-        score: decision.score,
-        reasons: [...decision.reasons],
-        ...(section.renditionLayout
-          ? { renditionLayout: section.renditionLayout }
-          : {}),
-        ...(spreadContext
-          ? {
-              renditionSpread: spreadContext.renditionSpread,
-              spreadMode: spreadContext.spreadMode,
-              pageSpreadPlacement: spreadContext.pageSpreadPlacement,
-              syntheticSpreadActive: spreadContext.syntheticSpreadActive,
-              viewportSlotCount: spreadContext.viewportSlotCount
-            }
-          : {}),
-        publisherStyles: this.publisherStyles,
-        ...capabilities,
-        alignmentTarget: "dom-baseline",
-        styleProfile: DEFAULT_READER_BASELINE_STYLE_PROFILE,
-        sectionId: section.id,
-        sectionHref: section.href,
-        isCurrent: sectionIndex === this.currentSectionIndex
-      });
-    }
-
-    return diagnostics;
+    return this.runtimeController.getVisibleSectionDiagnostics();
   }
 
   mapLocatorToViewport(locator: Locator): VisibleDrawBounds {
-    if (!this.book || !this.options.container) {
-      return [];
-    }
-
-    const targetCanvasBlockIds = this.resolveCanvasViewportBlockIds(locator);
-    const targetSection = this.book.sections[locator.spineIndex];
-    if (!targetSection) {
-      return [];
-    }
-    const targetSectionId = targetSection.id;
-
-    const canvasRects = this.lastInteractionRegions
-      .filter((region) => {
-        if (region.sectionId !== targetSectionId) {
-          return false;
-        }
-
-        return targetCanvasBlockIds.length === 0
-          ? true
-          : targetCanvasBlockIds.includes(region.blockId);
-      })
-      .map((region) => region.rect);
-    if (canvasRects.length > 0) {
-      return canvasRects;
-    }
-
-    const sectionElement = this.getSectionElement(targetSectionId);
-    if (!sectionElement || !isRenderedDomSectionElement(sectionElement)) {
-      return [];
-    }
-
-    return mapDomLocatorToViewport({
-      container: this.options.container,
-      mode: this.mode,
-      sectionElement,
-      locator,
-      sectionTop: this.getSectionTop(targetSectionId),
-      sectionHeight: this.getSectionHeight(targetSectionId)
-    });
+    return this.runtimeController.mapLocatorToViewport(locator);
   }
 
   mapViewportToLocator(point: Point): Locator | null {
-    if (!this.book || !this.options.container) {
-      return null;
-    }
-
-    const hit = this.hitTest(point);
-    return hit?.locator
-      ? {
-          ...hit.locator,
-          blockId: hit.blockId
-        }
-      : this.mapDomViewportPointToLocator(point);
+    return this.runtimeController.mapViewportToLocator(point);
   }
 
   private captureModeSwitchLocator(): Locator | null {
-    const fallbackLocator = this.locator ? { ...this.locator } : null;
-    const probePoints = this.getViewportCenterProbePoints();
-    let nearestLocator: Locator | null = null;
-
-    for (const point of probePoints) {
-      const locator =
-        this.mapCanvasTextLayerPointToLocator(point) ??
-        this.mapViewportToLocator(point);
-      if (!locator) {
-        continue;
-      }
-
-      if (locator.anchorId || locator.blockId) {
-        return locator;
-      }
-
-      if (!nearestLocator) {
-        nearestLocator = locator;
-      }
-    }
-
-    return nearestLocator ?? fallbackLocator;
+    return this.runtimeController.captureModeSwitchLocator();
   }
 
   private mapCanvasTextLayerPointToLocator(point: Point): Locator | null {
-    if (!this.book || !this.options.container) {
-      return null;
-    }
-
-    const clientPoint = this.getClientPointForContainerPoint(point);
-    if (!clientPoint) {
-      return null;
-    }
-
-    return mapCanvasTextLayerClientPointToLocator({
-      container: this.options.container,
-      book: this.book,
-      clientPoint,
-      getSectionIndexById: (sectionId) => this.getSectionIndexById(sectionId)
-    });
+    return this.runtimeController.mapCanvasTextLayerPointToLocator(point);
   }
 
   private applyPendingModeSwitchLocator(): void {
-    if (!this.pendingModeSwitchLocator) {
-      return;
-    }
-
-    this.currentSectionIndex = this.pendingModeSwitchLocator.spineIndex;
-    this.updateLocator(this.pendingModeSwitchLocator);
+    return this.runtimeController.applyPendingModeSwitchLocator();
   }
 
   on<TEvent extends ReaderEvent>(
     event: TEvent,
     handler: (payload: ReaderEventMap[TEvent]) => void
   ): () => void {
-    const wrapped = ((payload: ReaderEventMap[TEvent]) => {
-      handler(payload);
-    }) as never;
-
-    this.events.on(event, wrapped);
-    return () => this.events.off(event, wrapped);
+    return this.runtimeController.on(event, handler);
   }
 
   destroy(): void {
-    this.events.removeAllListeners();
-    if (typeof document !== "undefined") {
-      document.removeEventListener(
-        "selectionchange",
-        this.handleDocumentSelectionChange
-      );
-    }
-    this.detachScrollListener();
-    this.detachPointerListener();
-    this.detachKeyboardListener();
-    this.documentSession.resetForDestroy();
-    this.layoutEngine.clearCache();
-    this.navigationSession.resetForDestroy();
-    this.renderSession.resetForDestroy();
-    this.measuredDomPaginationBySectionId.clear();
-    this.selectionSession.reset();
-    this.scrollCoordinator.clearAll();
-    this.revokeObjectUrls();
-    if (this.options.container) {
-      this.options.container.innerHTML = "";
-      this.options.container.removeAttribute("style");
-    }
-    this.resizeObserver?.disconnect();
-    this.resizeObserver = null;
+    return this.runtimeController.destroy();
   }
 
   getBook(): Book | null {
-    return this.book;
+    return this.runtimeController.getBook();
   }
 
   getPublicationId(): string | null {
-    if (!this.book) {
-      return null;
-    }
-
-    return derivePublicationId({
-      book: this.book,
-      ...(this.sourceName ? { sourceName: this.sourceName } : {})
-    });
+    return this.runtimeController.getPublicationId();
   }
 
   createBookmark(
@@ -1946,143 +1019,61 @@ export class EpubReader {
       excerpt?: string;
     } = {}
   ): Bookmark | null {
-    if (!this.book) {
-      return null;
-    }
-
-    const publicationId = this.getPublicationId();
-    const locator = input.locator ?? this.getCurrentLocation();
-    if (!publicationId || !locator) {
-      return null;
-    }
-
-    return createReaderBookmark({
-      publicationId,
-      locator,
-      book: this.book,
-      ...(input.label ? { label: input.label } : {}),
-      ...(input.excerpt ? { excerpt: input.excerpt } : {})
-    });
+    return this.runtimeController.createBookmark(input);
   }
 
   getLastLocationRestoreDiagnostics(): LocatorRestoreDiagnostics | null {
-    return this.lastLocatorRestoreDiagnostics
-      ? { ...this.lastLocatorRestoreDiagnostics }
-      : null;
+    return this.runtimeController.getLastLocationRestoreDiagnostics();
   }
 
   getPreferences(): ReaderPreferences {
-    return cloneReaderPreferences(this.preferences);
+    return this.runtimeController.getPreferences();
   }
 
   getSettings(): ReaderSettings {
-    return this.viewSession.snapshotSettings();
+    return this.runtimeController.getSettings();
   }
 
   getReadingLanguageContext(): ReadingLanguageContext | null {
-    return this.resolveReadingLanguageContextForSectionIndex(
-      this.currentSectionIndex
-    );
+    return this.runtimeController.getReadingLanguageContext();
   }
 
   getReadingNavigationContext(): ReadingNavigationContext | null {
-    return this.resolveReadingNavigationContextForSectionIndex(
-      this.currentSectionIndex
-    );
+    return this.runtimeController.getReadingNavigationContext();
   }
 
   getReadingSpreadContext(): ReadingSpreadContext | null {
-    return this.resolveReadingSpreadContextForSectionIndex(
-      this.currentSectionIndex
-    );
+    return this.runtimeController.getReadingSpreadContext();
   }
 
   getTocTargets(): TocTarget[] {
-    if (!this.book) {
-      return [];
-    }
-
-    return flattenTocTargets(this.book);
+    return this.runtimeController.getTocTargets();
   }
 
   getSectionAccessibilitySnapshot(
     spineIndex = this.currentSectionIndex
   ): SectionAccessibilitySnapshot | null {
-    if (!this.book) {
-      return null;
-    }
-
-    const section = this.book.sections[spineIndex];
-    if (!section) {
-      return null;
-    }
-
-    return buildSectionAccessibilitySnapshot({
-      section,
-      spineIndex
-    });
+    return this.runtimeController.getSectionAccessibilitySnapshot(spineIndex);
   }
 
   getPublicationAccessibilitySnapshot(): PublicationAccessibilitySnapshot | null {
-    if (!this.book) {
-      return null;
-    }
-
-    const publicationId = this.getPublicationId();
-    return buildPublicationAccessibilitySnapshot({
-      book: this.book,
-      ...(publicationId ? { publicationId } : {})
-    });
+    return this.runtimeController.getPublicationAccessibilitySnapshot();
   }
 
   getTheme(): Theme {
-    return { ...this.theme };
+    return this.runtimeController.getTheme();
   }
 
   getTypography(): TypographyOptions {
-    return { ...this.typography };
+    return this.runtimeController.getTypography();
   }
 
   getPaginationInfo(): PaginationInfo {
-    if (this.mode === "scroll") {
-      return {
-        currentPage: Math.max(
-          1,
-          Math.min(
-            this.currentSectionIndex + 1,
-            this.book?.sections.length ?? 1
-          )
-        ),
-        totalPages: Math.max(1, this.book?.sections.length ?? 1)
-      };
-    }
-    this.ensurePages();
-    if (this.mode === "paginated") {
-      const visibleSpreads = this.getVisiblePaginatedSpreads();
-      if (visibleSpreads.length > 0) {
-        const currentSpreadIndex = visibleSpreads.findIndex((spread) =>
-          spread.pageNumbers.includes(this.currentPageNumber)
-        );
-        return {
-          currentPage: Math.max(
-            1,
-            currentSpreadIndex >= 0 ? currentSpreadIndex + 1 : 1
-          ),
-          totalPages: visibleSpreads.length
-        };
-      }
-    }
-    return {
-      currentPage: Math.max(
-        1,
-        Math.min(this.currentPageNumber, this.pages.length || 1)
-      ),
-      totalPages: Math.max(1, this.pages.length)
-    };
+    return this.runtimeController.getPaginationInfo();
   }
 
   async goToHref(href: string): Promise<Locator | null> {
-    return this.navigationController.goToHref(href);
+    return this.runtimeController.goToHref(href);
   }
 
   private async activateLink(input: {
@@ -2092,453 +1083,78 @@ export class EpubReader {
     sectionId?: string;
     blockId?: string;
   }): Promise<void> {
-    const resolved = classifyNavigationHref(input.href);
-    if (resolved.kind === "internal") {
-      await this.goToHref(input.href);
-      return;
-    }
-
-    if (resolved.kind === "external-safe") {
-      const payload = {
-        href: input.href,
-        scheme: resolved.scheme,
-        source: input.source,
-        ...(input.text ? { text: input.text } : {}),
-        ...(input.sectionId ? { sectionId: input.sectionId } : {}),
-        ...(input.blockId ? { blockId: input.blockId } : {})
-      } satisfies ReaderEventMap["externalLinkActivated"];
-      this.events.emit("externalLinkActivated", payload);
-      await this.options.onExternalLink?.(payload);
-      return;
-    }
-
-    this.events.emit("externalLinkBlocked", {
-      href: input.href,
-      scheme: resolved.scheme,
-      reason: "unsafe-scheme"
-    });
+    return this.runtimeController.activateLink(input);
   }
 
   private getSectionProgressWeights(): number[] {
-    if (!this.book || this.book.sections.length === 0) {
-      return [];
-    }
-
-    return this.book.sections.map((section, index) =>
-      Math.max(
-        1,
-        index === this.currentSectionIndex
-          ? this.getSectionHeight(section.id)
-          : (this.sectionEstimatedHeights[index] ?? this.getPageHeight())
-      )
-    );
+    return this.runtimeController.getSectionProgressWeights();
   }
 
   resolveHrefLocator(href: string): Locator | null {
-    return this.navigationController.resolveHrefLocator(href);
+    return this.runtimeController.resolveHrefLocator(href);
   }
 
   private async applyPreferences(
     preferences: ReaderPreferences
   ): Promise<ReaderSettings> {
-    const nextPreferences = normalizeReaderPreferences(preferences);
-    const previousSettings = this.getSettings();
-    const nextSettings = resolveReaderSettings(
-      nextPreferences,
-      DEFAULT_READER_SETTINGS
-    );
-    const modeChanged = previousSettings.mode !== nextSettings.mode;
-    const publisherStylesChanged =
-      previousSettings.publisherStyles !== nextSettings.publisherStyles;
-    const publisherColorOverrideChanged =
-      previousSettings.publisherColorOverride !==
-      nextSettings.publisherColorOverride;
-    const experimentalRtlChanged =
-      previousSettings.experimentalRtl !== nextSettings.experimentalRtl;
-    const spreadModeChanged =
-      previousSettings.spreadMode !== nextSettings.spreadMode;
-    const themeChanged = !themesEqual(
-      previousSettings.theme,
-      nextSettings.theme
-    );
-    const typographyChanged = !typographyEqual(
-      previousSettings.typography,
-      nextSettings.typography
-    );
-    const didChange =
-      modeChanged ||
-      publisherStylesChanged ||
-      publisherColorOverrideChanged ||
-      experimentalRtlChanged ||
-      spreadModeChanged ||
-      themeChanged ||
-      typographyChanged;
-    const capturedModeSwitchLocator =
-      modeChanged && this.book ? this.captureModeSwitchLocator() : null;
-
-    this.viewSession.applySettings({
-      preferences: nextPreferences,
-      settings: nextSettings
-    });
-    this.applyContainerTheme();
-
-    if (didChange) {
-      await this.waitForFonts();
-      this.pages = [];
-      this.measuredDomPaginationBySectionId.clear();
-      if (this.book) {
-        this.pendingModeSwitchLocator = capturedModeSwitchLocator;
-        this.applyPendingModeSwitchLocator();
-        try {
-          this.renderCurrentSection(
-            modeChanged || publisherStylesChanged || experimentalRtlChanged
-              ? "relocate"
-              : "preserve"
-          );
-        } finally {
-          this.pendingModeSwitchLocator = null;
-        }
-      }
-    }
-
-    const settings = this.getSettings();
-    if (didChange) {
-      this.events.emit("preferencesChanged", {
-        preferences: this.getPreferences(),
-        settings
-      });
-    }
-    if (themeChanged) {
-      this.events.emit("themeChanged", { theme: { ...settings.theme } });
-    }
-    if (typographyChanged) {
-      this.events.emit("typographyChanged", {
-        typography: { ...settings.typography }
-      });
-    }
-    if (modeChanged) {
-      this.events.emit("rendered", { mode: settings.mode });
-    }
-
-    return settings;
+    return this.runtimeController.applyPreferences(preferences);
   }
 
   private emitRelocated(): void {
-    this.events.emit("relocated", { locator: this.locator });
-    const event = this.buildSectionRelocatedEvent();
-    if (!event) {
-      return;
-    }
-    this.invokeReaderHook(() => this.options.onSectionRelocated?.(event));
+    return this.runtimeController.emitRelocated();
   }
 
   private buildSectionRelocatedEvent(): SectionRelocatedEvent | null {
-    if (!this.book || this.book.sections.length === 0) {
-      return null;
-    }
-
-    const spineIndex = Math.max(
-      0,
-      Math.min(
-        this.locator?.spineIndex ?? this.currentSectionIndex,
-        this.book.sections.length - 1
-      )
-    );
-    const section = this.book.sections[spineIndex];
-    if (!section) {
-      return null;
-    }
-
-    const elements = this.resolveSectionHookElements(section.id);
-    return {
-      spineIndex,
-      sectionId: section.id,
-      sectionHref: section.href,
-      locator: this.getCurrentLocation(),
-      mode: this.mode,
-      backend: this.lastRenderMetrics.backend,
-      diagnostics: this.getRenderDiagnostics(),
-      ...(elements.containerElement
-        ? { containerElement: elements.containerElement }
-        : {}),
-      ...(elements.contentElement
-        ? { contentElement: elements.contentElement }
-        : {})
-    };
+    return this.runtimeController.buildSectionRelocatedEvent();
   }
 
   private emitSectionRendered(section: SectionDocument): void {
-    const event = this.buildSectionRenderedEvent(section);
-    if (!event) {
-      return;
-    }
-    this.invokeReaderHook(() => this.options.onSectionRendered?.(event));
+    return this.runtimeController.emitSectionRendered(section);
   }
 
   private buildSectionRenderedEvent(
     section: SectionDocument
   ): SectionRenderedEvent | null {
-    if (!this.book) {
-      return null;
-    }
-
-    const sectionIndex = this.getSectionIndexById(section.id);
-    if (sectionIndex < 0) {
-      return null;
-    }
-
-    const elements = this.resolveSectionHookElements(section.id);
-    return {
-      spineIndex: sectionIndex,
-      sectionId: section.id,
-      sectionHref: section.href,
-      mode: this.mode,
-      backend: this.lastRenderMetrics.backend,
-      diagnostics: this.getRenderDiagnostics(),
-      ...(elements.containerElement
-        ? { containerElement: elements.containerElement }
-        : {}),
-      ...(elements.contentElement
-        ? { contentElement: elements.contentElement }
-        : {}),
-      isCurrent: sectionIndex === this.currentSectionIndex
-    };
+    return this.runtimeController.buildSectionRenderedEvent(section);
   }
 
   private resolveSectionHookElements(sectionId: string): {
     containerElement?: HTMLElement;
     contentElement?: HTMLElement;
   } {
-    const containerElement = this.getSectionElement(sectionId);
-    const contentElement = containerElement?.matches(".epub-dom-section")
-      ? containerElement
-      : containerElement?.querySelector<HTMLElement>(".epub-dom-section");
-
-    return {
-      ...(containerElement ? { containerElement } : {}),
-      ...(contentElement ? { contentElement } : {})
-    };
+    return this.runtimeController.resolveSectionHookElements(sectionId);
   }
 
   private invokeReaderHook(
     callback: () => void | Promise<void> | undefined
   ): void {
-    try {
-      const result = callback();
-      if (result) {
-        void Promise.resolve(result).catch(() => {});
-      }
-    } catch {
-      // Hook failures must stay isolated from the reader lifecycle.
-    }
+    return this.runtimeController.invokeReaderHook(callback);
   }
 
   private renderCurrentSection(
     renderBehavior: RenderBehavior = "relocate"
   ): void {
-    this.renderOrchestrator.renderCurrentSection(renderBehavior);
+    return this.runtimeController.renderCurrentSection(renderBehavior);
   }
 
   private renderDomSection(
     section: SectionDocument,
     renderVersion: number
   ): void {
-    if (
-      !this.options.container ||
-      !this.renderSession.isCurrentRenderVersion(renderVersion)
-    ) {
-      return;
-    }
-
-    const input = this.chapterRenderInputs[this.currentSectionIndex];
-    if (!input) {
-      return;
-    }
-
-    const domRenderInput = this.createDomRenderInput(section, input);
-    this.syncFixedLayoutContainerState(domRenderInput);
-    this.domChapterRenderer.render(this.options.container, domRenderInput);
-    const domSection =
-      this.options.container.querySelector<HTMLElement>(".epub-dom-section");
-    if (domSection) {
-      annotateDomSectionWithBlockIds(section, domSection);
-      applyDomDecorations({
-        container: this.options.container,
-        sectionElement: domSection,
-        mode: this.mode,
-        decorations: this.decorationManager.getForSpineIndex(
-          this.currentSectionIndex
-        )
-      });
-    }
-    this.lastInteractionRegions = [];
-    this.lastVisibleBounds = [];
-    this.lastRenderedSectionIds = [section.id];
-    this.lastRenderMetrics = {
-      backend: "dom",
-      visibleSectionCount: 1,
-      visibleDrawOpCount: 0,
-      highlightedDrawOpCount: 0,
-      totalCanvasHeight: this.options.container.scrollHeight
-    };
+    return this.runtimeController.renderDomSection(section, renderVersion);
   }
 
   private renderPaginatedDomSpread(
     page: ReaderPage,
     renderVersion: number
   ): void {
-    if (
-      !this.options.container ||
-      !this.book ||
-      !this.renderSession.isCurrentRenderVersion(renderVersion)
-    ) {
-      return;
-    }
-
-    const spread = this.resolvePaginatedSpread(page);
-    if (!spread || spread.slots.length === 0) {
-      const section = this.book.sections[page.spineIndex];
-      if (section) {
-        this.renderDomSection(section, renderVersion);
-      }
-      return;
-    }
-
-    const renderedSections: Array<{
-      sectionId: string;
-      input: DomChapterRenderInput;
-      page: ReaderPage;
-      usesViewportSlice: boolean;
-    }> = [];
-    const pageHeight = this.getPageHeight();
-    const markup = spread.slots
-      .map((slot) => {
-        if (!slot.section || !slot.page) {
-          return `<div class="epub-dom-spread-slot epub-dom-spread-slot-${slot.position} epub-dom-spread-slot-blank" data-spread-slot="${slot.position}" aria-hidden="true"></div>`;
-        }
-
-        const input = this.chapterRenderInputs[slot.page.spineIndex];
-        if (!input) {
-          return `<div class="epub-dom-spread-slot epub-dom-spread-slot-${slot.position} epub-dom-spread-slot-blank" data-spread-slot="${slot.position}" aria-hidden="true"></div>`;
-        }
-
-        const domRenderInput = this.createDomRenderInput(slot.section, input);
-        const usesViewportSlice =
-          domRenderInput.renditionLayout !== "pre-paginated";
-        renderedSections.push({
-          sectionId: slot.section.id,
-          input: domRenderInput,
-          page: slot.page,
-          usesViewportSlice
-        });
-        const sectionMarkup = this.domChapterRenderer.createMarkup(
-          domRenderInput,
-          usesViewportSlice
-            ? { rootBackgroundTarget: "page-viewport" }
-            : undefined
-        );
-        const slotMarkup = usesViewportSlice
-          ? `<div${serializeDomPageViewportAttributes(domRenderInput, {
-              pageHeight,
-              pageNumberInSection: slot.page.pageNumberInSection
-            })}>${sectionMarkup}</div>`
-          : sectionMarkup;
-        return `<div class="epub-dom-spread-slot epub-dom-spread-slot-${slot.position}" data-spread-slot="${slot.position}" data-page-number="${slot.page.pageNumber}">${slotMarkup}</div>`;
-      })
-      .join("");
-
-    this.syncFixedLayoutContainerState(renderedSections[0]?.input ?? null);
-    this.options.container.innerHTML = `<div class="epub-dom-spread" data-spread-page-start="${spread.anchorPageNumber}" data-spread-page-end="${spread.pageNumbers[spread.pageNumbers.length - 1] ?? spread.anchorPageNumber}" data-spread-size="${spread.pageNumbers.length}">${markup}</div>`;
-
-    for (const renderedSection of renderedSections) {
-      const domSection = this.options.container.querySelector<HTMLElement>(
-        `.epub-dom-section[data-section-id="${renderedSection.sectionId}"]`
-      );
-      const sectionIndex = this.book.sections.findIndex(
-        (section) => section.id === renderedSection.sectionId
-      );
-      if (domSection && sectionIndex >= 0) {
-        const renderedPage = renderedSections.find(
-          (entry) => entry.sectionId === renderedSection.sectionId
-        );
-        if (renderedPage?.usesViewportSlice) {
-          this.positionPaginatedDomSection(domSection, renderedPage.page);
-        }
-        annotateDomSectionWithBlockIds(
-          this.book.sections[sectionIndex]!,
-          domSection
-        );
-        applyDomDecorations({
-          container: this.options.container,
-          sectionElement: domSection,
-          mode: this.mode,
-          decorations: this.decorationManager.getForSpineIndex(sectionIndex)
-        });
-      }
-    }
-
-    this.lastInteractionRegions = [];
-    this.lastVisibleBounds = [];
-    this.lastRenderedSectionIds = renderedSections.map(
-      (entry) => entry.sectionId
-    );
-    this.lastRenderMetrics = {
-      backend: "dom",
-      visibleSectionCount: renderedSections.length,
-      visibleDrawOpCount: 0,
-      highlightedDrawOpCount: 0,
-      totalCanvasHeight: this.options.container.scrollHeight
-    };
+    return this.runtimeController.renderPaginatedDomSpread(page, renderVersion);
   }
 
   private syncFixedLayoutContainerState(
     input: DomChapterRenderInput | null
   ): void {
-    if (!this.options.container) {
-      return;
-    }
-
-    if (
-      input?.renditionLayout !== "pre-paginated" ||
-      !input.fixedLayoutViewport
-    ) {
-      delete this.options.container.dataset.fixedLayoutScale;
-      delete this.options.container.dataset.fixedLayoutWidth;
-      delete this.options.container.dataset.fixedLayoutHeight;
-      this.lastFixedLayoutRenderSignature = null;
-      return;
-    }
-
-    if (typeof input.fixedLayoutScale === "number") {
-      this.options.container.dataset.fixedLayoutScale =
-        input.fixedLayoutScale.toFixed(4);
-    } else {
-      delete this.options.container.dataset.fixedLayoutScale;
-    }
-
-    if (typeof input.fixedLayoutRenderWidth === "number") {
-      this.options.container.dataset.fixedLayoutWidth = String(
-        input.fixedLayoutRenderWidth
-      );
-    } else {
-      delete this.options.container.dataset.fixedLayoutWidth;
-    }
-
-    if (typeof input.fixedLayoutRenderHeight === "number") {
-      this.options.container.dataset.fixedLayoutHeight = String(
-        input.fixedLayoutRenderHeight
-      );
-    } else {
-      delete this.options.container.dataset.fixedLayoutHeight;
-    }
-
-    this.lastFixedLayoutRenderSignature = `${
-      input.fixedLayoutRenderWidth ?? input.fixedLayoutViewport.width
-    }x${input.fixedLayoutRenderHeight ?? input.fixedLayoutViewport.height}@${
-      typeof input.fixedLayoutScale === "number"
-        ? input.fixedLayoutScale.toFixed(4)
-        : "1.0000"
-    }`;
+    return this.runtimeController.syncFixedLayoutContainerState(input);
   }
 
   private syncDomSectionStateAfterRender(
@@ -2546,264 +1162,42 @@ export class EpubReader {
     preservedScrollAnchor: ScrollAnchor | null,
     paginatedPage: ReaderPage | null = null
   ): void {
-    if (!this.options.container) {
-      return;
-    }
-
-    if (
-      renderBehavior === "preserve" &&
-      preservedScrollAnchor &&
-      this.mode === "scroll"
-    ) {
-      this.setProgrammaticScrollTop(preservedScrollAnchor.fallbackScrollTop);
-    } else if (this.mode === "paginated") {
-      const targetPage =
-        paginatedPage ??
-        (this.locator
-          ? this.findPageForLocator({
-              ...this.locator,
-              spineIndex: this.currentSectionIndex
-            })
-          : null) ??
-        this.findCurrentPageForSection(
-          this.book?.sections[this.currentSectionIndex]?.id ?? ""
-        );
-      const progressInSection =
-        targetPage && targetPage.totalPagesInSection > 1
-          ? (targetPage.pageNumberInSection - 1) /
-            (targetPage.totalPagesInSection - 1)
-          : 0;
-
-      this.scrollDomSectionToPaginatedPage(targetPage);
-      this.updateLocator({
-        ...this.locator,
-        spineIndex: this.currentSectionIndex,
-        progressInSection
-      });
-      return;
-    } else if (this.scrollToLocatorAnchor()) {
-      this.syncCurrentPageFromSection();
-      this.updateLocator({
-        ...this.locator,
-        spineIndex: this.currentSectionIndex,
-        progressInSection: this.getProgressForCurrentLocator()
-      });
-      return;
-    } else {
-      this.scrollDomSectionToProgress(this.locator?.progressInSection ?? 0);
-    }
-
-    this.updateLocator({
-      ...this.locator,
-      spineIndex: this.currentSectionIndex,
-      progressInSection: this.locator?.progressInSection ?? 0
-    });
+    return this.runtimeController.syncDomSectionStateAfterRender(
+      renderBehavior,
+      preservedScrollAnchor,
+      paginatedPage
+    );
   }
 
   private scrollDomSectionToProgress(progressInSection: number): void {
-    if (!this.options.container) {
-      return;
-    }
-
-    const section = this.options.container.querySelector(".epub-dom-section");
-    const sectionHeight =
-      (section instanceof HTMLElement
-        ? section.scrollHeight || section.offsetHeight
-        : 0) || this.options.container.scrollHeight;
-    const clamped = Number.isFinite(progressInSection)
-      ? Math.max(0, Math.min(progressInSection, 1))
-      : 0;
-    const availableScroll = Math.max(
-      0,
-      sectionHeight - this.options.container.clientHeight
-    );
-    this.setProgrammaticScrollTop(availableScroll * clamped);
+    return this.runtimeController.scrollDomSectionToProgress(progressInSection);
   }
 
   private scrollDomSectionToPaginatedPage(page: ReaderPage | null): void {
-    if (!this.options.container) {
-      return;
-    }
-
-    const section =
-      this.options.container.querySelector<HTMLElement>(".epub-dom-section");
-    if (section && page) {
-      this.positionPaginatedDomSection(section, page);
-    }
-    this.setProgrammaticScrollTop(0);
+    return this.runtimeController.scrollDomSectionToPaginatedPage(page);
   }
 
   private positionPaginatedDomSection(
     section: HTMLElement,
     page: ReaderPage
   ): void {
-    this.domPaginationService.positionPaginatedDomSection({
-      sectionElement: section,
-      page,
-      pageHeight: this.getPageHeight(),
-      pages: this.pages
-    });
+    return this.runtimeController.positionPaginatedDomSection(section, page);
   }
 
   private syncMeasuredPaginatedDomPages(
     section: SectionDocument
   ): ReaderPage | null {
-    if (!this.options.container) {
-      return null;
-    }
-
-    const result = this.domPaginationService.syncMeasuredPaginatedDomPages({
-      container: this.options.container,
-      section,
-      currentSectionIndex: this.currentSectionIndex,
-      currentPageNumber: this.currentPageNumber,
-      pages: this.pages,
-      pageHeight: this.getPageHeight(),
-      locator: this.locator,
-      preferLocatorWhenResolvingPage: this.preferLocatorOnNextDomPaginationSync
-    });
-    this.preferLocatorOnNextDomPaginationSync = false;
-    if (!result) {
-      return null;
-    }
-
-    const measurement = this.getPaginationMeasurement();
-    const measuredSectionPages = result.pages.filter(
-      (page) => page.sectionId === section.id
-    );
-    if (measuredSectionPages.length > 0) {
-      this.measuredDomPaginationBySectionId.set(section.id, {
-        pages: measuredSectionPages.map((page) => ({ ...page })),
-        sectionEstimatedHeight: result.sectionEstimatedHeight,
-        width: measurement.width,
-        height: measurement.height
-      });
-    }
-    this.pages = result.pages;
-    this.sectionEstimatedHeights[this.currentSectionIndex] =
-      result.sectionEstimatedHeight;
-    return result.resolvedPage;
+    return this.runtimeController.syncMeasuredPaginatedDomPages(section);
   }
 
   private resolveChapterRenderDecision(
     sectionIndex: number
   ): ChapterRenderDecision {
-    const section = this.book?.sections[sectionIndex];
-    if (section?.renditionLayout === "pre-paginated") {
-      return {
-        mode: "dom",
-        score: 0,
-        reasons: ["fixed-layout-section"]
-      };
-    }
-
-    if (
-      section?.presentationRole === "cover" ||
-      section?.presentationRole === "image-page"
-    ) {
-      return {
-        mode: "dom",
-        score: 0,
-        reasons: [
-          section.presentationRole === "cover"
-            ? "cover-section"
-            : "image-page-section"
-        ]
-      };
-    }
-
-    const input = this.chapterRenderInputs[sectionIndex];
-    if (!input) {
-      return {
-        mode: "canvas",
-        score: 0,
-        reasons: []
-      };
-    }
-
-    // Cache by chapter source so repeated renders, searches, and mode switches do
-    // not keep re-running the analyzer for the same section content.
-    return this.chapterRenderDecisionCache.resolve(
-      {
-        href: input.href,
-        content: input.content
-      },
-      () =>
-        analyzeChapterRenderMode(
-          buildChapterAnalysisInput({
-            href: input.href,
-            chapter: input.preprocessed,
-            stylesheets: input.linkedStyleSheets.map(
-              (stylesheet) => stylesheet.ast
-            )
-          })
-        )
-    );
+    return this.runtimeController.resolveChapterRenderDecision(sectionIndex);
   }
 
   private applyContainerTheme(): void {
-    if (!this.options.container) {
-      return;
-    }
-
-    const profile = buildReadingStyleProfile({
-      theme: this.theme,
-      typography: this.typography
-    });
-    const languageContext = this.getReadingLanguageContext();
-    const navigationContext = this.getReadingNavigationContext();
-    const spreadContext = this.getReadingSpreadContext();
-    const variables = buildReadingStyleCssVariables(profile);
-    this.options.container.style.background = this.theme.background;
-    this.options.container.style.color = this.theme.color;
-    this.options.container.style.fontSize = `${this.typography.fontSize}px`;
-    this.options.container.style.fontFamily = this.typography.fontFamily ?? "";
-    this.options.container.style.lineHeight = String(
-      this.typography.lineHeight
-    );
-    this.options.container.style.letterSpacing = `${this.typography.letterSpacing ?? 0}px`;
-    this.options.container.style.wordSpacing = `${this.typography.wordSpacing ?? 0}px`;
-    this.options.container.dataset.baselineProfile = profile.name;
-    this.options.container.dataset.experimentalRtl = this.experimentalRtl
-      ? "enabled"
-      : "disabled";
-    this.options.container.dataset.contentDirection =
-      languageContext?.contentDirection ?? "ltr";
-    this.options.container.dataset.pageProgression =
-      navigationContext?.pageProgression ?? "ltr";
-    this.options.container.dataset.previousPageKey =
-      navigationContext?.previousPageKey ?? "ArrowLeft";
-    this.options.container.dataset.nextPageKey =
-      navigationContext?.nextPageKey ?? "ArrowRight";
-    this.options.container.dataset.spreadMode =
-      spreadContext?.spreadMode ?? this.spreadMode;
-    this.options.container.dataset.renditionSpread =
-      spreadContext?.renditionSpread ??
-      this.book?.metadata.renditionSpread ??
-      "auto";
-    this.options.container.dataset.syntheticSpread =
-      spreadContext?.syntheticSpreadActive ? "enabled" : "disabled";
-    this.options.container.dataset.pageSpreadPlacement =
-      spreadContext?.pageSpreadPlacement ?? "center";
-    this.options.container.dataset.viewportSlotCount = String(
-      spreadContext?.viewportSlotCount ?? 1
-    );
-    if (languageContext?.resolvedLanguage) {
-      this.options.container.dataset.contentLanguage =
-        languageContext.resolvedLanguage;
-      this.options.container.lang = languageContext.resolvedLanguage;
-    } else {
-      delete this.options.container.dataset.contentLanguage;
-      this.options.container.removeAttribute("lang");
-    }
-    if (languageContext?.rtlActive) {
-      this.options.container.dir = "rtl";
-    } else {
-      this.options.container.removeAttribute("dir");
-    }
-    for (const [name, value] of Object.entries(variables)) {
-      this.options.container.style.setProperty(name, value);
-    }
+    return this.runtimeController.applyContainerTheme();
   }
 
   private renderPaginatedCanvas(
@@ -2811,928 +1205,208 @@ export class EpubReader {
     page: ReaderPage | null,
     renderVersion: number
   ): void {
-    if (
-      !this.options.container ||
-      !page ||
-      !this.renderSession.isCurrentRenderVersion(renderVersion)
-    ) {
-      return;
-    }
-
-    const displayList = this.buildDisplayListForPage(section, page);
-    const result = this.canvasRenderer.renderPaginated(
-      this.options.container,
-      displayList,
-      this.getPageHeight(),
-      this.options.canvas
+    return this.runtimeController.renderPaginatedCanvas(
+      section,
+      page,
+      renderVersion
     );
-    this.lastInteractionRegions = result.sections.flatMap(
-      (entry) => entry.interactions
-    );
-    this.lastVisibleBounds = result.bounds;
-    this.lastRenderedSectionIds = [section.id];
-    const highlightedDrawOpCount = displayList.ops.filter(
-      (op) =>
-        op.kind === "text" &&
-        (Boolean(op.highlightColor) || Boolean(op.highlightSegments?.length))
-    ).length;
-    this.lastRenderMetrics = {
-      backend: "canvas",
-      visibleSectionCount: result.sections.length,
-      visibleDrawOpCount: result.drawOpCount,
-      highlightedDrawOpCount,
-      totalCanvasHeight: result.totalCanvasHeight
-    };
   }
 
   private renderScrollableCanvas(renderVersion: number): void {
-    if (
-      !this.book ||
-      !this.options.container ||
-      !this.renderSession.isCurrentRenderVersion(renderVersion)
-    ) {
-      return;
-    }
-
-    const plan = buildScrollRenderPlan({
-      sections: this.getSectionsForRender(),
-      scrollWindowStart: this.scrollWindowStart,
-      scrollWindowEnd: this.scrollWindowEnd,
-      sectionEstimatedHeights: this.sectionEstimatedHeights,
-      viewportTop: this.options.container.scrollTop,
-      viewportHeight: this.options.container.clientHeight,
-      pageHeight: this.getPageHeight(),
-      overscanMultiplier: EpubReader.SCROLL_SLICE_OVERSCAN_MULTIPLIER,
-      lastMeasuredWidth: this.lastMeasuredWidth,
-      getSectionHeight: (sectionId) => this.getSectionHeight(sectionId),
-      resolveChapterRenderDecision: (index) =>
-        this.resolveChapterRenderDecision(index),
-      buildDomMarkup: (section, index) => {
-        const input = this.chapterRenderInputs[index];
-        return input
-          ? this.domChapterRenderer.createMarkup(
-              this.createDomRenderInput(section, input)
-            )
-          : undefined;
-      },
-      buildCanvasSection: (section, index) => {
-        const layout = this.layoutEngine.layout(
-          {
-            section,
-            spineIndex: index,
-            viewportWidth: this.getContentWidth(),
-            viewportHeight: this.options.container!.clientHeight,
-            typography: this.typography,
-            fontFamily: this.getFontFamily(),
-            resolveImageIntrinsicSize: (src) =>
-              this.resolveImageIntrinsicSizeForLayout(src)
-          },
-          "scroll"
-        );
-        const displayList = this.displayListBuilder.buildSection({
-          section,
-          width: layout.width,
-          viewportHeight: this.options.container!.clientHeight,
-          blocks: layout.blocks,
-          theme: this.theme,
-          typography: this.typography,
-          publisherColorOverride: this.publisherColorOverride,
-          locatorMap: layout.locatorMap,
-          resolveImageLoaded: (src) => this.isImageResourceReady(src),
-          resolveImageUrl: (src) => this.resolveCanvasResourceUrl(src),
-          resolveImageIntrinsicSize: (src) =>
-            this.resolveImageIntrinsicSizeForLayout(src),
-          highlightedBlockIds:
-            this.getHighlightedCanvasBlockIdsForSection(index),
-          highlightRangesByBlock:
-            this.getHighlightedCanvasTextRangesForSection(index),
-          underlinedBlockIds: this.getUnderlinedCanvasBlockIdsForSection(index),
-          underlineColorsByBlock:
-            this.getUnderlinedCanvasBlockColorsForSection(index),
-          underlineRangesByBlock:
-            this.getUnderlinedCanvasTextRangesForSection(index),
-          activeBlockId: this.getActiveCanvasBlockIdForSection(index)
-        });
-
-        return {
-          width: layout.width,
-          displayList,
-          measuredHeight: displayList.height,
-          estimatedHeight: Math.max(this.getPageHeight(), displayList.height)
-        };
-      }
-    });
-    const sectionsToRender = plan.sectionsToRender;
-    this.sectionEstimatedHeights = plan.sectionEstimatedHeights;
-    this.lastMeasuredWidth = plan.lastMeasuredWidth;
-    this.lastScrollRenderWindows.clear();
-    for (const [
-      sectionId,
-      renderWindows
-    ] of plan.scrollRenderWindows.entries()) {
-      this.lastScrollRenderWindows.set(sectionId, renderWindows);
-    }
-
-    const result = this.canvasRenderer.renderScrollable(
-      this.options.container,
-      sectionsToRender,
-      this.options.canvas
-    );
-    for (let index = 0; index < this.book.sections.length; index += 1) {
-      const section = this.book.sections[index];
-      if (!section) {
-        continue;
-      }
-      this.sectionEstimatedHeights[index] = this.getSectionHeight(section.id);
-    }
-    this.lastInteractionRegions = this.offsetInteractionRegionsForScroll(
-      result.sections
-    );
-    for (const entry of sectionsToRender) {
-      if (!entry.domHtml) {
-        continue;
-      }
-
-      const sectionWrapper = this.getSectionElement(entry.sectionId);
-      const domSection = sectionWrapper?.matches(".epub-dom-section")
-        ? sectionWrapper
-        : sectionWrapper?.querySelector<HTMLElement>(".epub-dom-section");
-      const sectionIndex = this.getSectionIndexById(entry.sectionId);
-      if (domSection && sectionIndex >= 0) {
-        annotateDomSectionWithBlockIds(
-          this.book.sections[sectionIndex]!,
-          domSection
-        );
-        applyDomDecorations({
-          container: this.options.container,
-          sectionElement: domSection,
-          mode: this.mode,
-          decorations: this.decorationManager.getForSpineIndex(sectionIndex)
-        });
-      }
-    }
-    this.lastVisibleBounds =
-      this.collectVisibleBoundsForScroll(sectionsToRender);
-    this.lastRenderedSectionIds = sectionsToRender.map(
-      (entry) => entry.sectionId
-    );
-    const highlightedDrawOpCount = sectionsToRender
-      .flatMap((entry) => entry.displayList?.ops ?? [])
-      .filter(
-        (op) =>
-          op.kind === "text" &&
-          (Boolean(op.highlightColor) || Boolean(op.highlightSegments?.length))
-      ).length;
-    const currentDecision = this.resolveChapterRenderDecision(
-      this.currentSectionIndex
-    );
-    this.lastRenderMetrics = {
-      backend: currentDecision.mode,
-      visibleSectionCount: result.sections.length,
-      visibleDrawOpCount: result.drawOpCount,
-      highlightedDrawOpCount,
-      totalCanvasHeight: result.totalCanvasHeight
-    };
+    return this.runtimeController.renderScrollableCanvas(renderVersion);
   }
 
   private buildDisplayListForPage(
     section: SectionDocument,
     page: ReaderPage
   ): SectionDisplayList {
-    return buildPageDisplayList({
-      page,
-      section,
-      width: this.getContentWidth(),
-      viewportHeight: this.options.container?.clientHeight ?? 720,
-      theme: this.theme,
-      typography: this.typography,
-      publisherColorOverride: this.publisherColorOverride,
-      highlightedBlockIds: this.getHighlightedCanvasBlockIdsForSection(
-        page.spineIndex
-      ),
-      highlightRangesByBlock: this.getHighlightedCanvasTextRangesForSection(
-        page.spineIndex
-      ),
-      underlinedBlockIds: this.getUnderlinedCanvasBlockIdsForSection(
-        page.spineIndex
-      ),
-      underlineColorsByBlock: this.getUnderlinedCanvasBlockColorsForSection(
-        page.spineIndex
-      ),
-      underlineRangesByBlock: this.getUnderlinedCanvasTextRangesForSection(
-        page.spineIndex
-      ),
-      activeBlockId: this.getActiveCanvasBlockIdForSection(page.spineIndex),
-      resolveImageLoaded: (src) => this.isImageResourceReady(src),
-      resolveImageUrl: (src) => this.resolveCanvasResourceUrl(src),
-      resolveImageIntrinsicSize: (src) =>
-        this.resolveImageIntrinsicSizeForLayout(src),
-      estimateBlockHeight: (block) => this.estimateBlockHeightForPage(block),
-      buildSectionDisplayList: (input) =>
-        this.displayListBuilder.buildSection(input)
-    });
+    return this.runtimeController.buildDisplayListForPage(section, page);
   }
 
   private estimateBlockHeightForPage(block: BlockNode): number {
-    return (
-      this.layoutEngine.layout(
-        {
-          section: {
-            id: "estimate",
-            href: "estimate.xhtml",
-            blocks: [block],
-            anchors: {}
-          },
-          spineIndex: 0,
-          viewportWidth: this.getContentWidth(),
-          viewportHeight: this.options.container?.clientHeight ?? 720,
-          typography: this.typography,
-          fontFamily: this.getFontFamily(),
-          resolveImageIntrinsicSize: (src) =>
-            this.resolveImageIntrinsicSizeForLayout(src)
-        },
-        "paginated"
-      ).blocks[0]?.estimatedHeight ??
-      this.typography.fontSize * this.typography.lineHeight
-    );
+    return this.runtimeController.estimateBlockHeightForPage(block);
   }
 
   private isImageResourceReady(src: string): boolean {
-    return this.renderableResourceManager.isReady(src);
+    return this.runtimeController.isImageResourceReady(src);
   }
 
   private resolveImageIntrinsicSizeForLayout(
     src: string
   ): IntrinsicImageSize | null | undefined {
-    const cached = this.imageIntrinsicSizeCache.get(src);
-    if (cached) {
-      return cached;
-    }
-    if (this.imageIntrinsicSizeCache.has(src)) {
-      return null;
-    }
-
-    if (!this.resources || this.pendingImageIntrinsicSizePaths.has(src)) {
-      return undefined;
-    }
-
-    if (!this.resources.exists(src)) {
-      this.imageIntrinsicSizeCache.set(src, null);
-      return undefined;
-    }
-
-    this.pendingImageIntrinsicSizePaths.add(src);
-    this.resources
-      .readBinary(src)
-      .then((binary) => {
-        const resolved = extractIntrinsicImageSize(binary, src);
-        this.imageIntrinsicSizeCache.set(src, resolved);
-        if (resolved) {
-          this.scheduleDeferredResourceRenderRefresh();
-        }
-      })
-      .catch(() => {
-        this.imageIntrinsicSizeCache.set(src, null);
-      })
-      .finally(() => {
-        this.pendingImageIntrinsicSizePaths.delete(src);
-      });
-
-    return undefined;
+    return this.runtimeController.resolveImageIntrinsicSizeForLayout(src);
   }
 
   private extractBlockText(block: BlockNode): string {
-    return collectBlockText(block);
+    return this.runtimeController.extractBlockText(block);
   }
 
   private extractInlineText(inlines: InlineNode[]): string {
-    return inlines.map((inline) => collectInlineText(inline)).join("");
+    return this.runtimeController.extractInlineText(inlines);
   }
 
   private resolveCanvasResourceUrl(path: string): string {
-    return resolveEmbeddedResourceUrl(path, {
-      allowExternalEmbeddedResources:
-        this.options.allowExternalEmbeddedResources === true,
-      resolveInternalResourceUrl: (resourcePath) =>
-        this.resolveRenderableResourceUrl(resourcePath, "canvas")
-    });
+    return this.runtimeController.resolveCanvasResourceUrl(path);
   }
 
   private resolveDomResourceUrl(path: string): string {
-    return this.resolveRenderableResourceUrl(path, "dom");
+    return this.runtimeController.resolveDomResourceUrl(path);
   }
 
   private resolveRenderableResourceUrl(
     path: string,
     consumer: RenderableResourceConsumer
   ): string {
-    return this.renderableResourceManager.resolveUrl(path, consumer);
+    return this.runtimeController.resolveRenderableResourceUrl(path, consumer);
   }
 
   private createDomRenderInput(
     section: SectionDocument,
     input: SharedChapterRenderInput
   ): DomChapterRenderInput {
-    const languageContext =
-      this.resolveReadingLanguageContextForSection(section);
-    const fixedLayoutViewportBox = this.getFixedLayoutViewportBox(section);
-    const presentationViewportBox = this.getPresentationViewportBox(section);
-    const domRenderInput = createDomChapterRenderInput({
-      book: this.book,
-      section,
-      input,
-      theme: this.theme,
-      typography: this.typography,
-      fontFamily: this.getFontFamily(),
-      publisherStyles: this.publisherStyles,
-      publisherColorOverride: this.publisherColorOverride,
-      ...(typeof fixedLayoutViewportBox?.width === "number"
-        ? { availableWidth: fixedLayoutViewportBox.width }
-        : typeof presentationViewportBox?.width === "number"
-          ? { availableWidth: presentationViewportBox.width }
-          : typeof this.getContentWidth() === "number"
-            ? { availableWidth: this.getContentWidth() }
-            : {}),
-      ...(typeof fixedLayoutViewportBox?.height === "number"
-        ? { availableHeight: fixedLayoutViewportBox.height }
-        : typeof presentationViewportBox?.height === "number"
-          ? { availableHeight: presentationViewportBox.height }
-          : typeof this.options.container?.clientHeight === "number"
-            ? { availableHeight: this.options.container.clientHeight }
-            : {}),
-      allowExternalEmbeddedResources:
-        this.options.allowExternalEmbeddedResources === true,
-      resolveDomResourceUrl: (path) => this.resolveDomResourceUrl(path)
-    });
-
-    return {
-      ...domRenderInput,
-      ...(languageContext?.resolvedLanguage
-        ? { sectionLanguage: languageContext.resolvedLanguage }
-        : {}),
-      ...(languageContext?.rtlActive
-        ? { sectionDirection: "rtl" as const }
-        : {})
-    };
+    return this.runtimeController.createDomRenderInput(section, input);
   }
 
   private resolveReadingLanguageContextForSection(
     section: SectionDocument
   ): ReadingLanguageContext | null {
-    if (!this.book) {
-      return null;
-    }
-
-    const spineIndex = this.getSectionIndexById(section.id);
-    if (spineIndex < 0) {
-      return null;
-    }
-
-    return resolveReadingLanguageContext({
-      book: this.book,
-      section,
-      spineIndex,
-      experimentalRtl: this.experimentalRtl
-    });
+    return this.runtimeController.resolveReadingLanguageContextForSection(
+      section
+    );
   }
 
   private resolveReadingLanguageContextForSectionIndex(
     spineIndex: number
   ): ReadingLanguageContext | null {
-    if (!this.book) {
-      return null;
-    }
-
-    const section = this.book.sections[spineIndex];
-    if (!section) {
-      return null;
-    }
-
-    return resolveReadingLanguageContext({
-      book: this.book,
-      section,
-      spineIndex,
-      experimentalRtl: this.experimentalRtl
-    });
+    return this.runtimeController.resolveReadingLanguageContextForSectionIndex(
+      spineIndex
+    );
   }
 
   private resolveReadingNavigationContextForSectionIndex(
     spineIndex: number
   ): ReadingNavigationContext | null {
-    const languageContext =
-      this.resolveReadingLanguageContextForSectionIndex(spineIndex);
-    return languageContext
-      ? resolveReadingNavigationContext({ languageContext })
-      : null;
+    return this.runtimeController.resolveReadingNavigationContextForSectionIndex(
+      spineIndex
+    );
   }
 
   private resolveReadingSpreadContextForSectionIndex(
     spineIndex: number
   ): ReadingSpreadContext | null {
-    if (!this.book) {
-      return null;
-    }
-
-    const section = this.book.sections[spineIndex];
-    if (!section) {
-      return null;
-    }
-
-    const navigationContext =
-      this.resolveReadingNavigationContextForSectionIndex(spineIndex);
-    const dimensions = this.getContainerInnerDimensions();
-    return resolveReadingSpreadContext({
-      book: this.book,
-      section,
-      spineIndex,
-      mode: this.mode,
-      spreadMode: this.spreadMode,
-      pageProgression: navigationContext?.pageProgression ?? "ltr",
-      containerWidth: dimensions.width,
-      containerHeight: dimensions.height
-    });
-  }
-
-  private getSectionsForRender(): SectionDocument[] {
-    return (
-      this.book?.sections.map((section) => this.getSectionForRender(section)) ??
-      []
+    return this.runtimeController.resolveReadingSpreadContextForSectionIndex(
+      spineIndex
     );
   }
 
+  private getSectionsForRender(): SectionDocument[] {
+    return this.runtimeController.getSectionsForRender();
+  }
+
   private getSectionForRender(section: SectionDocument): SectionDocument {
-    return this.publisherStyles === "enabled"
-      ? section
-      : stripPublisherStylesFromSection(section);
+    return this.runtimeController.getSectionForRender(section);
   }
 
   private revokeObjectUrls(): void {
-    this.renderableResourceManager.revokeAll();
+    return this.runtimeController.revokeObjectUrls();
   }
 
   private getContainerInnerDimensions(): { width: number; height: number } {
-    if (!this.options.container) {
-      return {
-        width: 672,
-        height: 720
-      };
-    }
-
-    const container = this.options.container;
-    const computed =
-      typeof window !== "undefined" &&
-      typeof window.getComputedStyle === "function"
-        ? window.getComputedStyle(container)
-        : null;
-    const paddingLeft = computed
-      ? Number.parseFloat(computed.paddingLeft) || 0
-      : 0;
-    const paddingRight = computed
-      ? Number.parseFloat(computed.paddingRight) || 0
-      : 0;
-    const paddingTop = computed
-      ? Number.parseFloat(computed.paddingTop) || 0
-      : 0;
-    const paddingBottom = computed
-      ? Number.parseFloat(computed.paddingBottom) || 0
-      : 0;
-
-    return {
-      width: Math.max(120, container.clientWidth - paddingLeft - paddingRight),
-      height: Math.max(120, container.clientHeight - paddingTop - paddingBottom)
-    };
+    return this.runtimeController.getContainerInnerDimensions();
   }
 
   private getPaginationMeasurement(): { width: number; height: number } {
-    const { height } = this.getContainerInnerDimensions();
-    return {
-      width: this.getContentWidth(),
-      height
-    };
+    return this.runtimeController.getPaginationMeasurement();
   }
 
   private getFixedLayoutViewportBox(
     section: SectionDocument
   ): { width: number; height: number } | null {
-    if (section.renditionLayout !== "pre-paginated") {
-      return null;
-    }
-
-    const sectionIndex = this.getSectionIndexById(section.id);
-    const viewportBox = this.getContainerInnerDimensions();
-    if (sectionIndex < 0) {
-      return viewportBox;
-    }
-
-    const spreadContext =
-      this.resolveReadingSpreadContextForSectionIndex(sectionIndex);
-    const partition = spreadContext
-      ? resolveSyntheticSpreadViewportPartition({
-          spreadContext,
-          containerWidth: viewportBox.width,
-          containerHeight: viewportBox.height
-        })
-      : null;
-
-    return partition
-      ? {
-          width: partition.width,
-          height: partition.height
-        }
-      : viewportBox;
+    return this.runtimeController.getFixedLayoutViewportBox(section);
   }
 
   private getPresentationViewportBox(
     section: SectionDocument
   ): { width: number; height: number } | null {
-    if (
-      section.presentationRole !== "cover" &&
-      section.presentationRole !== "image-page"
-    ) {
-      return null;
-    }
-
-    return (
-      this.getFixedLayoutViewportBox(section) ??
-      this.getContainerInnerDimensions()
-    );
+    return this.runtimeController.getPresentationViewportBox(section);
   }
 
   private resolveFixedLayoutRenderSignature(
     section: SectionDocument
   ): string | null {
-    const viewportBox = this.getFixedLayoutViewportBox(section);
-    if (!viewportBox) {
-      return null;
-    }
-
-    const frame = resolveFixedLayoutFrame({
-      section,
-      availableWidth: viewportBox.width,
-      availableHeight: viewportBox.height
-    });
-    if (!frame) {
-      return null;
-    }
-
-    return `${frame.width}x${frame.height}@${frame.scale.toFixed(4)}`;
+    return this.runtimeController.resolveFixedLayoutRenderSignature(section);
   }
 
   private resolvePresentationRenderSignature(
     section: SectionDocument
   ): string | null {
-    const viewportBox = this.getPresentationViewportBox(section);
-    if (!viewportBox) {
-      return null;
-    }
-
-    return `${Math.round(viewportBox.width)}x${Math.round(viewportBox.height)}`;
+    return this.runtimeController.resolvePresentationRenderSignature(section);
   }
 
   private getContentWidth(): number {
-    const { width } = this.getContainerInnerDimensions();
-    const rootFontSize =
-      typeof document !== "undefined"
-        ? Number.parseFloat(
-            window.getComputedStyle(document.documentElement).fontSize
-          ) || 16
-        : 16;
-    const maxContentWidth = 42 * rootFontSize;
-    return Math.min(width, maxContentWidth);
+    return this.runtimeController.getContentWidth();
   }
 
   private getFontFamily(): string {
-    if (this.typography.fontFamily?.trim()) {
-      return this.typography.fontFamily;
-    }
-
-    if (!this.options.container || typeof window === "undefined") {
-      return '"Iowan Old Style", "Palatino Linotype", serif';
-    }
-
-    const fontFamily = window
-      .getComputedStyle(this.options.container)
-      .fontFamily.trim();
-    return fontFamily || '"Iowan Old Style", "Palatino Linotype", serif';
+    return this.runtimeController.getFontFamily();
   }
 
   private attachResizeObserver(): void {
-    if (!this.options.container || typeof ResizeObserver === "undefined") {
-      return;
-    }
-
-    this.resizeObserver = new ResizeObserver(() => {
-      if (!this.options.container || !this.book) {
-        return;
-      }
-
-      const { width: nextWidth, height: nextHeight } =
-        this.getPaginationMeasurement();
-      const currentSection = this.book.sections[this.currentSectionIndex];
-      const nextFixedLayoutRenderSignature = currentSection
-        ? this.resolveFixedLayoutRenderSignature(currentSection)
-        : null;
-      const nextPresentationRenderSignature = currentSection
-        ? this.resolvePresentationRenderSignature(currentSection)
-        : null;
-      const widthChanged = Math.abs(nextWidth - this.lastMeasuredWidth) >= 1;
-      const heightChanged = Math.abs(nextHeight - this.lastMeasuredHeight) >= 1;
-      const fixedLayoutChanged =
-        nextFixedLayoutRenderSignature !== this.lastFixedLayoutRenderSignature;
-      const presentationChanged =
-        nextPresentationRenderSignature !==
-        this.lastPresentationRenderSignature;
-
-      if (
-        !widthChanged &&
-        !heightChanged &&
-        !fixedLayoutChanged &&
-        !presentationChanged
-      ) {
-        return;
-      }
-
-      this.pages = [];
-      this.measuredDomPaginationBySectionId.clear();
-      this.renderCurrentSection("preserve");
-    });
-
-    this.resizeObserver.observe(this.options.container);
+    return this.runtimeController.attachResizeObserver();
   }
 
   private attachScrollListener(): void {
-    this.interactionController.attachScrollListener();
+    return this.runtimeController.attachScrollListener();
   }
 
   private detachScrollListener(): void {
-    this.interactionController.detachScrollListener();
+    return this.runtimeController.detachScrollListener();
   }
 
   private attachSelectionChangeListener(): void {
-    if (typeof document === "undefined") {
-      return;
-    }
-
-    document.addEventListener(
-      "selectionchange",
-      this.handleDocumentSelectionChange
-    );
+    return this.runtimeController.attachSelectionChangeListener();
   }
 
   private attachPointerListener(): void {
-    this.interactionController.attachPointerListener();
+    return this.runtimeController.attachPointerListener();
   }
 
   private detachPointerListener(): void {
-    this.interactionController.detachPointerListener();
+    return this.runtimeController.detachPointerListener();
   }
 
   private attachKeyboardListener(): void {
-    this.interactionController.attachKeyboardListener();
+    return this.runtimeController.attachKeyboardListener();
   }
 
   private detachKeyboardListener(): void {
-    this.interactionController.detachKeyboardListener();
+    return this.runtimeController.detachKeyboardListener();
   }
 
   private handleDomClick(event: MouseEvent): void {
-    if (!this.options.container || !this.book) {
-      return;
-    }
-
-    if (hasActiveTextSelection(this.options.container)) {
-      return;
-    }
-
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) {
-      return;
-    }
-
-    const sectionElement = target.closest(".epub-dom-section");
-    if (!(sectionElement instanceof HTMLElement)) {
-      return;
-    }
-
-    const sectionId = sectionElement.dataset.sectionId;
-    const sectionIndex = sectionId
-      ? this.getSectionIndexById(sectionId)
-      : this.currentSectionIndex;
-    if (sectionIndex < 0) {
-      return;
-    }
-
-    const point = this.getContainerRelativePoint(event);
-    if (!point) {
-      return;
-    }
-
-    const annotationSelection = this.resolveAnnotationSelectionAtPoint(point);
-    if (annotationSelection) {
-      event.preventDefault();
-      this.setPinnedTextSelectionSnapshot(annotationSelection);
-      this.emitAnnotationActivatedAtPoint(point);
-      return;
-    }
-
-    if (this.pinnedTextSelectionSnapshot) {
-      this.setPinnedTextSelectionSnapshot(null);
-    }
-
-    const section = this.book.sections[sectionIndex];
-    if (!section) {
-      return;
-    }
-
-    const interaction = resolveDomClickInteraction({
-      target,
-      resolveLocator: () =>
-        mapDomPointToLocator({
-          container: this.options.container!,
-          sectionElement,
-          section,
-          spineIndex: sectionIndex,
-          point
-        })
-    });
-    const paginatedClickAction =
-      this.mode === "paginated"
-        ? this.resolvePaginatedClickNavigationAction({
-            offsetX: point.x,
-            target
-          })
-        : null;
-    if (paginatedClickAction && interaction?.kind !== "link") {
-      event.preventDefault();
-      this.performPaginatedNavigationAction(paginatedClickAction);
-      return;
-    }
-
-    if (
-      this.mode === "paginated" &&
-      !paginatedClickAction &&
-      interaction?.kind !== "link"
-    ) {
-      event.preventDefault();
-      const clickedAnchorId = resolveSectionAnchorIdForElement(section, target);
-      const anchoredInteractionLocator =
-        interaction?.kind === "locator"
-          ? {
-              ...interaction.locator,
-              ...(clickedAnchorId ? { anchorId: clickedAnchorId } : {})
-            }
-          : null;
-      if (interaction?.kind === "locator") {
-        this.currentSectionIndex = interaction.locator.spineIndex;
-        this.updateLocator(anchoredInteractionLocator ?? interaction.locator);
-        this.syncCurrentPageFromSection();
-        this.emitRelocated();
-      }
-      const centerTapLocator =
-        interaction?.kind === "locator"
-          ? (anchoredInteractionLocator ?? interaction.locator)
-          : (mapDomPointToLocator({
-              container: this.options.container,
-              sectionElement,
-              section,
-              spineIndex: sectionIndex,
-              point
-            }) ?? this.getCurrentLocation());
-      this.emitPaginatedCenterTapped({
-        source: "dom",
-        offsetX: point.x,
-        locator: centerTapLocator,
-        sectionId: section.id
-      });
-      return;
-    }
-
-    if (!interaction) {
-      return;
-    }
-
-    if (interaction.kind === "link") {
-      event.preventDefault();
-      void this.activateLink({
-        href: this.resolveDomLinkHref(section.href, interaction.href),
-        source: "dom",
-        sectionId: section.id
-      });
-      return;
-    }
-
-    this.currentSectionIndex = interaction.locator.spineIndex;
-    const clickedAnchorId = resolveSectionAnchorIdForElement(section, target);
-    this.updateLocator({
-      ...interaction.locator,
-      ...(clickedAnchorId ? { anchorId: clickedAnchorId } : {})
-    });
-    this.syncCurrentPageFromSection();
-    this.emitRelocated();
+    return this.runtimeController.handleDomClick(event);
   }
 
   private handlePaginatedViewportClick(event: MouseEvent): void {
-    if (!this.options.container || !this.book || this.mode !== "paginated") {
-      return;
-    }
-
-    const point = this.getContainerRelativePoint(event);
-    if (!point) {
-      return;
-    }
-
-    const action = this.resolvePaginatedClickNavigationAction({
-      offsetX: point.x,
-      ...(event.target instanceof HTMLElement ? { target: event.target } : {})
-    });
-    if (!action) {
-      return;
-    }
-
-    event.preventDefault();
-    this.performPaginatedNavigationAction(action);
+    return this.runtimeController.handlePaginatedViewportClick(event);
   }
 
   private resolvePaginatedClickNavigationAction(input: {
     offsetX: number;
     target?: HTMLElement;
   }): "previous" | "next" | null {
-    if (!this.options.container) {
-      return null;
-    }
-
-    const width = this.options.container.clientWidth;
-    if (width <= 0) {
-      return null;
-    }
-
-    const navigationContext = this.getReadingNavigationContext();
-    if (!navigationContext) {
-      return null;
-    }
-
-    const spread = this.resolveCurrentPaginatedSpread();
-    if (spread && spread.slots.length === 2) {
-      const slotPosition = this.resolvePaginatedSpreadClickSlot({
-        offsetX: input.offsetX,
-        ...(input.target ? { target: input.target } : {})
-      });
-      if (slotPosition === "left") {
-        return navigationContext.pageProgression === "rtl"
-          ? "next"
-          : "previous";
-      }
-
-      if (slotPosition === "right") {
-        return navigationContext.pageProgression === "rtl"
-          ? "previous"
-          : "next";
-      }
-    }
-
-    const normalizedX = Math.max(0, Math.min(input.offsetX, width));
-    const zoneWidth = width * EpubReader.PAGINATED_CLICK_NAV_ZONE_RATIO;
-    if (normalizedX <= zoneWidth) {
-      return navigationContext.pageProgression === "rtl" ? "next" : "previous";
-    }
-
-    if (normalizedX >= width - zoneWidth) {
-      return navigationContext.pageProgression === "rtl" ? "previous" : "next";
-    }
-
-    return null;
+    return this.runtimeController.resolvePaginatedClickNavigationAction(input);
   }
 
   private resolvePaginatedSpreadClickSlot(input: {
     offsetX: number;
     target?: HTMLElement;
   }): "left" | "right" | null {
-    if (!this.options.container) {
-      return null;
-    }
-
-    const slotElement =
-      input.target?.closest<HTMLElement>("[data-spread-slot]");
-    const slotName = slotElement?.dataset.spreadSlot;
-    if (slotName === "left" || slotName === "right") {
-      return slotName;
-    }
-
-    const width = this.options.container.clientWidth;
-    if (width <= 0) {
-      return null;
-    }
-
-    return input.offsetX < width / 2 ? "left" : "right";
+    return this.runtimeController.resolvePaginatedSpreadClickSlot(input);
   }
 
   private performPaginatedNavigationAction(action: "previous" | "next"): void {
-    if (action === "next") {
-      void this.next();
-      return;
-    }
-
-    void this.prev();
+    return this.runtimeController.performPaginatedNavigationAction(action);
   }
 
   private emitPaginatedCenterTapped(input: {
@@ -3741,279 +1415,37 @@ export class EpubReader {
     locator?: Locator | null;
     sectionId?: string;
   }): void {
-    if (this.mode !== "paginated" || !this.options.container) {
-      return;
-    }
-
-    const locator = input.locator ?? null;
-    const sectionFromId =
-      input.sectionId && this.book
-        ? this.book.sections.find((section) => section.id === input.sectionId)
-        : null;
-    const sectionFromLocator =
-      !sectionFromId &&
-      this.book &&
-      locator &&
-      Number.isInteger(locator.spineIndex) &&
-      locator.spineIndex >= 0 &&
-      locator.spineIndex < this.book.sections.length
-        ? this.book.sections[locator.spineIndex]
-        : null;
-    const section = sectionFromId ?? sectionFromLocator;
-
-    const payload = {
-      locator,
-      source: input.source,
-      offsetX: input.offsetX,
-      containerWidth: this.options.container.clientWidth,
-      ...(section?.id ? { sectionId: section.id } : {}),
-      ...(section?.href ? { sectionHref: section.href } : {})
-    } satisfies ReaderEventMap["paginatedCenterTapped"];
-
-    this.events.emit("paginatedCenterTapped", payload);
-    this.invokeReaderHook(() => this.options.onPaginatedCenterTap?.(payload));
+    return this.runtimeController.emitPaginatedCenterTapped(input);
   }
 
   private mapDomViewportPointToLocator(point: Point): Locator | null {
-    if (!this.book || !this.options.container) {
-      return null;
-    }
-
-    const sectionEntry = this.findRenderedDomSectionAtPoint(point);
-    if (!sectionEntry) {
-      return null;
-    }
-
-    return mapDomPointToLocator({
-      container: this.options.container,
-      sectionElement: sectionEntry.sectionElement,
-      section: sectionEntry.section,
-      spineIndex: sectionEntry.sectionIndex,
-      point
-    });
+    return this.runtimeController.mapDomViewportPointToLocator(point);
   }
 
   private getViewportCenterProbePoints(): Point[] {
-    const container = this.options.container;
-    if (!container) {
-      return [];
-    }
-
-    const width = Math.max(
-      1,
-      container.clientWidth ||
-        Math.round(container.getBoundingClientRect().width)
-    );
-    const height = Math.max(
-      1,
-      container.clientHeight ||
-        Math.round(container.getBoundingClientRect().height)
-    );
-    const centerX = container.scrollLeft + width / 2;
-    const centerY = height / 2;
-    const xOffsets = [
-      0,
-      -width * 0.16,
-      width * 0.16,
-      -width * 0.28,
-      width * 0.28
-    ];
-    const yOffsets = [
-      0,
-      -height * 0.16,
-      height * 0.16,
-      -height * 0.28,
-      height * 0.28
-    ];
-    const seen = new Set<string>();
-    const points: Point[] = [];
-
-    for (const [xOffset, yOffset] of [
-      [0, 0],
-      [xOffsets[1], 0],
-      [xOffsets[2], 0],
-      [0, yOffsets[1]],
-      [0, yOffsets[2]],
-      [xOffsets[3], 0],
-      [xOffsets[4], 0],
-      [0, yOffsets[3]],
-      [0, yOffsets[4]]
-    ] as Array<[number, number]>) {
-      const x = Math.max(
-        container.scrollLeft,
-        Math.min(centerX + xOffset, container.scrollLeft + width - 1)
-      );
-      const y = Math.max(0, Math.min(centerY + yOffset, height - 1));
-      const key = `${Math.round(x)}:${Math.round(y)}`;
-      if (seen.has(key)) {
-        continue;
-      }
-      seen.add(key);
-      points.push({ x, y });
-    }
-
-    return points;
+    return this.runtimeController.getViewportCenterProbePoints();
   }
 
   private getContainerRelativePoint(event: MouseEvent): Point | null {
-    if (!this.options.container) {
-      return null;
-    }
-
-    const bounds = this.options.container.getBoundingClientRect();
-    return {
-      x: event.clientX - bounds.left + this.options.container.scrollLeft,
-      y: event.clientY - bounds.top
-    };
+    return this.runtimeController.getContainerRelativePoint(event);
   }
 
   private getClientPointForContainerPoint(
     point: Point
   ): { x: number; y: number } | null {
-    if (!this.options.container) {
-      return null;
-    }
-
-    const bounds = this.options.container.getBoundingClientRect();
-    return {
-      x: bounds.left + point.x - this.options.container.scrollLeft,
-      y: bounds.top + point.y
-    };
+    return this.runtimeController.getClientPointForContainerPoint(point);
   }
 
   private realignDomSearchResult(result: SearchResult): void {
-    if (!this.options.container || !this.book) {
-      return;
-    }
-
-    const section = this.book.sections[this.currentSectionIndex];
-    if (!section) {
-      return;
-    }
-
-    const sectionElement = this.getSectionElement(section.id);
-    if (!sectionElement || !isRenderedDomSectionElement(sectionElement)) {
-      return;
-    }
-
-    const target = findRenderedSearchResultTarget({
-      sectionElement,
-      result
-    });
-    if (!target) {
-      return;
-    }
-
-    const containerRect = this.options.container.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
-    if (this.mode === "scroll") {
-      const nextScrollTop =
-        this.options.container.scrollTop +
-        targetRect.top -
-        containerRect.top -
-        16;
-      this.setProgrammaticScrollTop(nextScrollTop);
-    }
-
-    const containerWidth =
-      this.options.container.clientWidth || Math.max(1, containerRect.width);
-    const containerHeight =
-      this.options.container.clientHeight || Math.max(1, containerRect.height);
-    const targetPoint = {
-      x: Math.max(
-        0,
-        Math.min(
-          targetRect.left -
-            containerRect.left +
-            Math.max(1, Math.min(12, targetRect.width / 2)),
-          containerWidth - 1
-        )
-      ),
-      y: Math.max(
-        0,
-        Math.min(
-          targetRect.top -
-            containerRect.top +
-            Math.max(1, Math.min(12, targetRect.height / 2)),
-          containerHeight - 1
-        )
-      )
-    };
-    const preciseLocator = this.mapDomViewportPointToLocator(targetPoint);
-    if (!preciseLocator) {
-      return;
-    }
-
-    this.currentSectionIndex = preciseLocator.spineIndex;
-    this.updateLocator({
-      ...result.locator,
-      ...preciseLocator,
-      ...((preciseLocator.blockId ?? result.locator.blockId)
-        ? { blockId: preciseLocator.blockId ?? result.locator.blockId }
-        : {}),
-      ...((preciseLocator.anchorId ?? result.locator.anchorId)
-        ? { anchorId: preciseLocator.anchorId ?? result.locator.anchorId }
-        : {})
-    });
-    this.syncCurrentPageFromSection();
-    this.emitRelocated();
+    return this.runtimeController.realignDomSearchResult(result);
   }
 
   private async waitForFonts(): Promise<void> {
-    if (typeof document === "undefined" || !("fonts" in document)) {
-      return;
-    }
-
-    const fonts = document.fonts;
-    if (!fonts || typeof fonts.ready === "undefined") {
-      return;
-    }
-
-    await fonts.ready;
+    return this.runtimeController.waitForFonts();
   }
 
   private ensurePages(sectionLayout?: LayoutResult): void {
-    if (!this.book || !this.options.container) {
-      this.pages = [];
-      return;
-    }
-
-    const { width: targetWidth, height: targetHeight } =
-      this.getPaginationMeasurement();
-    if (
-      this.pages.length > 0 &&
-      sectionLayout === undefined &&
-      Math.abs(this.lastMeasuredWidth - targetWidth) < 1 &&
-      Math.abs(this.lastMeasuredHeight - targetHeight) < 1
-    ) {
-      return;
-    }
-
-    const pageHeight = this.getPageHeight();
-    const plan = buildPaginatedPages({
-      sections: this.getSectionsForRender(),
-      currentSectionIndex: this.currentSectionIndex,
-      sectionLayout,
-      pageHeight,
-      getSectionLayout: (section, index) =>
-        this.layoutEngine.layout(
-          {
-            section,
-            spineIndex: index,
-            viewportWidth: targetWidth,
-            viewportHeight: targetHeight,
-            typography: this.typography,
-            fontFamily: this.getFontFamily(),
-            resolveImageIntrinsicSize: (src) =>
-              this.resolveImageIntrinsicSizeForLayout(src)
-          },
-          "paginated"
-        )
-    });
-
-    const measuredPlan = this.applyMeasuredDomPagination(plan);
-    this.sectionEstimatedHeights = measuredPlan.sectionEstimatedHeights;
-    this.pages = measuredPlan.pages;
+    return this.runtimeController.ensurePages(sectionLayout);
   }
 
   private applyMeasuredDomPagination(plan: {
@@ -4023,544 +1455,145 @@ export class EpubReader {
     pages: ReaderPage[];
     sectionEstimatedHeights: number[];
   } {
-    if (
-      !this.book ||
-      this.measuredDomPaginationBySectionId.size === 0 ||
-      this.mode !== "paginated"
-    ) {
-      return plan;
-    }
-
-    const { width, height } = this.getPaginationMeasurement();
-    const sections = this.getSectionsForRender();
-    const sectionEstimatedHeights = [...plan.sectionEstimatedHeights];
-    const nextPages: ReaderPage[] = [];
-
-    for (let index = 0; index < sections.length; index += 1) {
-      const section = sections[index];
-      if (!section) {
-        continue;
-      }
-
-      const cached = this.measuredDomPaginationBySectionId.get(section.id);
-      const canUseCached =
-        cached &&
-        Math.abs(cached.width - width) < 1 &&
-        Math.abs(cached.height - height) < 1;
-      const sourcePages = canUseCached
-        ? cached.pages
-        : plan.pages.filter((page) => page.spineIndex === index);
-      const totalPagesInSection = Math.max(1, sourcePages.length);
-
-      if (canUseCached) {
-        sectionEstimatedHeights[index] = cached.sectionEstimatedHeight;
-      }
-
-      for (let pageIndex = 0; pageIndex < sourcePages.length; pageIndex += 1) {
-        const page = sourcePages[pageIndex]!;
-        nextPages.push({
-          ...page,
-          pageNumber: nextPages.length + 1,
-          pageNumberInSection: pageIndex + 1,
-          totalPagesInSection,
-          spineIndex: index,
-          sectionId: section.id,
-          sectionHref: section.href
-        });
-      }
-    }
-
-    return {
-      pages: nextPages,
-      sectionEstimatedHeights
-    };
+    return this.runtimeController.applyMeasuredDomPagination(plan);
   }
 
   private getPageHeight(): number {
-    return this.getContainerInnerDimensions().height;
+    return this.runtimeController.getPageHeight();
   }
 
   private findCurrentPageForSection(sectionId: string): ReaderPage | null {
-    return findPaginatedCurrentPageForSection({
-      pages: this.pages,
-      currentPageNumber: this.currentPageNumber,
-      sectionId
-    });
+    return this.runtimeController.findCurrentPageForSection(sectionId);
   }
 
   private findPageForLocator(locator: Locator): ReaderPage | null {
-    return findPaginatedPageForLocator(this.pages, locator);
+    return this.runtimeController.findPageForLocator(locator);
   }
 
   private resolveRenderedPage(sectionId: string): ReaderPage | null {
-    return resolveReaderRenderedPage({
-      pages: this.pages,
-      sectionId,
-      currentPageNumber: this.currentPageNumber,
-      pendingModeSwitchLocator: this.pendingModeSwitchLocator,
-      locator: this.locator
-    });
+    return this.runtimeController.resolveRenderedPage(sectionId);
   }
 
   private findPageByNumber(pageNumber: number): ReaderPage | null {
-    return findPaginatedPageByNumber(this.pages, pageNumber);
+    return this.runtimeController.findPageByNumber(pageNumber);
   }
 
   private resolvePaginatedSpread(
     page: ReaderPage | null
   ): PaginatedSpread | null {
-    return resolveReaderPaginatedSpread({
-      page,
-      book: this.book,
-      pages: this.pages,
-      resolveReadingSpreadContextForSectionIndex: (spineIndex) =>
-        this.resolveReadingSpreadContextForSectionIndex(spineIndex)
-    });
+    return this.runtimeController.resolvePaginatedSpread(page);
   }
 
   private resolveCurrentPaginatedSpread(): PaginatedSpread | null {
-    return resolveReaderCurrentPaginatedSpread({
-      mode: this.mode,
-      currentPageNumber: this.currentPageNumber,
-      book: this.book,
-      pages: this.pages,
-      resolveReadingSpreadContextForSectionIndex: (spineIndex) =>
-        this.resolveReadingSpreadContextForSectionIndex(spineIndex)
-    });
+    return this.runtimeController.resolveCurrentPaginatedSpread();
   }
 
   private getVisiblePaginatedSpreads(): PaginatedSpread[] {
-    return getReaderVisiblePaginatedSpreads({
-      mode: this.mode,
-      book: this.book,
-      pages: this.pages,
-      resolveReadingSpreadContextForSectionIndex: (spineIndex) =>
-        this.resolveReadingSpreadContextForSectionIndex(spineIndex)
-    });
+    return this.runtimeController.getVisiblePaginatedSpreads();
   }
 
   private resolveDisplayPageNumberToLeafPage(
     pageNumber: number
   ): number | null {
-    return resolveReaderDisplayPageNumberToLeafPage({
-      pageNumber,
-      mode: this.mode,
-      book: this.book,
-      pages: this.pages,
-      resolveReadingSpreadContextForSectionIndex: (spineIndex) =>
-        this.resolveReadingSpreadContextForSectionIndex(spineIndex)
-    });
+    return this.runtimeController.resolveDisplayPageNumberToLeafPage(
+      pageNumber
+    );
   }
 
   private resolveSpreadNavigationTarget(
     action: "previous" | "next"
   ): number | null {
-    return resolveReaderSpreadNavigationTarget({
-      action,
-      mode: this.mode,
-      currentPageNumber: this.currentPageNumber,
-      book: this.book,
-      pages: this.pages,
-      resolveReadingSpreadContextForSectionIndex: (spineIndex) =>
-        this.resolveReadingSpreadContextForSectionIndex(spineIndex)
-    });
+    return this.runtimeController.resolveSpreadNavigationTarget(action);
   }
 
   private syncCurrentPageFromSection(): void {
-    this.currentPageNumber = resolveCurrentPageNumberFromSection({
-      mode: this.mode,
-      currentSectionIndex: this.currentSectionIndex,
-      locator: this.locator,
-      pages: this.pages
-    });
+    return this.runtimeController.syncCurrentPageFromSection();
   }
 
   private createLocatorForPage(page: ReaderPage): Locator {
-    return createPaginatedPageLocator(page);
+    return this.runtimeController.createLocatorForPage(page);
   }
 
   private getProgressForCurrentLocator(): number {
-    return resolveProgressForCurrentLocator({
-      locator: this.locator,
-      mode: this.mode,
-      currentSectionIndex: this.currentSectionIndex,
-      pages: this.pages
-    });
+    return this.runtimeController.getProgressForCurrentLocator();
   }
 
   private syncDerivedDecorationGroups(): void {
-    if (!this.locator || !this.debugMode) {
-      this.decorationManager.clearDerivedGroup("current-location");
-    } else {
-      this.decorationManager.setDerivedGroup("current-location", [
-        {
-          id: "current-location:active",
-          group: "current-location",
-          locator: this.locator,
-          style: "active"
-        }
-      ]);
-    }
+    return this.runtimeController.syncDerivedDecorationGroups();
   }
 
   private getHighlightedCanvasBlockIdsForSection(
     sectionIndex: number
   ): Set<string> {
-    if (!this.book) {
-      return new Set();
-    }
-
-    const section = this.book.sections[sectionIndex];
-    if (!section) {
-      return new Set();
-    }
-
-    return new Set(
-      this.decorationManager
-        .getForSpineIndex(sectionIndex)
-        .filter(
-          (decoration) =>
-            (decoration.style === "highlight" ||
-              decoration.style === "search-hit") &&
-            !decoration.extras?.textRange
-        )
-        .map((decoration) =>
-          decoration.locator.blockId
-            ? (resolveRenderableBlockId(
-                section.blocks,
-                decoration.locator.blockId
-              ) ?? decoration.locator.blockId)
-            : undefined
-        )
-        .filter((blockId): blockId is string => Boolean(blockId))
+    return this.runtimeController.getHighlightedCanvasBlockIdsForSection(
+      sectionIndex
     );
   }
 
   private getHighlightedCanvasTextRangesForSection(
     sectionIndex: number
   ): Map<string, Array<{ start: number; end: number; color: string }>> {
-    if (!this.book) {
-      return new Map();
-    }
-
-    const section = this.book.sections[sectionIndex];
-    if (!section) {
-      return new Map();
-    }
-
-    const rangesByBlock = new Map<
-      string,
-      Array<{ start: number; end: number; color: string }>
-    >();
-    const defaultColor = toTransparentHighlightColor(
-      buildReadingStyleProfile({
-        theme: this.theme,
-        typography: this.typography
-      }).highlight.mark
-    );
-
-    for (const decoration of this.decorationManager.getForSpineIndex(
+    return this.runtimeController.getHighlightedCanvasTextRangesForSection(
       sectionIndex
-    )) {
-      const textRange = decoration.extras?.textRange;
-      if (decoration.style !== "highlight" || !textRange) {
-        continue;
-      }
-
-      const normalizedRange = normalizeTextRangeSelector(textRange);
-      const blockIds = collectBlockIdsInReadingOrder(section.blocks);
-      const startIndex = blockIds.indexOf(normalizedRange.start.blockId);
-      const endIndex = blockIds.indexOf(normalizedRange.end.blockId);
-      if (startIndex < 0 || endIndex < 0 || endIndex < startIndex) {
-        continue;
-      }
-
-      for (
-        let blockIndex = startIndex;
-        blockIndex <= endIndex;
-        blockIndex += 1
-      ) {
-        const blockId = blockIds[blockIndex];
-        if (!blockId) {
-          continue;
-        }
-
-        const renderableBlockId = resolveRenderableBlockId(
-          section.blocks,
-          blockId
-        );
-        if (!renderableBlockId || renderableBlockId !== blockId) {
-          continue;
-        }
-
-        const block = findBlockById(section.blocks, blockId);
-        const blockTextLength = block
-          ? Array.from(this.extractBlockText(block)).length
-          : 0;
-        const start =
-          blockId === normalizedRange.start.blockId
-            ? Math.max(
-                0,
-                Math.min(blockTextLength, normalizedRange.start.inlineOffset)
-              )
-            : 0;
-        const end =
-          blockId === normalizedRange.end.blockId
-            ? Math.max(
-                start,
-                Math.min(blockTextLength, normalizedRange.end.inlineOffset)
-              )
-            : blockTextLength;
-        if (end <= start) {
-          continue;
-        }
-
-        const entry = rangesByBlock.get(blockId) ?? [];
-        entry.push({
-          start,
-          end,
-          color: toTransparentHighlightColor(decoration.color ?? defaultColor)
-        });
-        rangesByBlock.set(blockId, entry);
-      }
-    }
-
-    return rangesByBlock;
+    );
   }
 
   private getActiveCanvasBlockIdForSection(
     sectionIndex: number
   ): string | undefined {
-    if (!this.book) {
-      return undefined;
-    }
-
-    const section = this.book.sections[sectionIndex];
-    const locator = this.decorationManager.getFirstLocatorForStyle("active");
-    if (
-      !section ||
-      !locator ||
-      locator.spineIndex !== sectionIndex ||
-      !locator.blockId
-    ) {
-      return undefined;
-    }
-
-    return (
-      resolveRenderableBlockId(section.blocks, locator.blockId) ??
-      locator.blockId
+    return this.runtimeController.getActiveCanvasBlockIdForSection(
+      sectionIndex
     );
   }
 
   private getUnderlinedCanvasBlockIdsForSection(
     sectionIndex: number
   ): Set<string> {
-    if (!this.book) {
-      return new Set();
-    }
-
-    const section = this.book.sections[sectionIndex];
-    if (!section) {
-      return new Set();
-    }
-
-    return new Set(
-      this.decorationManager
-        .getForSpineIndex(sectionIndex)
-        .filter((decoration) => decoration.style === "underline")
-        .filter((decoration) => !decoration.extras?.textRange)
-        .map((decoration) =>
-          decoration.locator.blockId
-            ? (resolveRenderableBlockId(
-                section.blocks,
-                decoration.locator.blockId
-              ) ?? decoration.locator.blockId)
-            : undefined
-        )
-        .filter((blockId): blockId is string => Boolean(blockId))
+    return this.runtimeController.getUnderlinedCanvasBlockIdsForSection(
+      sectionIndex
     );
   }
 
   private getUnderlinedCanvasBlockColorsForSection(
     sectionIndex: number
   ): Map<string, string> {
-    if (!this.book) {
-      return new Map();
-    }
-
-    const section = this.book.sections[sectionIndex];
-    if (!section) {
-      return new Map();
-    }
-
-    const colors = new Map<string, string>();
-    for (const decoration of this.decorationManager.getForSpineIndex(
+    return this.runtimeController.getUnderlinedCanvasBlockColorsForSection(
       sectionIndex
-    )) {
-      if (decoration.style !== "underline" || !decoration.color) {
-        continue;
-      }
-      if (decoration.extras?.textRange) {
-        continue;
-      }
-
-      const blockId = decoration.locator.blockId
-        ? (resolveRenderableBlockId(
-            section.blocks,
-            decoration.locator.blockId
-          ) ?? decoration.locator.blockId)
-        : undefined;
-      if (blockId) {
-        colors.set(blockId, decoration.color);
-      }
-    }
-
-    return colors;
+    );
   }
 
   private getUnderlinedCanvasTextRangesForSection(
     sectionIndex: number
   ): Map<string, Array<{ start: number; end: number; color: string }>> {
-    if (!this.book) {
-      return new Map();
-    }
-
-    const section = this.book.sections[sectionIndex];
-    if (!section) {
-      return new Map();
-    }
-
-    const rangesByBlock = new Map<
-      string,
-      Array<{ start: number; end: number; color: string }>
-    >();
-
-    for (const decoration of this.decorationManager.getForSpineIndex(
+    return this.runtimeController.getUnderlinedCanvasTextRangesForSection(
       sectionIndex
-    )) {
-      const textRange = decoration.extras?.textRange;
-      if (decoration.style !== "underline" || !textRange) {
-        continue;
-      }
-
-      const normalizedRange = normalizeTextRangeSelector(textRange);
-      const blockIds = collectBlockIdsInReadingOrder(section.blocks);
-      const startIndex = blockIds.indexOf(normalizedRange.start.blockId);
-      const endIndex = blockIds.indexOf(normalizedRange.end.blockId);
-      if (startIndex < 0 || endIndex < 0 || endIndex < startIndex) {
-        continue;
-      }
-
-      for (
-        let blockIndex = startIndex;
-        blockIndex <= endIndex;
-        blockIndex += 1
-      ) {
-        const blockId = blockIds[blockIndex];
-        if (!blockId) {
-          continue;
-        }
-
-        const renderableBlockId = resolveRenderableBlockId(
-          section.blocks,
-          blockId
-        );
-        if (!renderableBlockId || renderableBlockId !== blockId) {
-          continue;
-        }
-
-        const block = findBlockById(section.blocks, blockId);
-        const blockTextLength = block
-          ? Array.from(this.extractBlockText(block)).length
-          : 0;
-        const start =
-          blockId === normalizedRange.start.blockId
-            ? Math.max(
-                0,
-                Math.min(blockTextLength, normalizedRange.start.inlineOffset)
-              )
-            : 0;
-        const end =
-          blockId === normalizedRange.end.blockId
-            ? Math.max(
-                start,
-                Math.min(blockTextLength, normalizedRange.end.inlineOffset)
-              )
-            : blockTextLength;
-        if (end <= start) {
-          continue;
-        }
-
-        const entry = rangesByBlock.get(blockId) ?? [];
-        entry.push({
-          start,
-          end,
-          color: decoration.color ?? this.theme.color
-        });
-        rangesByBlock.set(blockId, entry);
-      }
-    }
-
-    return rangesByBlock;
+    );
   }
 
   private resolveCanvasViewportBlockIds(locator: Locator): string[] {
-    const blockId = locator.blockId;
-    if (!blockId) {
-      return [];
-    }
-
-    const section = this.book?.sections[locator.spineIndex];
-    if (!section) {
-      return [blockId];
-    }
-
-    const renderableBlockId = resolveRenderableBlockId(section.blocks, blockId);
-    return renderableBlockId && renderableBlockId !== blockId
-      ? [blockId, renderableBlockId]
-      : [blockId];
+    return this.runtimeController.resolveCanvasViewportBlockIds(locator);
   }
 
   private syncAnnotationDecorations(): void {
-    this.decorationManager.setExplicitGroup(
-      "annotations",
-      mapAnnotationsToDecorations(this.annotations)
-    );
-    if (this.book) {
-      this.renderCurrentSection("preserve");
-    }
+    return this.runtimeController.syncAnnotationDecorations();
   }
 
   private resolveAnnotationQuote(locator: Locator): string | undefined {
-    const section = this.book?.sections[locator.spineIndex];
-    const blockId = locator.blockId;
-    if (!section || !blockId) {
-      return undefined;
-    }
-
-    const block = findBlockById(section.blocks, blockId);
-    if (!block) {
-      return undefined;
-    }
-
-    const text = collectBlockText(block).replace(/\s+/g, " ").trim();
-    return text || undefined;
+    return this.runtimeController.resolveAnnotationQuote(locator);
   }
 
   private resolveAnnotationTextRangeQuote(
     locator: Locator,
     textRange: TextRangeSelector
   ): string | undefined {
-    const section = this.book?.sections[locator.spineIndex];
-    if (!section) {
-      return undefined;
-    }
-
-    return this.annotationService.resolveTextRangeQuote(section, textRange);
+    return this.runtimeController.resolveAnnotationTextRangeQuote(
+      locator,
+      textRange
+    );
   }
 
   private getLocatorScrollAlignment(): "start" | "center" {
-    return this.pendingModeSwitchLocator ? "center" : "start";
+    return this.runtimeController.getLocatorScrollAlignment();
   }
 
   private resolveScrollTopForRect(
@@ -4568,43 +1601,21 @@ export class EpubReader {
     rectHeight: number,
     alignment: "start" | "center"
   ): number {
-    if (!this.options.container || alignment === "start") {
-      return rectTop - 16;
-    }
-
-    return rectTop - this.options.container.clientHeight / 2 + rectHeight / 2;
+    return this.runtimeController.resolveScrollTopForRect(
+      rectTop,
+      rectHeight,
+      alignment
+    );
   }
 
   private findRenderedDomBlockTarget(
     sectionElement: HTMLElement,
     blockId: string | undefined
   ): HTMLElement | null {
-    const normalizedBlockId = blockId?.trim();
-    if (!normalizedBlockId) {
-      return null;
-    }
-
-    const directMatch =
-      sectionElement.dataset.readerBlockId?.trim() === normalizedBlockId ||
-      sectionElement.id.trim() === normalizedBlockId
-        ? sectionElement
-        : null;
-    if (directMatch) {
-      return directMatch;
-    }
-
-    for (const element of sectionElement.querySelectorAll<HTMLElement>(
-      "[data-reader-block-id], [id]"
-    )) {
-      if (
-        element.dataset.readerBlockId?.trim() === normalizedBlockId ||
-        element.id.trim() === normalizedBlockId
-      ) {
-        return element;
-      }
-    }
-
-    return null;
+    return this.runtimeController.findRenderedDomBlockTarget(
+      sectionElement,
+      blockId
+    );
   }
 
   private resolveRenderedDomTextPosition(
@@ -4615,107 +1626,15 @@ export class EpubReader {
     node: Text;
     offset: number;
   } | null {
-    const blockElement = this.findRenderedDomBlockTarget(
+    return this.runtimeController.resolveRenderedDomTextPosition(
       sectionElement,
-      blockId
+      blockId,
+      inlineOffset
     );
-    if (!blockElement) {
-      return null;
-    }
-
-    const textNodes = collectTextNodes(blockElement);
-    if (textNodes.length === 0) {
-      return null;
-    }
-
-    let remaining = Math.max(0, Math.trunc(inlineOffset));
-    for (const textNode of textNodes) {
-      const length = textNode.textContent?.length ?? 0;
-      if (remaining <= length) {
-        return {
-          node: textNode,
-          offset: remaining
-        };
-      }
-      remaining -= length;
-    }
-
-    const lastNode = textNodes.at(-1);
-    return lastNode
-      ? {
-          node: lastNode,
-          offset: lastNode.textContent?.length ?? 0
-        }
-      : null;
   }
 
   private scrollToLocatorBlock(): boolean {
-    if (!this.options.container || !this.locator?.blockId) {
-      return false;
-    }
-
-    const section = this.book?.sections[this.currentSectionIndex];
-    const sectionElement = section ? this.getSectionElement(section.id) : null;
-    if (sectionElement && isRenderedDomSectionElement(sectionElement)) {
-      const target = this.findRenderedDomBlockTarget(
-        sectionElement,
-        this.locator.blockId
-      );
-      if (target) {
-        const containerRect = this.options.container.getBoundingClientRect();
-        const targetRect = target.getBoundingClientRect();
-        if (targetRect.width <= 0 && targetRect.height <= 0) {
-          return false;
-        }
-        const absoluteRectTop =
-          this.options.container.scrollTop + targetRect.top - containerRect.top;
-        this.setProgrammaticScrollTop(
-          Math.max(
-            0,
-            this.resolveScrollTopForRect(
-              absoluteRectTop,
-              targetRect.height,
-              this.getLocatorScrollAlignment()
-            )
-          )
-        );
-        return true;
-      }
-    }
-
-    const targetBlockIds = this.resolveCanvasViewportBlockIds({
-      ...this.locator,
-      spineIndex: this.currentSectionIndex
-    });
-    const blockRegion = this.lastInteractionRegions.find(
-      (region) =>
-        region.kind === "block" &&
-        targetBlockIds.includes(region.blockId) &&
-        region.sectionId === section?.id
-    );
-    const targetRect =
-      blockRegion?.rect ??
-      (section
-        ? this.resolveScrollCanvasBlockRect(
-            section,
-            this.currentSectionIndex,
-            targetBlockIds
-          )
-        : null);
-    if (!targetRect) {
-      return false;
-    }
-    this.setProgrammaticScrollTop(
-      Math.max(
-        0,
-        this.resolveScrollTopForRect(
-          targetRect.y,
-          targetRect.height,
-          this.getLocatorScrollAlignment()
-        )
-      )
-    );
-    return true;
+    return this.runtimeController.scrollToLocatorBlock();
   }
 
   private resolveScrollCanvasBlockRect(
@@ -4723,460 +1642,87 @@ export class EpubReader {
     sectionIndex: number,
     blockIds: string[]
   ): Rect | null {
-    if (!this.options.container || blockIds.length === 0) {
-      return null;
-    }
-
-    const section = this.getSectionForRender(sourceSection);
-    const layout = this.layoutEngine.layout(
-      {
-        section,
-        spineIndex: sectionIndex,
-        viewportWidth: this.getContentWidth(),
-        viewportHeight: this.options.container.clientHeight,
-        typography: this.typography,
-        fontFamily: this.getFontFamily(),
-        resolveImageIntrinsicSize: (src) =>
-          this.resolveImageIntrinsicSizeForLayout(src)
-      },
-      "scroll"
+    return this.runtimeController.resolveScrollCanvasBlockRect(
+      sourceSection,
+      sectionIndex,
+      blockIds
     );
-    const displayList = this.displayListBuilder.buildSection({
-      section,
-      width: layout.width,
-      viewportHeight: this.options.container.clientHeight,
-      blocks: layout.blocks,
-      theme: this.theme,
-      typography: this.typography,
-      publisherColorOverride: this.publisherColorOverride,
-      locatorMap: layout.locatorMap,
-      resolveImageLoaded: (src) => this.isImageResourceReady(src),
-      resolveImageUrl: (src) => this.resolveCanvasResourceUrl(src),
-      resolveImageIntrinsicSize: (src) =>
-        this.resolveImageIntrinsicSizeForLayout(src),
-      highlightedBlockIds:
-        this.getHighlightedCanvasBlockIdsForSection(sectionIndex),
-      highlightRangesByBlock:
-        this.getHighlightedCanvasTextRangesForSection(sectionIndex),
-      underlinedBlockIds:
-        this.getUnderlinedCanvasBlockIdsForSection(sectionIndex),
-      underlineColorsByBlock:
-        this.getUnderlinedCanvasBlockColorsForSection(sectionIndex),
-      underlineRangesByBlock:
-        this.getUnderlinedCanvasTextRangesForSection(sectionIndex),
-      activeBlockId: this.getActiveCanvasBlockIdForSection(sectionIndex)
-    });
-    const targetInteraction = displayList.interactions.find(
-      (interaction) =>
-        interaction.kind === "block" && blockIds.includes(interaction.blockId)
-    );
-    const targetOp = displayList.ops.find((op) =>
-      blockIds.includes(op.blockId)
-    );
-    const localRect = targetInteraction?.rect ?? targetOp?.rect ?? null;
-    if (!localRect) {
-      return null;
-    }
-
-    const sectionTop = this.getSectionTop(sourceSection.id);
-    return {
-      ...localRect,
-      y: localRect.y + sectionTop
-    };
   }
 
   private scrollToLocatorInlineOffset(): boolean {
-    if (
-      !this.options.container ||
-      !this.locator?.blockId ||
-      this.locator.inlineOffset === undefined
-    ) {
-      return false;
-    }
-
-    const section = this.book?.sections[this.currentSectionIndex];
-    if (!section) {
-      return false;
-    }
-
-    const sectionElement = this.getSectionElement(section.id);
-    const textPosition =
-      resolveCanvasTextPosition({
-        container: this.options.container,
-        sectionId: section.id,
-        blockId: this.locator.blockId,
-        inlineOffset: this.locator.inlineOffset,
-        bias: "start"
-      }) ??
-      (sectionElement && isRenderedDomSectionElement(sectionElement)
-        ? this.resolveRenderedDomTextPosition(
-            sectionElement,
-            this.locator.blockId,
-            this.locator.inlineOffset
-          )
-        : null);
-    if (!textPosition) {
-      return false;
-    }
-
-    if (typeof document.createRange !== "function") {
-      return false;
-    }
-
-    const range = document.createRange();
-    if (typeof range.getBoundingClientRect !== "function") {
-      return false;
-    }
-
-    const textLength = textPosition.node.textContent?.length ?? 0;
-    const startOffset = Math.max(0, Math.min(textLength, textPosition.offset));
-    const endOffset =
-      startOffset < textLength
-        ? startOffset + 1
-        : Math.max(0, Math.min(textLength, startOffset - 1));
-
-    range.setStart(textPosition.node, Math.min(startOffset, endOffset));
-    range.setEnd(textPosition.node, Math.max(startOffset, endOffset));
-    const rangeRect = range.getBoundingClientRect();
-    const rect =
-      rangeRect.height > 0
-        ? rangeRect
-        : (textPosition.node.parentElement?.getBoundingClientRect() ?? null);
-    if (!rect || (rect.width <= 0 && rect.height <= 0)) {
-      return false;
-    }
-
-    const containerRect = this.options.container.getBoundingClientRect();
-    const nextScrollTop =
-      this.options.container.scrollTop + rect.top - containerRect.top - 16;
-    const alignedScrollTop =
-      this.getLocatorScrollAlignment() === "center"
-        ? this.options.container.scrollTop +
-          rect.top -
-          containerRect.top -
-          this.options.container.clientHeight / 2 +
-          rect.height / 2
-        : nextScrollTop;
-    this.setProgrammaticScrollTop(Math.max(0, alignedScrollTop));
-    return true;
+    return this.runtimeController.scrollToLocatorInlineOffset();
   }
 
   private scrollToLocatorAnchor(): boolean {
-    if (!this.options.container || !this.locator?.anchorId) {
-      return false;
-    }
-
-    const section = this.book?.sections[this.currentSectionIndex];
-    const sectionElement = section ? this.getSectionElement(section.id) : null;
-    if (!sectionElement) {
-      return false;
-    }
-
-    const target = findRenderedAnchorTarget(
-      sectionElement,
-      this.locator.anchorId
-    );
-    if (!target) {
-      return false;
-    }
-
-    const containerRect = this.options.container.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
-    const nextScrollTop =
-      this.getLocatorScrollAlignment() === "center"
-        ? this.options.container.scrollTop +
-          targetRect.top -
-          containerRect.top -
-          this.options.container.clientHeight / 2 +
-          targetRect.height / 2
-        : this.options.container.scrollTop +
-          targetRect.top -
-          containerRect.top -
-          16;
-    this.setProgrammaticScrollTop(nextScrollTop);
-    return true;
+    return this.runtimeController.scrollToLocatorAnchor();
   }
 
   private refreshScrollSlicesAfterModeSwitchRelocation(): void {
-    if (this.pendingModeSwitchLocator) {
-      this.refreshScrollSlicesIfNeeded();
-    }
+    return this.runtimeController.refreshScrollSlicesAfterModeSwitchRelocation();
   }
 
   private scrollToCurrentLocation(): void {
-    if (!this.options.container) {
-      return;
-    }
-
-    if (this.scrollToLocatorAnchor()) {
-      this.refreshScrollSlicesAfterModeSwitchRelocation();
-      return;
-    }
-
-    if (this.scrollToLocatorInlineOffset()) {
-      this.refreshScrollSlicesAfterModeSwitchRelocation();
-      return;
-    }
-
-    if (this.locator?.blockId && this.scrollToLocatorBlock()) {
-      this.refreshScrollSlicesAfterModeSwitchRelocation();
-      return;
-    }
-
-    const section = this.book?.sections[this.currentSectionIndex];
-    if (!section) {
-      this.setProgrammaticScrollTop(0);
-      return;
-    }
-
-    const progress = this.locator?.progressInSection ?? 0;
-    if (this.currentSectionIndex === 0 && progress <= 0) {
-      this.setProgrammaticScrollTop(0);
-      return;
-    }
-
-    const sectionTop = this.getSectionTop(section.id);
-    const sectionHeight = this.getSectionHeight(section.id);
-    const targetTop =
-      sectionTop +
-      Math.max(0, Math.min(progress, 1)) *
-        Math.max(0, sectionHeight - this.options.container.clientHeight);
-    this.setProgrammaticScrollTop(Math.max(0, targetTop));
+    return this.runtimeController.scrollToCurrentLocation();
   }
 
   private syncPositionFromScroll(emitEvent: boolean): boolean {
-    if (!this.options.container || !this.book || this.mode !== "scroll") {
-      return false;
-    }
-
-    const preservedBlockId = emitEvent ? undefined : this.locator?.blockId;
-    const preservedAnchorId = emitEvent ? undefined : this.locator?.anchorId;
-    if (!emitEvent && this.locator?.anchorId) {
-      this.currentSectionIndex = this.locator.spineIndex;
-      this.syncCurrentPageFromSection();
-      this.updateLocator({
-        ...this.locator,
-        spineIndex: this.currentSectionIndex,
-        progressInSection: this.getProgressForCurrentLocator()
-      });
-      return true;
-    }
-
-    const probe =
-      this.options.container.scrollTop +
-      this.options.container.clientHeight * 0.5;
-    const nextSectionIndex = this.findSectionIndexForOffset(probe);
-    if (nextSectionIndex < 0) {
-      return false;
-    }
-    const section = this.book.sections[nextSectionIndex];
-    if (!section) {
-      return false;
-    }
-    const sectionTop = this.getSectionTop(section.id);
-    const sectionHeight = Math.max(1, this.getSectionHeight(section.id));
-    const localOffset = probe - sectionTop;
-    const progress = Math.max(0, Math.min(localOffset / sectionHeight, 1));
-    this.currentSectionIndex = nextSectionIndex;
-    this.updateLocator({
-      spineIndex: nextSectionIndex,
-      progressInSection: progress,
-      ...(preservedAnchorId ? { anchorId: preservedAnchorId } : {}),
-      ...(preservedBlockId ? { blockId: preservedBlockId } : {})
-    });
-    this.syncCurrentPageFromSection();
-
-    if (emitEvent) {
-      this.emitRelocated();
-    }
-
-    return true;
+    return this.runtimeController.syncPositionFromScroll(emitEvent);
   }
 
   private findRenderedSectionIndexForOffset(offset: number): number {
-    if (!this.book) {
-      return -1;
-    }
-
-    return this.scrollPositionService.findRenderedSectionIndexForOffset({
-      container: this.options.container,
-      sections: this.book.sections,
-      offset
-    });
+    return this.runtimeController.findRenderedSectionIndexForOffset(offset);
   }
 
   private updateScrollWindowBounds(): void {
-    if (!this.book) {
-      this.scrollWindowStart = -1;
-      this.scrollWindowEnd = -1;
-      return;
-    }
-
-    const bounds = this.scrollPositionService.resolveScrollWindowBounds({
-      currentSectionIndex: this.currentSectionIndex,
-      sectionCount: this.book.sections.length,
-      radius: EpubReader.SCROLL_WINDOW_RADIUS
-    });
-    this.scrollWindowStart = bounds.start;
-    this.scrollWindowEnd = bounds.end;
+    return this.runtimeController.updateScrollWindowBounds();
   }
 
   private refreshScrollWindowIfNeeded(): boolean {
-    if (!this.options.container || !this.book || this.mode !== "scroll") {
-      return false;
-    }
-
-    const nextBounds = this.scrollPositionService.shouldRefreshScrollWindow({
-      currentSectionIndex: this.currentSectionIndex,
-      sectionCount: this.book.sections.length,
-      radius: EpubReader.SCROLL_WINDOW_RADIUS,
-      scrollWindowStart: this.scrollWindowStart,
-      scrollWindowEnd: this.scrollWindowEnd
-    });
-    if (!nextBounds) {
-      return false;
-    }
-
-    const scrollAnchor = this.captureScrollAnchor();
-    this.scrollWindowStart = nextBounds.start;
-    this.scrollWindowEnd = nextBounds.end;
-    this.renderScrollableCanvas(this.renderVersion);
-    this.restoreScrollAnchor(scrollAnchor);
-    this.syncPositionFromScroll(false);
-    return true;
+    return this.runtimeController.refreshScrollWindowIfNeeded();
   }
 
   private refreshScrollSlicesIfNeeded(): boolean {
-    if (
-      !this.options.container ||
-      !this.book ||
-      this.mode !== "scroll" ||
-      this.lastRenderedSectionIds.length === 0
-    ) {
-      return false;
-    }
-
-    const viewportTop = this.options.container.scrollTop;
-    const viewportBottom = viewportTop + this.options.container.clientHeight;
-    const refreshGuard = Math.max(
-      this.options.container.clientHeight * 0.2,
-      48
-    );
-
-    for (const sectionId of this.lastRenderedSectionIds) {
-      const window = this.lastScrollRenderWindows.get(sectionId);
-      const sectionIndex = this.getSectionIndexById(sectionId);
-      if (
-        sectionIndex >= 0 &&
-        this.resolveChapterRenderDecision(sectionIndex).mode === "dom"
-      ) {
-        continue;
-      }
-      if (!window || window.length === 0) {
-        this.rerenderScrollSlicesPreservingScrollTop();
-        return true;
-      }
-
-      const sectionTop = this.getSectionTop(sectionId);
-      const sectionHeight = this.getSectionHeight(sectionId);
-      const visibleTop = Math.max(viewportTop, sectionTop);
-      const visibleBottom = Math.min(
-        viewportBottom,
-        sectionTop + sectionHeight
-      );
-      if (visibleBottom <= visibleTop) {
-        continue;
-      }
-
-      const localVisibleTop = visibleTop - sectionTop;
-      const localVisibleBottom = visibleBottom - sectionTop;
-      const coverageTop = Math.min(...window.map((entry) => entry.top));
-      const coverageBottom = Math.max(
-        ...window.map((entry) => entry.top + entry.height)
-      );
-      if (
-        localVisibleTop < coverageTop + refreshGuard ||
-        localVisibleBottom > coverageBottom - refreshGuard
-      ) {
-        this.rerenderScrollSlicesPreservingScrollTop();
-        return true;
-      }
-    }
-
-    return false;
+    return this.runtimeController.refreshScrollSlicesIfNeeded();
   }
 
   private scheduleDeferredScrollRefresh(): void {
-    this.scrollCoordinator.scheduleDeferredScrollRefresh(this.mode);
+    return this.runtimeController.scheduleDeferredScrollRefresh();
   }
 
   private clearDeferredScrollRefresh(): void {
-    this.scrollCoordinator.clearDeferredScrollRefresh();
+    return this.runtimeController.clearDeferredScrollRefresh();
   }
 
   private rerenderScrollSlicesPreservingScrollTop(): void {
-    if (!this.options.container) {
-      return;
-    }
-
-    const scrollAnchor = this.captureScrollAnchor();
-    const preservedScrollTop = this.options.container.scrollTop;
-    const preservedScrollLeft = this.options.container.scrollLeft;
-    this.renderScrollableCanvas(this.renderVersion);
-    if (scrollAnchor) {
-      this.restoreScrollAnchor(scrollAnchor);
-    } else {
-      this.setProgrammaticScrollTop(preservedScrollTop);
-    }
-    this.options.container.scrollLeft = preservedScrollLeft;
+    return this.runtimeController.rerenderScrollSlicesPreservingScrollTop();
   }
 
   private scheduleDeferredResourceRenderRefresh(): void {
-    if (!this.book || !this.options.container) {
-      return;
-    }
-
-    this.scrollCoordinator.scheduleDeferredResourceRenderRefresh();
+    return this.runtimeController.scheduleDeferredResourceRenderRefresh();
   }
 
   private clearDeferredResourceRenderRefresh(): void {
-    this.scrollCoordinator.clearDeferredResourceRenderRefresh();
+    return this.runtimeController.clearDeferredResourceRenderRefresh();
   }
 
   private scheduleDeferredAnchorRealignment(): void {
-    if (!this.options.container || !this.locator?.anchorId) {
-      return;
-    }
-
-    this.scrollCoordinator.scheduleDeferredAnchorRealignment();
+    return this.runtimeController.scheduleDeferredAnchorRealignment();
   }
 
   private clearDeferredAnchorRealignment(): void {
-    this.scrollCoordinator.clearDeferredAnchorRealignment();
+    return this.runtimeController.clearDeferredAnchorRealignment();
   }
 
   private captureScrollAnchor(): ScrollAnchor | null {
-    return this.scrollPositionService.captureScrollAnchor({
-      container: this.options.container
-    });
+    return this.runtimeController.captureScrollAnchor();
   }
 
   private restoreScrollAnchor(anchor: ScrollAnchor | null): void {
-    if (!this.options.container) {
-      return;
-    }
-
-    this.setProgrammaticScrollTop(
-      this.scrollPositionService.resolveScrollTopForAnchor({
-        anchor,
-        currentScrollTop: this.options.container.scrollTop,
-        getSectionTop: (sectionId) => this.getSectionTop(sectionId)
-      })
-    );
+    return this.runtimeController.restoreScrollAnchor(anchor);
   }
 
   private setProgrammaticScrollTop(nextScrollTop: number): void {
-    this.scrollCoordinator.setProgrammaticScrollTop(nextScrollTop);
+    return this.runtimeController.setProgrammaticScrollTop(nextScrollTop);
   }
 
   private collectRenderedCanvasSections(): Array<{
@@ -5185,27 +1731,7 @@ export class EpubReader {
     canvas: HTMLCanvasElement;
     interactions: InteractionRegion[];
   }> {
-    if (!this.options.container || !this.book) {
-      return [];
-    }
-
-    return this.lastRenderedSectionIds.map((sectionId) => {
-      const sectionTop = this.getSectionTop(sectionId);
-      return {
-        sectionId,
-        height: this.getSectionHeight(sectionId),
-        canvas: this.options.canvas ?? document.createElement("canvas"),
-        interactions: this.lastInteractionRegions
-          .filter((region) => region.sectionId === sectionId)
-          .map((region) => ({
-            ...region,
-            rect: {
-              ...region.rect,
-              y: region.rect.y - sectionTop
-            }
-          }))
-      };
-    });
+    return this.runtimeController.collectRenderedCanvasSections();
   }
 
   private offsetInteractionRegionsForScroll(
@@ -5215,10 +1741,7 @@ export class EpubReader {
       interactions: InteractionRegion[];
     }>
   ): InteractionRegion[] {
-    return this.scrollPositionService.offsetInteractionRegionsForScroll({
-      sections,
-      getSectionTop: (sectionId) => this.getSectionTop(sectionId)
-    });
+    return this.runtimeController.offsetInteractionRegionsForScroll(sections);
   }
 
   private collectVisibleBoundsForScroll(
@@ -5233,25 +1756,13 @@ export class EpubReader {
       }>;
     }>
   ): VisibleDrawBounds {
-    return this.scrollPositionService.collectVisibleBoundsForScroll({
-      sectionsToRender,
-      getSectionTop: (sectionId) => this.getSectionTop(sectionId)
-    });
+    return this.runtimeController.collectVisibleBoundsForScroll(
+      sectionsToRender
+    );
   }
 
   private getSectionElement(sectionId: string): HTMLElement | null {
-    if (!this.options.container) {
-      return null;
-    }
-
-    return (
-      this.options.container.querySelector<HTMLElement>(
-        `article[data-section-id="${sectionId}"]`
-      ) ??
-      this.options.container.querySelector<HTMLElement>(
-        `.epub-dom-section[data-section-id="${sectionId}"]`
-      )
-    );
+    return this.runtimeController.getSectionElement(sectionId);
   }
 
   private findRenderedDomSectionAtPoint(point: Point): {
@@ -5259,186 +1770,27 @@ export class EpubReader {
     sectionIndex: number;
     sectionElement: HTMLElement;
   } | null {
-    if (!this.book || !this.options.container) {
-      return null;
-    }
-
-    const candidateSectionIds = this.lastRenderedSectionIds.length
-      ? this.lastRenderedSectionIds
-      : this.book.sections[this.currentSectionIndex]?.id
-        ? [this.book.sections[this.currentSectionIndex]!.id]
-        : [];
-
-    if (this.mode === "paginated") {
-      const containerRect = this.options.container.getBoundingClientRect();
-      for (const sectionId of candidateSectionIds) {
-        const sectionIndex = this.getSectionIndexById(sectionId);
-        if (sectionIndex < 0) {
-          continue;
-        }
-
-        const section = this.book.sections[sectionIndex];
-        const sectionElement = this.getSectionElement(sectionId);
-        if (
-          !section ||
-          !sectionElement ||
-          !isRenderedDomSectionElement(sectionElement)
-        ) {
-          continue;
-        }
-
-        const rect = sectionElement.getBoundingClientRect();
-        const relativeLeft = rect.left - containerRect.left;
-        const relativeTop = rect.top - containerRect.top;
-        if (
-          point.x >= relativeLeft &&
-          point.x <= relativeLeft + rect.width &&
-          point.y >= relativeTop &&
-          point.y <= relativeTop + rect.height
-        ) {
-          return {
-            section,
-            sectionIndex,
-            sectionElement
-          };
-        }
-      }
-
-      for (const sectionId of candidateSectionIds) {
-        const sectionIndex = this.getSectionIndexById(sectionId);
-        if (sectionIndex < 0) {
-          continue;
-        }
-
-        const section = this.book.sections[sectionIndex];
-        const sectionElement = this.getSectionElement(sectionId);
-        if (
-          !section ||
-          !sectionElement ||
-          !isRenderedDomSectionElement(sectionElement)
-        ) {
-          continue;
-        }
-
-        return {
-          section,
-          sectionIndex,
-          sectionElement
-        };
-      }
-
-      return null;
-    }
-
-    const absoluteY = point.y + this.options.container.scrollTop;
-    for (const sectionId of candidateSectionIds) {
-      const sectionIndex = this.getSectionIndexById(sectionId);
-      if (sectionIndex < 0) {
-        continue;
-      }
-
-      const section = this.book.sections[sectionIndex];
-      const sectionElement = this.getSectionElement(sectionId);
-      if (
-        !section ||
-        !sectionElement ||
-        !isRenderedDomSectionElement(sectionElement)
-      ) {
-        continue;
-      }
-
-      const top = this.getSectionTop(sectionId);
-      const height = this.getSectionHeight(sectionId);
-      if (absoluteY >= top && absoluteY <= top + height) {
-        return {
-          section,
-          sectionIndex,
-          sectionElement
-        };
-      }
-    }
-
-    return null;
+    return this.runtimeController.findRenderedDomSectionAtPoint(point);
   }
 
   private getSectionTop(sectionId: string): number {
-    const sectionElement = this.getSectionElement(sectionId);
-    const sectionIndex = this.getSectionIndexById(sectionId);
-    if (
-      sectionElement &&
-      Number.isFinite(sectionElement.offsetTop) &&
-      (sectionIndex <= 0 || sectionElement.offsetTop > 0)
-    ) {
-      return sectionElement.offsetTop;
-    }
-
-    if (!this.book) {
-      return 0;
-    }
-
-    let offset = 0;
-    for (let index = 0; index < sectionIndex; index += 1) {
-      const section = this.book.sections[index];
-      if (!section) {
-        continue;
-      }
-      offset += this.getSectionHeight(section.id);
-    }
-    return offset;
+    return this.runtimeController.getSectionTop(sectionId);
   }
 
   private getSectionHeight(sectionId: string): number {
-    const sectionElement = this.getSectionElement(sectionId);
-    if (sectionElement && sectionElement.offsetHeight > 0) {
-      return sectionElement.offsetHeight;
-    }
-    if (sectionElement) {
-      const domSection =
-        sectionElement.querySelector<HTMLElement>(".epub-dom-section");
-      if (domSection) {
-        const domHeight = domSection.scrollHeight || domSection.offsetHeight;
-        if (domHeight > 0) {
-          return domHeight;
-        }
-      }
-    }
-
-    if (!this.book) {
-      return this.getPageHeight();
-    }
-    const index = this.getSectionIndexById(sectionId);
-    if (index < 0) {
-      return this.getPageHeight();
-    }
-    return Math.max(
-      this.getPageHeight(),
-      this.sectionEstimatedHeights[index] ?? this.getPageHeight()
-    );
+    return this.runtimeController.getSectionHeight(sectionId);
   }
 
   private rebuildSectionIndex(): void {
-    this.documentSession.rebuildSectionIndex();
+    return this.runtimeController.rebuildSectionIndex();
   }
 
   private getSectionIndexById(sectionId?: string | null): number {
-    if (!sectionId) {
-      return -1;
-    }
-
-    return this.documentSession.resolveSectionIndexById(sectionId);
+    return this.runtimeController.getSectionIndexById(sectionId);
   }
 
   private findSectionIndexForOffset(offset: number): number {
-    if (!this.book) {
-      return -1;
-    }
-
-    return this.scrollPositionService.findSectionIndexForOffset({
-      container: this.options.container,
-      sections: this.book.sections,
-      offset,
-      getSectionHeight: (sectionId) => this.getSectionHeight(sectionId)
-    });
+    return this.runtimeController.findSectionIndexForOffset(offset);
   }
 
   private resolveSelectionTarget(node: Node | null): {
@@ -5447,81 +1799,7 @@ export class EpubReader {
     sectionId: string;
     blockId?: string;
   } | null {
-    if (!this.book || !this.options.container || !node) {
-      return null;
-    }
-
-    const element = node instanceof HTMLElement ? node : node.parentElement;
-    if (
-      !(element instanceof HTMLElement) ||
-      !this.options.container.contains(element)
-    ) {
-      return null;
-    }
-
-    const canvasTextRun = element.closest<HTMLElement>(".epub-text-run");
-    if (canvasTextRun) {
-      const sectionId = canvasTextRun.dataset.readerSectionId?.trim();
-      const blockId = canvasTextRun.dataset.readerBlockId?.trim();
-      const sectionIndex = sectionId ? this.getSectionIndexById(sectionId) : -1;
-      const section =
-        sectionIndex >= 0 ? this.book.sections[sectionIndex] : null;
-      if (sectionId && section && blockId) {
-        return {
-          element: canvasTextRun,
-          locator: createBlockLocator({
-            section,
-            spineIndex: sectionIndex,
-            blockId
-          }),
-          sectionId,
-          blockId
-        };
-      }
-    }
-
-    const domSection = element.closest<HTMLElement>(".epub-dom-section");
-    if (!(domSection instanceof HTMLElement)) {
-      return null;
-    }
-
-    const sectionId = domSection.dataset.sectionId?.trim();
-    const sectionIndex = sectionId ? this.getSectionIndexById(sectionId) : -1;
-    const section = sectionIndex >= 0 ? this.book.sections[sectionIndex] : null;
-    if (!sectionId || !section) {
-      return null;
-    }
-
-    const identifiedElement = element.closest<HTMLElement>(
-      "[id], [data-reader-block-id]"
-    );
-    const blockId =
-      identifiedElement?.dataset.readerBlockId?.trim() ||
-      identifiedElement?.id?.trim();
-    if (blockId) {
-      return {
-        element: identifiedElement ?? domSection,
-        locator: createBlockLocator({
-          section,
-          spineIndex: sectionIndex,
-          blockId
-        }),
-        sectionId,
-        blockId
-      };
-    }
-
-    return {
-      element: domSection,
-      locator: normalizeLocator({
-        spineIndex: sectionIndex,
-        progressInSection:
-          this.locator?.spineIndex === sectionIndex
-            ? (this.locator.progressInSection ?? 0)
-            : 0
-      }),
-      sectionId
-    };
+    return this.runtimeController.resolveSelectionTarget(node);
   }
 
   private resolveSelectionEndpoint(input: {
@@ -5534,162 +1812,48 @@ export class EpubReader {
     blockId?: string;
     inlineOffset?: number;
   } | null {
-    const target = this.resolveSelectionTarget(input.node);
-    if (!target || !target.blockId) {
-      return target;
-    }
-
-    const clampedOffset = Math.max(0, Math.trunc(input.offset));
-    const canvasTextRun = target.element.closest<HTMLElement>(".epub-text-run");
-    if (canvasTextRun) {
-      const inlineStart =
-        Number.parseInt(canvasTextRun.dataset.readerInlineStart ?? "0", 10) ||
-        0;
-      const inlineEnd =
-        Number.parseInt(
-          canvasTextRun.dataset.readerInlineEnd ?? `${inlineStart}`,
-          10
-        ) || inlineStart;
-      const inlineOffset = Math.max(
-        inlineStart,
-        Math.min(inlineEnd, inlineStart + clampedOffset)
-      );
-      return {
-        ...target,
-        locator: normalizeLocator({
-          ...target.locator,
-          inlineOffset
-        }),
-        inlineOffset
-      };
-    }
-
-    const inlineOffset = resolveDomTextOffsetWithinBlock(
-      target.element,
-      input.node,
-      clampedOffset
-    );
-    return {
-      ...target,
-      locator: normalizeLocator({
-        ...target.locator,
-        inlineOffset
-      }),
-      inlineOffset
-    };
+    return this.runtimeController.resolveSelectionEndpoint(input);
   }
 
   private resolveCurrentTextSelectionSnapshot(): ReaderTextSelectionSnapshot | null {
-    if (!this.book || !this.options.container) {
-      return null;
-    }
-
-    const selection = getScopedTextSelectionRecord(this.options.container);
-    if (!selection) {
-      return cloneReaderTextSelectionSnapshot(this.pinnedTextSelectionSnapshot);
-    }
-
-    const startTarget = this.resolveSelectionEndpoint({
-      node: selection.startNode,
-      offset: selection.range?.startOffset ?? 0
-    });
-    const endTarget = this.resolveSelectionEndpoint({
-      node: selection.endNode,
-      offset: selection.range?.endOffset ?? 0
-    });
-    const target =
-      resolveLeadingSelectionTarget(startTarget, endTarget) ??
-      startTarget ??
-      endTarget;
-    if (!target) {
-      return null;
-    }
-
-    const rects = measureSelectionRectsWithinContainer({
-      container: this.options.container,
-      selection: selection.selection,
-      fallbackElement: target.element,
-      mode: this.mode
-    });
-
-    return {
-      text: selection.text,
-      locator: normalizeLocator({
-        ...target.locator,
-        ...(target.inlineOffset !== undefined
-          ? { inlineOffset: target.inlineOffset }
-          : {})
-      }),
-      sectionId: target.sectionId,
-      ...(target.blockId ? { blockId: target.blockId } : {}),
-      ...(startTarget &&
-      endTarget &&
-      startTarget.sectionId === endTarget.sectionId &&
-      startTarget.blockId &&
-      endTarget.blockId
-        ? {
-            textRange: normalizeTextRangeSelector({
-              start: {
-                blockId: startTarget.blockId,
-                inlineOffset: startTarget.inlineOffset ?? 0
-              },
-              end: {
-                blockId: endTarget.blockId,
-                inlineOffset:
-                  endTarget.inlineOffset ?? startTarget.inlineOffset ?? 0
-              }
-            })
-          }
-        : {}),
-      rects,
-      visible: rects.length > 0
-    };
+    return this.runtimeController.resolveCurrentTextSelectionSnapshot();
   }
 
   private setPinnedTextSelectionSnapshot(
     selection: ReaderTextSelectionSnapshot | null
   ): void {
-    const updatedSelection =
-      this.selectionSession.setPinnedTextSelectionSnapshot(selection);
-    if (!updatedSelection.changed) {
-      return;
-    }
-    const payload = {
-      selection: updatedSelection.selection
-    } satisfies ReaderEventMap["textSelectionChanged"];
-    this.events.emit("textSelectionChanged", payload);
-    void this.options.onTextSelectionChanged?.(payload);
+    return this.runtimeController.setPinnedTextSelectionSnapshot(selection);
   }
 
   private resolveSelectionHighlightState(
     selection: ReaderTextSelectionSnapshot
   ): ReaderSelectionHighlightState {
-    return this.annotationService.resolveSelectionHighlightState(selection);
+    return this.runtimeController.resolveSelectionHighlightState(selection);
   }
 
   private resolveAnnotationRangesForSection(
     spineIndex: number
   ): ResolvedAnnotationRange[] {
-    return this.annotationService.resolveAnnotationRangesForSection(spineIndex);
+    return this.runtimeController.resolveAnnotationRangesForSection(spineIndex);
   }
 
   private resolveAnnotationRange(
     annotation: Annotation
   ): ResolvedAnnotationRange | null {
-    return this.annotationService.resolveAnnotationRange(annotation);
+    return this.runtimeController.resolveAnnotationRange(annotation);
   }
 
   private createSectionTextRangeContext(
     section: SectionDocument
   ): SectionTextRangeContext {
-    return this.annotationService.createSectionTextRangeContext(section);
+    return this.runtimeController.createSectionTextRangeContext(section);
   }
 
   private normalizeTextRangeForSection(
     spineIndex: number,
     textRange: TextRangeSelector
   ): TextRangeSelector | null {
-    return this.annotationService.normalizeTextRangeForSection(
+    return this.runtimeController.normalizeTextRangeForSection(
       spineIndex,
       textRange
     );
@@ -5699,7 +1863,7 @@ export class EpubReader {
     section: SectionDocument,
     blockId: string | undefined
   ): TextRangeSelector | null {
-    return this.annotationService.resolveFullBlockTextRange(section, blockId);
+    return this.runtimeController.resolveFullBlockTextRange(section, blockId);
   }
 
   private createAnnotationForResolvedRange(input: {
@@ -5711,21 +1875,21 @@ export class EpubReader {
     color?: string;
     note?: string;
   }): Annotation | null {
-    return this.annotationService.createAnnotationForResolvedRange(input);
+    return this.runtimeController.createAnnotationForResolvedRange(input);
   }
 
   private resolveTextRangeQuote(
     section: SectionDocument,
     textRange: TextRangeSelector
   ): string | undefined {
-    return this.annotationService.resolveTextRangeQuote(section, textRange);
+    return this.runtimeController.resolveTextRangeQuote(section, textRange);
   }
 
   private resolveAnnotationViewportRects(
     annotation: Annotation,
     locator: Locator
   ): VisibleDrawBounds {
-    return this.annotationService.resolveAnnotationViewportRects(
+    return this.runtimeController.resolveAnnotationViewportRects(
       annotation,
       locator
     );
@@ -5735,84 +1899,29 @@ export class EpubReader {
     sectionId: string,
     textRange: TextRangeSelector
   ): VisibleDrawBounds {
-    if (!this.options.container) {
-      return [];
-    }
-
-    const startPosition = resolveCanvasTextPosition({
-      container: this.options.container,
+    return this.runtimeController.resolveCanvasTextRangeViewportRects(
       sectionId,
-      blockId: textRange.start.blockId,
-      inlineOffset: textRange.start.inlineOffset,
-      bias: "start"
-    });
-    const endPosition = resolveCanvasTextPosition({
-      container: this.options.container,
-      sectionId,
-      blockId: textRange.end.blockId,
-      inlineOffset: textRange.end.inlineOffset,
-      bias: "end"
-    });
-    if (!startPosition || !endPosition) {
-      return [];
-    }
-
-    const range = document.createRange();
-    range.setStart(startPosition.node, startPosition.offset);
-    range.setEnd(endPosition.node, endPosition.offset);
-    const containerRect = this.options.container.getBoundingClientRect();
-    const rangeClientRects =
-      typeof range.getClientRects === "function"
-        ? Array.from(range.getClientRects())
-        : [];
-    return rangeClientRects
-      .filter((rect) => rect.width > 0 && rect.height > 0)
-      .map((rect) => ({
-        x: rect.left - containerRect.left + this.options.container!.scrollLeft,
-        y:
-          this.mode === "scroll"
-            ? rect.top - containerRect.top + this.options.container!.scrollTop
-            : rect.top - containerRect.top,
-        width: rect.width,
-        height: rect.height
-      }));
+      textRange
+    );
   }
 
   private resolveAnnotationSelectionAtPoint(
     point: Point
   ): ReaderTextSelectionSnapshot | null {
-    return this.annotationService.resolveAnnotationSelectionAtPoint(
-      this.toAnnotationViewportPoint(point)
-    );
+    return this.runtimeController.resolveAnnotationSelectionAtPoint(point);
   }
 
   emitAnnotationActivatedAtPoint(point: Point): boolean {
-    const activation =
-      this.annotationService.resolveAnnotationActivationAtPoint(
-        this.toAnnotationViewportPoint(point)
-      );
-    if (!activation) {
-      return false;
-    }
-
-    return this.emitAnnotationActivationPayload(activation, point);
+    return this.runtimeController.emitAnnotationActivatedAtPoint(point);
   }
 
   emitAnnotationActivatedForDecoration(
     decorationId: string,
     point?: Point
   ): boolean {
-    const activation =
-      this.annotationService.resolveAnnotationActivationByDecorationId(
-        decorationId
-      );
-    if (!activation) {
-      return false;
-    }
-
-    return this.emitAnnotationActivationPayload(
-      activation,
-      point ?? this.getAnnotationActivationFallbackPoint(activation.rects)
+    return this.runtimeController.emitAnnotationActivatedForDecoration(
+      decorationId,
+      point
     );
   }
 
@@ -5820,431 +1929,29 @@ export class EpubReader {
     activation: ResolvedAnnotationActivation,
     point: Point
   ): boolean {
-    const payload = {
-      annotation: activation.annotation,
-      locator: activation.locator,
-      sectionId: activation.sectionId,
-      ...(activation.blockId ? { blockId: activation.blockId } : {}),
-      ...(activation.textRange ? { textRange: activation.textRange } : {}),
-      ...(activation.quote ? { quote: activation.quote } : {}),
-      point: { ...point },
-      rects: activation.rects.map((rect) => ({ ...rect }))
-    } satisfies AnnotationActivatedEvent;
-    this.events.emit("annotationActivated", payload);
-    void this.options.onAnnotationActivated?.(payload);
-    return true;
+    return this.runtimeController.emitAnnotationActivationPayload(
+      activation,
+      point
+    );
   }
 
   private getAnnotationActivationFallbackPoint(
     rects: VisibleDrawBounds
   ): Point {
-    const firstRect = rects.find((rect) => rect.width > 0 && rect.height > 0);
-    if (!firstRect) {
-      return { x: 0, y: 0 };
-    }
-
-    return {
-      x: firstRect.x + firstRect.width / 2,
-      y: firstRect.y + firstRect.height / 2
-    };
+    return this.runtimeController.getAnnotationActivationFallbackPoint(rects);
   }
 
   private toAnnotationViewportPoint(point: Point): Point {
-    if (this.mode !== "scroll" || !this.options.container) {
-      return point;
-    }
-
-    return {
-      x: point.x,
-      y: point.y + this.options.container.scrollTop
-    };
+    return this.runtimeController.toAnnotationViewportPoint(point);
   }
 
   private syncTextSelectionState(): void {
-    this.updateTextSelectionSnapshot(
-      this.resolveCurrentTextSelectionSnapshot()
-    );
+    return this.runtimeController.syncTextSelectionState();
   }
 
   private updateTextSelectionSnapshot(
     selection: ReaderTextSelectionSnapshot | null
   ): void {
-    const result = this.selectionSession.updateTextSelectionSnapshot(selection);
-    if (!result.changed) {
-      return;
-    }
-
-    const payload = {
-      selection: result.selection
-    } satisfies ReaderEventMap["textSelectionChanged"];
-    this.events.emit("textSelectionChanged", payload);
-    void this.options.onTextSelectionChanged?.(payload);
+    return this.runtimeController.updateTextSelectionSnapshot(selection);
   }
-}
-
-function cloneReaderPreferences(
-  preferences: ReaderPreferences
-): ReaderPreferences {
-  return {
-    ...(preferences.mode ? { mode: preferences.mode } : {}),
-    ...(preferences.publisherStyles
-      ? { publisherStyles: preferences.publisherStyles }
-      : {}),
-    ...(preferences.publisherColorOverride
-      ? { publisherColorOverride: preferences.publisherColorOverride }
-      : {}),
-    ...(preferences.experimentalRtl !== undefined
-      ? { experimentalRtl: preferences.experimentalRtl }
-      : {}),
-    ...(preferences.spreadMode ? { spreadMode: preferences.spreadMode } : {}),
-    ...(preferences.theme ? { theme: { ...preferences.theme } } : {}),
-    ...(preferences.typography
-      ? { typography: { ...preferences.typography } }
-      : {})
-  };
-}
-
-function themesEqual(left: Theme, right: Theme): boolean {
-  return left.background === right.background && left.color === right.color;
-}
-
-function typographyEqual(
-  left: TypographyOptions,
-  right: TypographyOptions
-): boolean {
-  return (
-    left.fontSize === right.fontSize &&
-    left.lineHeight === right.lineHeight &&
-    left.paragraphSpacing === right.paragraphSpacing &&
-    left.fontFamily === right.fontFamily &&
-    left.letterSpacing === right.letterSpacing &&
-    left.wordSpacing === right.wordSpacing
-  );
-}
-
-function resolveDomTextOffsetWithinBlock(
-  blockElement: HTMLElement,
-  node: Node | null,
-  offset: number
-): number {
-  const safeOffset = Math.max(0, Math.trunc(offset));
-  const textNodes = collectTextNodes(blockElement);
-  if (textNodes.length === 0) {
-    return safeOffset;
-  }
-
-  let cursor = 0;
-  for (const textNode of textNodes) {
-    const length = textNode.textContent?.length ?? 0;
-    if (textNode === node) {
-      return cursor + Math.min(length, safeOffset);
-    }
-    cursor += length;
-  }
-
-  const ownerTextNode =
-    node?.nodeType === Node.TEXT_NODE ? node : node?.firstChild;
-  if (ownerTextNode && ownerTextNode.nodeType === Node.TEXT_NODE) {
-    const matchingIndex = textNodes.indexOf(ownerTextNode as Text);
-    if (matchingIndex >= 0) {
-      const priorLength = textNodes
-        .slice(0, matchingIndex)
-        .reduce(
-          (total, textNode) => total + (textNode.textContent?.length ?? 0),
-          0
-        );
-      const localLength = ownerTextNode.textContent?.length ?? 0;
-      return priorLength + Math.min(localLength, safeOffset);
-    }
-  }
-
-  return Math.min(cursor, safeOffset);
-}
-
-function collectTextNodes(root: Node): Text[] {
-  if (typeof document === "undefined") {
-    return [];
-  }
-
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const textNodes: Text[] = [];
-  let current = walker.nextNode();
-  while (current) {
-    if (current instanceof Text) {
-      textNodes.push(current);
-    }
-    current = walker.nextNode();
-  }
-  return textNodes;
-}
-
-function getScopedTextSelectionRecord(scope: Node): {
-  selection: Selection;
-  range: Range | null;
-  text: string;
-  startNode: Node | null;
-  endNode: Node | null;
-} | null {
-  if (
-    typeof window === "undefined" ||
-    typeof window.getSelection !== "function"
-  ) {
-    return null;
-  }
-
-  const selection = window.getSelection();
-  const text = selection?.toString().trim();
-  if (!selection || !text) {
-    return null;
-  }
-
-  const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-  const startNode = range?.startContainer ?? selection.anchorNode;
-  const endNode = range?.endContainer ?? selection.focusNode;
-  if (
-    !(
-      (startNode && scope.contains(startNode)) ||
-      (endNode && scope.contains(endNode))
-    )
-  ) {
-    return null;
-  }
-
-  return {
-    selection,
-    range,
-    text,
-    startNode: startNode ?? null,
-    endNode: endNode ?? null
-  };
-}
-
-function measureSelectionRectsWithinContainer(input: {
-  container: HTMLElement;
-  selection: Selection;
-  fallbackElement?: HTMLElement | null;
-  mode: ReadingMode;
-}): VisibleDrawBounds {
-  const selectionRange =
-    input.selection.rangeCount > 0 ? input.selection.getRangeAt(0) : null;
-  const rangeRects =
-    selectionRange && typeof selectionRange.getClientRects === "function"
-      ? Array.from(selectionRange.getClientRects())
-      : [];
-  const rects = rangeRects
-    .map((rect) =>
-      projectClientRectIntoContainer(rect, input.container, input.mode)
-    )
-    .filter((rect): rect is Rect => Boolean(rect));
-
-  if (rects.length > 0) {
-    return rects;
-  }
-
-  if (!input.fallbackElement) {
-    return [];
-  }
-
-  const fallbackRect = projectClientRectIntoContainer(
-    input.fallbackElement.getBoundingClientRect(),
-    input.container,
-    input.mode
-  );
-  return fallbackRect ? [fallbackRect] : [];
-}
-
-function projectClientRectIntoContainer(
-  rect: DOMRect | DOMRectReadOnly,
-  container: HTMLElement,
-  mode: ReadingMode
-): Rect | null {
-  if (rect.width <= 0 || rect.height <= 0) {
-    return null;
-  }
-
-  const containerRect = container.getBoundingClientRect();
-  return {
-    x: rect.left - containerRect.left + container.scrollLeft,
-    y:
-      mode === "scroll"
-        ? rect.top - containerRect.top + container.scrollTop
-        : rect.top - containerRect.top,
-    width: rect.width,
-    height: rect.height
-  };
-}
-
-function clampProgress(value: number): number {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-
-  return Math.max(0, Math.min(value, 1));
-}
-
-function readTranslateY(element: HTMLElement): number {
-  const transform =
-    element.style.transform ||
-    (typeof window !== "undefined"
-      ? window.getComputedStyle(element).transform
-      : "");
-  if (!transform || transform === "none") {
-    return 0;
-  }
-
-  const translateMatch = transform.match(/translateY\((-?\d+(?:\.\d+)?)px\)/);
-  if (translateMatch?.[1]) {
-    return Number.parseFloat(translateMatch[1]);
-  }
-
-  const matrixMatch = transform.match(/matrix\(([^)]+)\)/);
-  if (matrixMatch?.[1]) {
-    const parts = matrixMatch[1]
-      .split(",")
-      .map((part) => Number.parseFloat(part.trim()));
-    return parts[5] ?? 0;
-  }
-
-  const matrix3dMatch = transform.match(/matrix3d\(([^)]+)\)/);
-  if (matrix3dMatch?.[1]) {
-    const parts = matrix3dMatch[1]
-      .split(",")
-      .map((part) => Number.parseFloat(part.trim()));
-    return parts[13] ?? 0;
-  }
-
-  return 0;
-}
-
-function isRenderedDomSectionElement(element: HTMLElement): boolean {
-  return (
-    element.matches(".epub-dom-section") ||
-    Boolean(element.querySelector(".epub-dom-section"))
-  );
-}
-
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-
-  if (target.isContentEditable) {
-    return true;
-  }
-
-  return Boolean(
-    target.closest("input, textarea, select, button, [contenteditable='true']")
-  );
-}
-
-function annotateDomSectionWithBlockIds(
-  section: SectionDocument,
-  sectionElement: HTMLElement
-): void {
-  for (const element of sectionElement.querySelectorAll<HTMLElement>(
-    "[data-reader-block-id]"
-  )) {
-    delete element.dataset.readerBlockId;
-  }
-
-  const elements = collectDomReadableBlockElements(sectionElement);
-  const blocks = collectSelectableBlocksInReadingOrder(section.blocks).map(
-    (block) => ({
-      id: block.id,
-      text: normalizeBlockMatchText(collectBlockText(block))
-    })
-  );
-
-  let searchStartIndex = 0;
-  for (const element of elements) {
-    if (element.id.trim()) {
-      element.dataset.readerBlockId = element.id.trim();
-      continue;
-    }
-
-    const elementText = normalizeBlockMatchText(element.textContent ?? "");
-    if (!elementText) {
-      continue;
-    }
-
-    const matchIndex = findMatchingSelectableBlockIndex(
-      blocks,
-      elementText,
-      searchStartIndex
-    );
-    if (matchIndex < 0) {
-      continue;
-    }
-
-    element.dataset.readerBlockId = blocks[matchIndex]!.id;
-    searchStartIndex = matchIndex + 1;
-  }
-}
-
-function collectDomReadableBlockElements(
-  sectionElement: HTMLElement
-): HTMLElement[] {
-  return Array.from(
-    sectionElement.querySelectorAll<HTMLElement>(
-      "p, li, pre, h1, h2, h3, h4, h5, h6, td, th, dt, dd, figcaption"
-    )
-  );
-}
-
-function resolveSectionAnchorIdForElement(
-  section: SectionDocument,
-  element: HTMLElement
-): string | undefined {
-  const elementId = element.id.trim();
-  if (elementId && section.anchors[elementId]) {
-    return elementId;
-  }
-
-  const namedAnchor = element.getAttribute("name")?.trim();
-  if (namedAnchor && section.anchors[namedAnchor]) {
-    return namedAnchor;
-  }
-
-  if (elementId) {
-    const resolvedAnchor = Object.entries(section.anchors).find(
-      ([, blockId]) => blockId === elementId
-    )?.[0];
-    if (resolvedAnchor) {
-      return resolvedAnchor;
-    }
-  }
-
-  return undefined;
-}
-
-function normalizeBlockMatchText(value: string): string {
-  return value.replace(/\s+/g, " ").trim();
-}
-
-function findMatchingSelectableBlockIndex(
-  blocks: Array<{ id: string; text: string }>,
-  elementText: string,
-  searchStartIndex: number
-): number {
-  for (let index = searchStartIndex; index < blocks.length; index += 1) {
-    const candidate = blocks[index];
-    if (!candidate?.text) {
-      continue;
-    }
-
-    if (candidate.text === elementText) {
-      return index;
-    }
-
-    const shortestLength = Math.min(candidate.text.length, elementText.length);
-    if (
-      shortestLength >= 12 &&
-      (candidate.text.includes(elementText) ||
-        elementText.includes(candidate.text))
-    ) {
-      return index;
-    }
-  }
-
-  return -1;
 }
