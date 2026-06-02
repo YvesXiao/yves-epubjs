@@ -137,8 +137,8 @@ pnpm exec vitest run packages/core/test/dom-viewport-mapper.test.ts
 pnpm exec vitest run packages/core/test/reader-runtime-navigation.test.ts -t "uses the captured scroll locator"
 pnpm exec vitest run packages/core/test/canvas-renderer.test.ts packages/core/test/reader-runtime-navigation.test.ts -t "clears stale DOM children|uses the captured scroll locator"
 pnpm exec vitest run packages/core/test/reader-hybrid-navigation.test.ts
-pnpm --filter @pretext-epub/core typecheck
-pnpm --filter @pretext-epub/demo build
+pnpm --filter @yves-epub/core typecheck
+pnpm --filter @yves-epub/demo build
 pnpm lint
 ```
 

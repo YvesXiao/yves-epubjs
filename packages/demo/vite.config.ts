@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@pretext-epub/core": fileURLToPath(new URL("../core/src/index.ts", import.meta.url))
+      "@yves-epub/core": fileURLToPath(new URL("../core/src/index.ts", import.meta.url))
     }
   }
 });

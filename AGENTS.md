@@ -17,7 +17,7 @@ Source code lives under `packages/*/src`. Core tests are in `packages/core/test`
 - `pnpm lint`: run ESLint on `.ts` files.
 - `pnpm ci:check`: full local verification (`typecheck`, `lint`, `test`, `build`).
 
-Use `pnpm --filter @pretext-epub/demo build` or `pnpm --filter @pretext-epub/core test` for package-specific work.
+Use `pnpm --filter @yves-epub/demo build` or `pnpm --filter @yves-epub/core test` for package-specific work.
 
 ## Coding Style & Naming Conventions
 Use TypeScript with 2-space indentation and semicolons omitted, matching the existing codebase. Prefer clear, small functions and explicit types for public APIs. File names use kebab-case for modules (for example `book-parser.ts`), while exported types and classes use `PascalCase`. Follow existing naming such as `renderCurrentSection`, `PaginationInfo`, and `SectionDocument`.

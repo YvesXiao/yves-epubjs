@@ -51,7 +51,7 @@ Verification:
 
 ```bash
 pnpm exec vitest run packages/core/test/architecture-boundaries.test.ts
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 ```
 
 Result: passed on 2026-04-24.
@@ -74,7 +74,7 @@ Verification:
 
 ```bash
 pnpm exec vitest run packages/core/test/architecture-boundaries.test.ts packages/core/test/locator.test.ts packages/core/test/xhtml-parser.test.ts packages/core/test/navigation-target.test.ts
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 ```
 
 Result: passed on 2026-04-24.
@@ -109,7 +109,7 @@ Verification:
 
 ```bash
 pnpm exec vitest run packages/core/test/reader-annotation.test.ts packages/core/test/reader-annotation-service.test.ts packages/core/test/reader-runtime-navigation.test.ts
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 ```
 
 Result: passed on 2026-04-24.
@@ -140,7 +140,7 @@ Verification:
 
 ```bash
 pnpm exec vitest run packages/core/test/reader-spread.test.ts packages/core/test/reader-pagination-compat.test.ts packages/core/test/reader-dom-pagination-service.test.ts
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 ```
 
 Result: passed on 2026-04-24.
@@ -169,7 +169,7 @@ Verification:
 
 ```bash
 pnpm exec vitest run packages/core/test/reader-runtime-navigation.test.ts packages/core/test/reader-hybrid-navigation.test.ts packages/core/test/reader-hybrid-progress.test.ts packages/core/test/reader-scroll-position-service.test.ts
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 ```
 
 Result: passed on 2026-04-24.
@@ -200,7 +200,7 @@ Verification:
 
 ```bash
 pnpm exec vitest run packages/core/test/reader-chapter-render-routing.test.ts packages/core/test/reader-spread.test.ts packages/core/test/reader-image.test.ts packages/core/test/reader-runtime-navigation.test.ts
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 ```
 
 Result: passed on 2026-04-24.
@@ -230,7 +230,7 @@ Verification:
 
 ```bash
 pnpm exec vitest run packages/core/test/public-api-surface.test.ts
-pnpm --filter @pretext-epub/core build
+pnpm --filter @yves-epub/core build
 ```
 
 Result: passed on 2026-04-24.
@@ -259,7 +259,7 @@ Verification:
 
 ```bash
 pnpm exec vitest run packages/core/test/pretext-layout.test.ts packages/core/test/image-layout.test.ts packages/core/test/structured-layout.test.ts packages/core/test/paginated-render-plan.test.ts
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 ```
 
 Result: passed on 2026-04-24.
@@ -290,7 +290,7 @@ Verification:
 
 ```bash
 pnpm exec vitest run packages/core/test/canvas-renderer.test.ts packages/core/test/dom-viewport-mapper.test.ts packages/core/test/reader-image.test.ts packages/core/test/canvas-style-alignment.test.ts
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 ```
 
 Result: passed on 2026-04-24.
@@ -303,10 +303,10 @@ Run the full verification suite after all completed tasks in this roadmap
 tranche:
 
 ```bash
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 pnpm lint
-pnpm --filter @pretext-epub/core test
-pnpm --filter @pretext-epub/core build
+pnpm --filter @yves-epub/core test
+pnpm --filter @yves-epub/core build
 ```
 
 Expected result: all commands pass.

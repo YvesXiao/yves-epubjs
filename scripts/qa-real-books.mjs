@@ -5,7 +5,7 @@ import { chromium } from "@playwright/test"
 const BOOK_DIR = process.env.BOOK_DIR ?? "/Users/xyf/Downloads/books"
 const APP_URL = process.env.APP_URL ?? "http://127.0.0.1:4173/"
 const OUTPUT_DIR =
-  process.env.QA_OUTPUT_DIR ?? "/Users/xyf/xyfProject/pretext-epub/tmp/qa-real-books"
+  process.env.QA_OUTPUT_DIR ?? "/Users/xyf/xyfProject/yves-epub/tmp/qa-real-books"
 const BOOK_LIMIT = Number(process.env.BOOK_LIMIT ?? "0")
 const INTERACTION_TIMEOUT_MS = Number(process.env.INTERACTION_TIMEOUT_MS ?? "25000")
 

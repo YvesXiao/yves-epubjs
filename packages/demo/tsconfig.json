@@ -2,9 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
-      "@pretext-epub/core": ["../core/src/index.ts"]
+      "@yves-epub/core": ["../core/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts", "../core/src/**/*.d.ts"]

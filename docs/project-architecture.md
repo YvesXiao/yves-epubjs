@@ -1,4 +1,4 @@
-# pretext-epub 项目架构文档
+# yves-epub 项目架构文档
 
 ## 1. 文档目标
 
@@ -14,7 +14,7 @@
 
 1. `packages/core`
    - EPUB 容器读取、解析、统一内容模型、布局、运行时、渲染器
-   - 对外发布包：`@pretext-epub/core`
+   - 对外发布包：`@yves-epub/core`
 2. `packages/demo`
    - 基于 `Vite + React` 的浏览器宿主
    - 用于验证 `EpubReader` 的真实交互链路
@@ -166,7 +166,7 @@
 
 ## 7. 对外宿主接口
 
-`pretext-epub` 现在已经具备一组面向宿主的稳定接口，特别用于像 `citicpub-enterprise-rn` 这样的外部阅读宿主：
+`yves-epub` 现在已经具备一组面向宿主的稳定接口，特别用于像 `citicpub-enterprise-rn` 这样的外部阅读宿主：
 
 1. 输入：
    - `open(File | Blob | ArrayBuffer | Uint8Array)`
@@ -204,7 +204,7 @@
 
 `citicpub-enterprise-rn` 的接入方式已经验证通过，但有一个工程约束必须记录：
 
-1. 本地联调阶段不推荐直接用 `file:` 目录依赖引用 `@pretext-epub/core`
+1. 本地联调阶段不推荐直接用 `file:` 目录依赖引用 `@yves-epub/core`
 2. 在 Expo Web + Metro + `pnpm` 组合下，`file:` 依赖会形成指向工作区外部的 `junction`
 3. Metro 对这个外部 `junction` 的依赖解析不稳定
 
@@ -214,7 +214,7 @@
 2. 打包生成 tarball
 3. 在宿主项目中安装该 tarball
 
-这样 `@pretext-epub/core` 会作为普通 npm 包进入宿主 `node_modules`，Metro 的解析路径最稳定。
+这样 `@yves-epub/core` 会作为普通 npm 包进入宿主 `node_modules`，Metro 的解析路径最稳定。
 
 ## 10. 测试结构
 

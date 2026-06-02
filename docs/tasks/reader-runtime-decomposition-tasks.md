@@ -32,7 +32,7 @@ or public behavior.
 Verification:
 
 ```bash
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 pnpm exec vitest run packages/core/test/reader-lifecycle.test.ts packages/core/test/reader-runtime-navigation.test.ts
 ```
 
@@ -76,7 +76,7 @@ state updates.
 Verification:
 
 ```bash
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 pnpm exec vitest run packages/core/test/reader-annotation.test.ts packages/core/test/reader-runtime-navigation.test.ts
 ```
 
@@ -89,10 +89,10 @@ Status: `completed`
 Run:
 
 ```bash
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 pnpm lint
 pnpm exec vitest run packages/core/test/reader-runtime-navigation.test.ts packages/core/test/reader-spread.test.ts packages/core/test/reader-pagination-compat.test.ts packages/core/test/reader-annotation.test.ts
-pnpm --filter @pretext-epub/core test
+pnpm --filter @yves-epub/core test
 ```
 
 Expected result: all commands pass.

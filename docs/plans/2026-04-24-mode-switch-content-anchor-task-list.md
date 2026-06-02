@@ -29,7 +29,7 @@
 **验证**
 
 ```powershell
-pnpm.cmd --filter @pretext-epub/core test -- pretext-layout.test.ts
+pnpm.cmd --filter @yves-epub/core test -- pretext-layout.test.ts
 ```
 
 **通过标准**
@@ -65,7 +65,7 @@ pnpm.cmd exec vitest run packages/core/test/pretext-layout.test.ts -t "captures 
 **验证**
 
 ```powershell
-pnpm.cmd --filter @pretext-epub/core test -- reader-preferences.test.ts
+pnpm.cmd --filter @yves-epub/core test -- reader-preferences.test.ts
 ```
 
 **通过标准**
@@ -104,8 +104,8 @@ pnpm.cmd exec vitest run packages/core/test/reader-preferences.test.ts -t "captu
 **验证**
 
 ```powershell
-pnpm.cmd --filter @pretext-epub/core test -- reader-runtime-navigation.test.ts
-pnpm.cmd --filter @pretext-epub/core test -- reader-hybrid-navigation.test.ts
+pnpm.cmd --filter @yves-epub/core test -- reader-runtime-navigation.test.ts
+pnpm.cmd --filter @yves-epub/core test -- reader-hybrid-navigation.test.ts
 ```
 
 **通过标准**
@@ -142,8 +142,8 @@ pnpm.cmd exec vitest run packages/core/test/reader-runtime-navigation.test.ts pa
 **验证**
 
 ```powershell
-pnpm.cmd --filter @pretext-epub/core test -- reader-runtime-navigation.test.ts
-pnpm.cmd --filter @pretext-epub/core test -- pretext-layout.test.ts
+pnpm.cmd --filter @yves-epub/core test -- reader-runtime-navigation.test.ts
+pnpm.cmd --filter @yves-epub/core test -- pretext-layout.test.ts
 ```
 
 **通过标准**
@@ -179,13 +179,13 @@ pnpm.cmd exec vitest run packages/core/test/pretext-layout.test.ts packages/core
 **验证**
 
 ```powershell
-pnpm.cmd --filter @pretext-epub/core test -- pretext-layout.test.ts
-pnpm.cmd --filter @pretext-epub/core test -- reader-preferences.test.ts
-pnpm.cmd --filter @pretext-epub/core test -- reader-runtime-navigation.test.ts
-pnpm.cmd --filter @pretext-epub/core test -- reader-hybrid-navigation.test.ts
-pnpm.cmd --filter @pretext-epub/core typecheck
+pnpm.cmd --filter @yves-epub/core test -- pretext-layout.test.ts
+pnpm.cmd --filter @yves-epub/core test -- reader-preferences.test.ts
+pnpm.cmd --filter @yves-epub/core test -- reader-runtime-navigation.test.ts
+pnpm.cmd --filter @yves-epub/core test -- reader-hybrid-navigation.test.ts
+pnpm.cmd --filter @yves-epub/core typecheck
 pnpm.cmd lint
-pnpm.cmd --filter @pretext-epub/demo build
+pnpm.cmd --filter @yves-epub/demo build
 ```
 
 **通过标准**
@@ -197,13 +197,13 @@ pnpm.cmd --filter @pretext-epub/demo build
 **结果**
 
 1. core 定向回归测试通过。
-2. `@pretext-epub/core` typecheck 通过。
+2. `@yves-epub/core` typecheck 通过。
 3. workspace `lint` 通过。
-4. `@pretext-epub/demo` build 通过。
+4. `@yves-epub/demo` build 通过。
 
 ```powershell
 pnpm.cmd exec vitest run packages/core/test/pretext-layout.test.ts packages/core/test/reader-preferences.test.ts packages/core/test/reader-runtime-navigation.test.ts packages/core/test/reader-hybrid-navigation.test.ts
-pnpm.cmd --filter @pretext-epub/core typecheck
+pnpm.cmd --filter @yves-epub/core typecheck
 pnpm.cmd lint
-pnpm.cmd --filter @pretext-epub/demo build
+pnpm.cmd --filter @yves-epub/demo build
 ```

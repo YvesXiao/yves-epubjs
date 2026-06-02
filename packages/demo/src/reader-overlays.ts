@@ -1,4 +1,4 @@
-import type { AnnotationViewportSnapshot, EpubReader, VisibleDrawBounds } from "@pretext-epub/core"
+import type { AnnotationViewportSnapshot, EpubReader, VisibleDrawBounds } from "@yves-epub/core"
 
 export type ReaderDecorationOverlay = {
   id: string

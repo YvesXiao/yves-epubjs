@@ -12,7 +12,7 @@
 
 代码单一事实来源：
 
-- [canvas-backlog-boundary.ts](/Users/xyf/xyfProject/pretext-epub/packages/core/src/runtime/canvas-backlog-boundary.ts)
+- [canvas-backlog-boundary.ts](/Users/xyf/xyfProject/yves-epub/packages/core/src/runtime/canvas-backlog-boundary.ts)
 
 ## 2. 冻结原则
 

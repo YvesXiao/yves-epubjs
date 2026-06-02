@@ -1,3 +1,11 @@
+/*
+ * @Author: xiao-yun-fei 827648331@qq.com
+ * @Date: 2026-04-15 09:16:11
+ * @LastEditors: xiao-yun-fei 827648331@qq.com
+ * @LastEditTime: 2026-06-02 09:50:44
+ * @FilePath: \yves-epubjs\packages\demo\src\App.tsx
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 import { useEffect, useRef, useState } from "react";
 import {
   CustomSelect,
@@ -169,7 +177,7 @@ export function App(): JSX.Element {
     <main className="reading-shell">
       <header className="reading-topbar">
         <div className="reading-topbar-brand">
-          <p className="eyebrow">Pretext EPUB Reader</p>
+          <p className="eyebrow">Yves EPUB Reader</p>
           <h1 title={readingTitle}>{readingTitle}</h1>
           <div className="reading-topbar-facts">
             <span className="reading-fact-chip">{mode}</span>

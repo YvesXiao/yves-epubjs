@@ -48,7 +48,7 @@
 **Verification:**
 ```powershell
 pnpm.cmd vitest run packages/core/test/reader-lifecycle.test.ts
-pnpm.cmd --filter @pretext-epub/core typecheck
+pnpm.cmd --filter @yves-epub/core typecheck
 ```
 
 **Done When:**
@@ -77,7 +77,7 @@ pnpm.cmd --filter @pretext-epub/core typecheck
 **Verification:**
 ```powershell
 pnpm.cmd vitest run packages/core/test/reader-lifecycle.test.ts packages/core/test/reader-runtime-navigation.test.ts packages/core/test/reader-chapter-render-routing.test.ts
-pnpm.cmd --filter @pretext-epub/core typecheck
+pnpm.cmd --filter @yves-epub/core typecheck
 ```
 
 **Done When:**
@@ -107,7 +107,7 @@ pnpm.cmd --filter @pretext-epub/core typecheck
 **Verification:**
 ```powershell
 pnpm.cmd vitest run packages/core/test/reader-navigation.test.ts packages/core/test/reader-runtime-navigation.test.ts packages/core/test/reader-hybrid-navigation.test.ts packages/core/test/reader-hybrid-progress.test.ts packages/core/test/navigation-target.test.ts
-pnpm.cmd --filter @pretext-epub/core typecheck
+pnpm.cmd --filter @yves-epub/core typecheck
 ```
 
 **Done When:**
@@ -136,7 +136,7 @@ pnpm.cmd --filter @pretext-epub/core typecheck
 **Verification:**
 ```powershell
 pnpm.cmd vitest run packages/core/test/reader-chapter-render-routing.test.ts packages/core/test/dom-chapter-renderer.test.ts packages/core/test/reader-hybrid-progress.test.ts packages/core/test/reader-runtime-navigation.test.ts
-pnpm.cmd --filter @pretext-epub/core typecheck
+pnpm.cmd --filter @yves-epub/core typecheck
 ```
 
 **Done When:**
@@ -150,7 +150,7 @@ pnpm.cmd --filter @pretext-epub/core typecheck
 Run after all tasks complete:
 
 ```powershell
-pnpm.cmd --filter @pretext-epub/core typecheck
+pnpm.cmd --filter @yves-epub/core typecheck
 pnpm.cmd vitest run packages/core/test/reader-lifecycle.test.ts packages/core/test/reader-navigation.test.ts packages/core/test/reader-runtime-navigation.test.ts packages/core/test/reader-hybrid-navigation.test.ts packages/core/test/reader-hybrid-progress.test.ts packages/core/test/navigation-target.test.ts packages/core/test/reader-chapter-render-routing.test.ts packages/core/test/dom-chapter-renderer.test.ts
 ```
 

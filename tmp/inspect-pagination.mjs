@@ -8,7 +8,7 @@ const books = [
   '/Users/xyf/Downloads/books/剑指Offer_名企面试官精讲典型编程题_--_何海涛_--_2011_--_电子工业出版社_--_214aa1542d6778be54e208760805863d_--_Anna’s_Archive.epub',
   '/Users/xyf/Downloads/books/精通Rust(第2版)_--_[印]拉胡尔•沙玛(Rahul_Sharma)_[芬]韦萨•凯拉维塔(Vesa_Kaihlavirta)_--_2021_--_人民邮电出版社_--_9ffed7de87a634f81fedb829c07c77ab_--_Anna’s_Archive.epub'
 ]
-const outDir = '/Users/xyf/xyfProject/pretext-epub/tmp/pagination-inspect-2026-04-19'
+const outDir = '/Users/xyf/xyfProject/yves-epub/tmp/pagination-inspect-2026-04-19'
 await fs.mkdir(outDir, { recursive: true })
 
 const browser = await chromium.launch({ headless: true })

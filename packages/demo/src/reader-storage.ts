@@ -6,9 +6,11 @@ import {
   serializeBookmark,
   type Bookmark,
   type ReaderPreferences
-} from "@pretext-epub/core";
+} from "@yves-epub/core";
 
-const DEMO_GLOBAL_PREFERENCES_STORAGE_KEY = "pretext-epub:preferences:global";
+const DEMO_GLOBAL_PREFERENCES_STORAGE_KEY = "yves-epub:preferences:global";
+const LEGACY_GLOBAL_PREFERENCES_STORAGE_KEY =
+  "pretext-epub:preferences:global";
 
 export function defaultFontFamily(): string {
   return '"Iowan Old Style", "Palatino Linotype", serif';
@@ -31,7 +33,10 @@ export function loadBookmark(publicationId: string): Bookmark | null {
   }
 
   return deserializeBookmark(
-    window.localStorage.getItem(bookmarkStorageKey(publicationId))
+    getStorageItemWithLegacy(
+      bookmarkStorageKey(publicationId),
+      legacyBookmarkStorageKey(publicationId)
+    )
   );
 }
 
@@ -66,7 +71,10 @@ export function loadStoredGlobalReaderPreferences(): ReaderPreferences | null {
   }
 
   return deserializeReaderPreferences(
-    window.localStorage.getItem(DEMO_GLOBAL_PREFERENCES_STORAGE_KEY)
+    getStorageItemWithLegacy(
+      DEMO_GLOBAL_PREFERENCES_STORAGE_KEY,
+      LEGACY_GLOBAL_PREFERENCES_STORAGE_KEY
+    )
   );
 }
 
@@ -79,17 +87,44 @@ export function loadStoredReaderPreferences(
   }
 
   const bookPreferences = deserializeReaderPreferences(
-    window.localStorage.getItem(readerPreferenceStorageKey(publicationId))
+    getStorageItemWithLegacy(
+      readerPreferenceStorageKey(publicationId),
+      legacyReaderPreferenceStorageKey(publicationId)
+    )
   );
   return mergeReaderPreferences(globalPreferences, bookPreferences);
 }
 
 function bookmarkStorageKey(publicationId: string): string {
+  return `yves-epub:bookmark:${publicationId}`;
+}
+
+function legacyBookmarkStorageKey(publicationId: string): string {
   return `pretext-epub:bookmark:${publicationId}`;
 }
 
 function readerPreferenceStorageKey(publicationId: string): string {
+  return `yves-epub:preferences:book:${publicationId}`;
+}
+
+function legacyReaderPreferenceStorageKey(publicationId: string): string {
   return `pretext-epub:preferences:book:${publicationId}`;
+}
+
+function getStorageItemWithLegacy(
+  storageKey: string,
+  legacyStorageKey: string
+): string | null {
+  const value = window.localStorage.getItem(storageKey);
+  if (value !== null) {
+    return value;
+  }
+
+  const legacyValue = window.localStorage.getItem(legacyStorageKey);
+  if (legacyValue !== null) {
+    window.localStorage.setItem(storageKey, legacyValue);
+  }
+  return legacyValue;
 }
 
 function pickGlobalReaderPreferences(

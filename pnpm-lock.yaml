@@ -89,7 +89,7 @@ importers:
 
   packages/demo:
     dependencies:
-      '@pretext-epub/core':
+      '@yves-epub/core':
         specifier: workspace:*
         version: link:../core
       react:

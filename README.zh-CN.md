@@ -60,7 +60,7 @@ pnpm ci:check
 
 ```bash
 pnpm -F @yves-epub/core test
-pnpm -F @pretext-epub/demo build
+pnpm -F @yves-epub/demo build
 ```
 
 ## 最小浏览器接入
@@ -181,7 +181,7 @@ React demo controller 可参考：[packages/demo/src/use-reader-controller.ts](p
 │  └─ demo              # Vite + React demo and Playwright smoke tests
 ├─ test-fixtures        # EPUB samples and test notes
 ├─ docs                 # Additional project notes
-├─ docs-pretext-epub-20260414
+├─ docs-yves-epub-20260414
 │  └─ Requirements, technical notes, tasks, and capability matrix
 └─ package.json
 ```

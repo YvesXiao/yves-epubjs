@@ -60,7 +60,7 @@ Package-specific commands:
 
 ```bash
 pnpm -F @yves-epub/core test
-pnpm -F @pretext-epub/demo build
+pnpm -F @yves-epub/demo build
 ```
 
 ## Minimal Browser Integration
@@ -206,7 +206,7 @@ Diagnostics: when debugging real EPUB files, start with `getRenderMetrics()`, `g
 │  └─ demo              # Vite + React demo and Playwright smoke tests
 ├─ test-fixtures        # EPUB samples and test notes
 ├─ docs                 # Additional project notes
-├─ docs-pretext-epub-20260414
+├─ docs-yves-epub-20260414
 │  └─ Requirements, technical notes, tasks, and capability matrix
 └─ package.json
 ```

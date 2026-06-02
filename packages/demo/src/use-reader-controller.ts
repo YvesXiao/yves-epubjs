@@ -29,7 +29,7 @@ import {
   type Theme,
   type TocItem,
   type VisibleSectionDiagnostics
-} from "@pretext-epub/core";
+} from "@yves-epub/core";
 import { openExternalLink, readViewportOffset } from "./reader-host-actions";
 import {
   buildAnnotationOverlays,

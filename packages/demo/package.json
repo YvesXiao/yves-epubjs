@@ -1,5 +1,5 @@
 {
-  "name": "@pretext-epub/demo",
+  "name": "@yves-epub/demo",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,7 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@pretext-epub/core": "workspace:*",
+    "@yves-epub/core": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

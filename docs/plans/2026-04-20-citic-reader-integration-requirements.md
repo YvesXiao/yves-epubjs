@@ -1,14 +1,14 @@
-# pretext-epub 接入 citicpub-enterprise-rn 需求文档
+# yves-epub 接入 citicpub-enterprise-rn 需求文档
 
 **文档日期**：2026-04-20
 
 ## 1. 目标
 
-明确 `pretext-epub` 为 `citicpub-enterprise-rn` Web 阅读器接入时需要提供的核心能力、适配层职责、接口边界和验收标准。
+明确 `yves-epub` 为 `citicpub-enterprise-rn` Web 阅读器接入时需要提供的核心能力、适配层职责、接口边界和验收标准。
 
 这份文档面向两个对象：
 
-1. `pretext-epub` 核心库维护者
+1. `yves-epub` 核心库维护者
 2. `citicpub-enterprise-rn` Web 阅读器宿主接入方
 
 ## 2. 背景
@@ -20,7 +20,7 @@
 3. 基于 `href/cfi` 的目录跳转与高亮
 4. 基于 `rendition.on('rendered'/'relocated')` 的章节渲染补丁
 
-`pretext-epub` 原有能力已经覆盖 EPUB 打开、分页、Canvas/DOM 混合渲染、目录、书签、偏好设置，但在宿主集成语义上存在缺口：
+`yves-epub` 原有能力已经覆盖 EPUB 打开、分页、Canvas/DOM 混合渲染、目录、书签、偏好设置，但在宿主集成语义上存在缺口：
 
 1. 没有对外稳定暴露的全书百分比进度模型
 2. 没有公开的 `href -> locator` 导航接口
@@ -31,7 +31,7 @@
 
 这次接入遵守一个核心原则：阅读器语义进核心，业务语义留宿主。
 
-应进入 `pretext-epub/core` 的能力：
+应进入 `yves-epub/core` 的能力：
 
 1. 阅读进度快照与百分比跳转
 2. `href` 导航与 TOC 目标暴露
@@ -193,7 +193,7 @@ citic 宿主层需要完成以下替换：
 
 接口层：
 
-1. `citicpub-enterprise-rn` Web 阅读器可以用 `pretext-epub` 打开解密后的 EPUB
+1. `citicpub-enterprise-rn` Web 阅读器可以用 `yves-epub` 打开解密后的 EPUB
 2. 目录点击可按 `href` 正确跳转
 3. 可读取当前全书百分比进度
 4. 进度条可按百分比稳定跳转
@@ -215,7 +215,7 @@ citic 宿主层需要完成以下替换：
 
 截至 `2026-04-20`，上述能力已经落地：
 
-1. `pretext-epub/core` 已公开以下能力：
+1. `yves-epub/core` 已公开以下能力：
    - `getReadingProgress()`
    - `goToProgress()`
    - `goToHref()`
@@ -225,17 +225,17 @@ citic 宿主层需要完成以下替换：
    - `onSectionRelocated`
 2. `citicpub-enterprise-rn` Web 宿主已完成：
    - `base64 -> Uint8Array`
-   - 百分比进度与跳转切换到 `pretext-epub`
+   - 百分比进度与跳转切换到 `yves-epub`
    - TOC 切换到 `href + locator`
    - 图片与封面补丁切换到新 hook
 
-本地联调阶段，`citic` 推荐通过 tarball 安装 `@pretext-epub/core`，而不是直接使用 `file:` 目录依赖。
+本地联调阶段，`citic` 推荐通过 tarball 安装 `@yves-epub/core`，而不是直接使用 `file:` 目录依赖。
 
 原因：
 
 1. `file:` 目录依赖在 `citic` 中会形成指向工作区外部的 `junction`
 2. Expo Web 的 Metro 对外部 `junction` 与 `pnpm` 依赖树的组合解析不稳定
-3. tarball 安装后，`@pretext-epub/core` 会作为普通 npm 包落入 `citic/node_modules`
+3. tarball 安装后，`@yves-epub/core` 会作为普通 npm 包落入 `citic/node_modules`
 
 推荐链路：
 

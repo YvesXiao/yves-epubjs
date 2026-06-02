@@ -114,11 +114,11 @@
 
 当前已完成验证：
 
-- `pnpm.cmd --filter @pretext-epub/core typecheck`
-- `pnpm.cmd --filter @pretext-epub/demo typecheck`
+- `pnpm.cmd --filter @yves-epub/core typecheck`
+- `pnpm.cmd --filter @yves-epub/demo typecheck`
 - `pnpm.cmd exec vitest run packages/core/test`
-- `pnpm.cmd --filter @pretext-epub/core build`
-- `pnpm.cmd --filter @pretext-epub/demo build`
+- `pnpm.cmd --filter @yves-epub/core build`
+- `pnpm.cmd --filter @yves-epub/demo build`
 - `pnpm.cmd lint`
 - `pnpm.cmd exec playwright test packages/demo/e2e/smoke.spec.ts`
 

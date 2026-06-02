@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** 为 `pretext-epub` 补齐接入 `citicpub-enterprise-rn` Web 阅读器所需的核心 API，并给出宿主侧替换路径。
+**Goal:** 为 `yves-epub` 补齐接入 `citicpub-enterprise-rn` Web 阅读器所需的核心 API，并给出宿主侧替换路径。
 
-**Architecture:** 这次实现分两层推进。核心层负责补“阅读器语义”，包括进度、`href` 导航、TOC 目标和章节生命周期 hook。宿主层负责输入适配、UI 绑定和业务上报，避免把 citic 的产品逻辑反向塞进 `pretext-epub`。
+**Architecture:** 这次实现分两层推进。核心层负责补“阅读器语义”，包括进度、`href` 导航、TOC 目标和章节生命周期 hook。宿主层负责输入适配、UI 绑定和业务上报，避免把 citic 的产品逻辑反向塞进 `yves-epub`。
 
 **Tech Stack:** TypeScript, Vitest, `packages/core` runtime/parser/renderer, `citicpub-enterprise-rn` Web React 宿主
 
@@ -32,9 +32,9 @@
 ### 总体验收命令
 
 ```powershell
-pnpm --filter @pretext-epub/core test
+pnpm --filter @yves-epub/core test
 pnpm typecheck
-pnpm --filter @pretext-epub/demo build
+pnpm --filter @yves-epub/demo build
 ```
 
 备注：当前仓库已有无关失败时，执行阶段应改为跑受影响的定向测试文件。
@@ -135,7 +135,7 @@ type ReaderOptions = {
 
 ```powershell
 pnpm typecheck
-pnpm --filter @pretext-epub/core test -- reader-compat.test.ts
+pnpm --filter @yves-epub/core test -- reader-compat.test.ts
 ```
 
 **完成标准**
@@ -217,9 +217,9 @@ pnpm --filter @pretext-epub/core test -- reader-compat.test.ts
 **Step 4: 跑定向测试**
 
 ```powershell
-pnpm --filter @pretext-epub/core test -- reader-hybrid-progress.test.ts
-pnpm --filter @pretext-epub/core test -- reader-navigation.test.ts
-pnpm --filter @pretext-epub/core test -- reader-runtime-navigation.test.ts
+pnpm --filter @yves-epub/core test -- reader-hybrid-progress.test.ts
+pnpm --filter @yves-epub/core test -- reader-navigation.test.ts
+pnpm --filter @yves-epub/core test -- reader-runtime-navigation.test.ts
 ```
 
 **完成标准**
@@ -302,9 +302,9 @@ flattenTocTargets(book: Book): TocTarget[]
 **Step 4: 跑定向测试**
 
 ```powershell
-pnpm --filter @pretext-epub/core test -- navigation-target.test.ts
-pnpm --filter @pretext-epub/core test -- reader-navigation.test.ts
-pnpm --filter @pretext-epub/core test -- reader-hybrid-navigation.test.ts
+pnpm --filter @yves-epub/core test -- navigation-target.test.ts
+pnpm --filter @yves-epub/core test -- reader-navigation.test.ts
+pnpm --filter @yves-epub/core test -- reader-hybrid-navigation.test.ts
 ```
 
 **完成标准**
@@ -379,9 +379,9 @@ pnpm --filter @pretext-epub/core test -- reader-hybrid-navigation.test.ts
 **Step 4: 跑定向测试**
 
 ```powershell
-pnpm --filter @pretext-epub/core test -- reader-runtime-navigation.test.ts
-pnpm --filter @pretext-epub/core test -- reader-chapter-render-routing.test.ts
-pnpm --filter @pretext-epub/core test -- dom-chapter-renderer.test.ts
+pnpm --filter @yves-epub/core test -- reader-runtime-navigation.test.ts
+pnpm --filter @yves-epub/core test -- reader-chapter-render-routing.test.ts
+pnpm --filter @yves-epub/core test -- dom-chapter-renderer.test.ts
 ```
 
 **完成标准**
@@ -399,7 +399,7 @@ pnpm --filter @pretext-epub/core test -- dom-chapter-renderer.test.ts
 
 **目标**
 
-把 citic 从 `react-reader/epub.js` 依赖迁到 `pretext-epub` 的新接口。
+把 citic 从 `react-reader/epub.js` 依赖迁到 `yves-epub` 的新接口。
 
 **替换清单**
 
@@ -499,7 +499,7 @@ pnpm --filter @pretext-epub/core test -- dom-chapter-renderer.test.ts
 
 ## 交付检查表
 
-- `pretext-epub` 核心层新增 API 已通过类型检查
+- `yves-epub` 核心层新增 API 已通过类型检查
 - 进度、导航、hook 三条能力链都有测试覆盖
 - citic 宿主层替换点清晰且不依赖 `epub.js` 私有对象
 - 文档已回填最终接口与使用方式

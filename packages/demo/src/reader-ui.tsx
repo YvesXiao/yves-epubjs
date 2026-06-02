@@ -12,7 +12,7 @@ import type {
   RenderDiagnostics,
   TocItem,
   VisibleSectionDiagnostics
-} from "@pretext-epub/core";
+} from "@yves-epub/core";
 import type { ReaderDecorationOverlay } from "./reader-overlays";
 import type { AnnotationColor } from "./use-reader-controller";
 

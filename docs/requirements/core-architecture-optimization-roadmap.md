@@ -189,9 +189,9 @@ testing support modules. Internal exports should not expand accidentally.
 6. Full verification passes after each completed implementation tranche:
 
 ```bash
-pnpm --filter @pretext-epub/core typecheck
+pnpm --filter @yves-epub/core typecheck
 pnpm lint
-pnpm --filter @pretext-epub/core test
+pnpm --filter @yves-epub/core test
 ```
 
 ## Open Questions

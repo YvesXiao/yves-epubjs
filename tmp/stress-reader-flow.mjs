@@ -4,7 +4,7 @@ import { chromium } from "@playwright/test"
 
 const APP_URL = "http://127.0.0.1:4174/"
 const BOOK_DIR = "/Users/xyf/Downloads/books"
-const OUT_PATH = "/Users/xyf/xyfProject/pretext-epub/tmp/stress-reader-flow-2026-04-19.json"
+const OUT_PATH = "/Users/xyf/xyfProject/yves-epub/tmp/stress-reader-flow-2026-04-19.json"
 
 function parsePositionChip(text) {
   const match = text.match(/\/\s*(page|section)\s+(\d+)\s+of\s+(\d+)/i)

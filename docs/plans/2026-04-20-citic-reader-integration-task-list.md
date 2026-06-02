@@ -1,4 +1,4 @@
-# pretext-epub 接入 citicpub-enterprise-rn Task 文档
+# yves-epub 接入 citicpub-enterprise-rn Task 文档
 
 **来源计划**：[2026-04-20-citic-reader-integration-implementation-plan.md](./2026-04-20-citic-reader-integration-implementation-plan.md)
 
@@ -30,7 +30,7 @@
 **验证**
 ```powershell
 pnpm typecheck
-pnpm --filter @pretext-epub/core test -- reader-compat.test.ts
+pnpm --filter @yves-epub/core test -- reader-compat.test.ts
 ```
 
 **结果**
@@ -54,9 +54,9 @@ pnpm --filter @pretext-epub/core test -- reader-compat.test.ts
 
 **验证**
 ```powershell
-pnpm --filter @pretext-epub/core test -- reader-hybrid-progress.test.ts
-pnpm --filter @pretext-epub/core test -- reader-navigation.test.ts
-pnpm --filter @pretext-epub/core test -- reader-runtime-navigation.test.ts
+pnpm --filter @yves-epub/core test -- reader-hybrid-progress.test.ts
+pnpm --filter @yves-epub/core test -- reader-navigation.test.ts
+pnpm --filter @yves-epub/core test -- reader-runtime-navigation.test.ts
 ```
 
 **结果**
@@ -82,9 +82,9 @@ pnpm --filter @pretext-epub/core test -- reader-runtime-navigation.test.ts
 
 **验证**
 ```powershell
-pnpm --filter @pretext-epub/core test -- navigation-target.test.ts
-pnpm --filter @pretext-epub/core test -- reader-navigation.test.ts
-pnpm --filter @pretext-epub/core test -- reader-hybrid-navigation.test.ts
+pnpm --filter @yves-epub/core test -- navigation-target.test.ts
+pnpm --filter @yves-epub/core test -- reader-navigation.test.ts
+pnpm --filter @yves-epub/core test -- reader-hybrid-navigation.test.ts
 ```
 
 **结果**
@@ -109,9 +109,9 @@ pnpm --filter @pretext-epub/core test -- reader-hybrid-navigation.test.ts
 
 **验证**
 ```powershell
-pnpm --filter @pretext-epub/core test -- reader-runtime-navigation.test.ts
-pnpm --filter @pretext-epub/core test -- reader-chapter-render-routing.test.ts
-pnpm --filter @pretext-epub/core test -- dom-chapter-renderer.test.ts
+pnpm --filter @yves-epub/core test -- reader-runtime-navigation.test.ts
+pnpm --filter @yves-epub/core test -- reader-chapter-render-routing.test.ts
+pnpm --filter @yves-epub/core test -- dom-chapter-renderer.test.ts
 ```
 
 **结果**
@@ -144,7 +144,7 @@ npm run build:web:test
 **结果**
 - `citic` 宿主已经不再依赖 `epub.js` 的 progress / cfi / rendition 语义
 - Expo Web 构建通过
-- 本地 `@pretext-epub/core` 通过 tarball 安装到 `citic`，避免 `file:` junction 与 Metro / pnpm 联动解析问题
+- 本地 `@yves-epub/core` 通过 tarball 安装到 `citic`，避免 `file:` junction 与 Metro / pnpm 联动解析问题
 
 ## Task 6: 文档回填
 
@@ -173,8 +173,8 @@ npm run build:web:test
 **验证命令**
 ```powershell
 pnpm typecheck
-pnpm --filter @pretext-epub/core test
-pnpm --filter @pretext-epub/demo build
+pnpm --filter @yves-epub/core test
+pnpm --filter @yves-epub/demo build
 ```
 
 **补充验证**
@@ -190,9 +190,9 @@ npm run build:web:test
 
 **结果**
 - `pnpm typecheck` 通过
-- `pnpm --filter @pretext-epub/demo build` 通过
+- `pnpm --filter @yves-epub/demo build` 通过
 - `C:\xyfProject\citicpub-enterprise-rn` 的 `npm run build:web:test` 通过
-- `pnpm --filter @pretext-epub/core test` 未全绿，当前仍有 4 个既有失败：
+- `pnpm --filter @yves-epub/core test` 未全绿，当前仍有 4 个既有失败：
   - `packages/core/test/reader-decoration.test.ts`
   - `packages/core/test/reader-hybrid-search.test.ts`
   - `packages/core/test/reader-spread.test.ts` 中 2 个用例

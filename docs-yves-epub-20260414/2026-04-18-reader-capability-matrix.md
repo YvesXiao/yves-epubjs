@@ -2,7 +2,7 @@
 
 ## 1. 文档目标
 
-本文档用于把 `pretext-epub` 当前已经进入正式能力范围、下一阶段准备纳入、以及明确不在当前阶段实现的阅读器能力，统一收口到一份 capability matrix 中。
+本文档用于把 `yves-epub` 当前已经进入正式能力范围、下一阶段准备纳入、以及明确不在当前阶段实现的阅读器能力，统一收口到一份 capability matrix 中。
 
 本文档解决三个问题：
 
@@ -37,7 +37,7 @@
 
 ## 3. 当前能力判断
 
-截至 `2026-04-18`，`pretext-epub` 的能力状态判断如下：
+截至 `2026-04-18`，`yves-epub` 的能力状态判断如下：
 
 - 平台基础层已经补齐：`locator / bookmark / decoration / annotation / preferences`
 - 阅读系统基线已经补齐：`publisher styles / baseline stylesheet / lang+RTL 入口 / accessibility baseline`

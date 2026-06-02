@@ -1,5 +1,5 @@
 {
-  "name": "pretext-epub-workspace",
+  "name": "yves-epub-workspace",
   "private": true,
   "version": "0.1.1",
   "packageManager": "pnpm@10.0.0",
@@ -10,7 +10,7 @@
     "build": "pnpm -r build",
     "check:boundaries": "node scripts/check-package-boundaries.mjs",
     "ci:check": "pnpm typecheck && pnpm check:boundaries && pnpm lint && pnpm test && pnpm build",
-    "dev": "pnpm --filter @pretext-epub/demo dev",
+    "dev": "pnpm --filter @yves-epub/demo dev",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs",
     "test": "vitest run",
