@@ -101,6 +101,10 @@ import {
   createReaderSessionState,
   type ReaderSessionState
 } from "./reader-session-state";
+import { ReaderDocumentSession } from "./reader-document-session";
+import { ReaderAnnotationSession } from "./reader-annotation-session";
+import { ReaderViewSession } from "./reader-view-session";
+import { ReaderSelectionSession } from "./reader-selection-session";
 import { ReaderNavigationSession } from "./reader-navigation-session";
 import { ReaderRenderSession } from "./reader-render-session";
 import {
@@ -145,7 +149,6 @@ import {
   flattenTextRange,
   hasActiveTextSelection,
   inflateFlattenedTextRange,
-  readerTextSelectionSnapshotsEqual,
   resolveLeadingSelectionTarget,
   subtractFlattenedRange,
   type SectionTextRangeContext
@@ -238,27 +241,12 @@ export class EpubReader {
   private readonly domPaginationService = new ReaderDomPaginationService();
   private readonly scrollPositionService = new ReaderScrollPositionService();
   private readonly sessionState: ReaderSessionState;
+  private readonly documentSession: ReaderDocumentSession;
+  private readonly annotationSession: ReaderAnnotationSession;
+  private readonly viewSession: ReaderViewSession;
   private readonly navigationSession: ReaderNavigationSession;
   private readonly renderSession: ReaderRenderSession;
-
-  private book: Book | null;
-  private sourceName: string | null;
-  private annotations: Annotation[];
-  private resources: {
-    readBinary(path: string): Promise<Uint8Array>;
-    exists(path: string): boolean;
-  } | null;
-  private chapterRenderInputs: SharedChapterRenderInput[];
-  private sectionIndexById: Map<string, number>;
-  private preferences: ReaderPreferences;
-  private mode: "scroll" | "paginated";
-  private publisherStyles: PublisherStylesMode;
-  private publisherColorOverride: PublisherColorOverride;
-  private experimentalRtl: boolean;
-  private spreadMode: ReaderSpreadMode;
-  private debugMode: boolean;
-  private theme: Theme;
-  private typography: TypographyOptions;
+  private readonly selectionSession: ReaderSelectionSession;
   private resizeObserver: ResizeObserver | null = null;
   private readonly measuredDomPaginationBySectionId: Map<
     string,
@@ -269,8 +257,6 @@ export class EpubReader {
       height: number;
     }
   >;
-  private textSelectionSnapshot: ReaderTextSelectionSnapshot | null;
-  private pinnedTextSelectionSnapshot: ReaderTextSelectionSnapshot | null;
   private readonly handleDocumentSelectionChange = (): void => {
     this.syncTextSelectionState();
   };
@@ -278,6 +264,138 @@ export class EpubReader {
   private static readonly SCROLL_WINDOW_RADIUS = 1;
   private static readonly SCROLL_SLICE_OVERSCAN_MULTIPLIER = 0.75;
   private static readonly PAGINATED_CLICK_NAV_ZONE_RATIO = 0.28;
+
+  private get book(): Book | null {
+    return this.documentSession.book;
+  }
+
+  private set book(value: Book | null) {
+    this.documentSession.book = value;
+  }
+
+  private get sourceName(): string | null {
+    return this.documentSession.sourceName;
+  }
+
+  private set sourceName(value: string | null) {
+    this.documentSession.sourceName = value;
+  }
+
+  private get resources(): {
+    readBinary(path: string): Promise<Uint8Array>;
+    exists(path: string): boolean;
+  } | null {
+    return this.documentSession.resources;
+  }
+
+  private set resources(
+    value: {
+      readBinary(path: string): Promise<Uint8Array>;
+      exists(path: string): boolean;
+    } | null
+  ) {
+    this.documentSession.resources = value;
+  }
+
+  private get chapterRenderInputs(): SharedChapterRenderInput[] {
+    return this.documentSession.chapterRenderInputs;
+  }
+
+  private set chapterRenderInputs(value: SharedChapterRenderInput[]) {
+    this.documentSession.chapterRenderInputs = value;
+  }
+
+  private get sectionIndexById(): Map<string, number> {
+    return this.documentSession.sectionIndexById;
+  }
+
+  private get annotations(): Annotation[] {
+    return this.annotationSession.annotations;
+  }
+
+  private set annotations(value: Annotation[]) {
+    this.annotationSession.annotations = value;
+  }
+
+  private get preferences(): ReaderPreferences {
+    return this.viewSession.preferences;
+  }
+
+  private set preferences(value: ReaderPreferences) {
+    this.viewSession.preferences = value;
+  }
+
+  private get mode(): "scroll" | "paginated" {
+    return this.viewSession.mode;
+  }
+
+  private set mode(value: "scroll" | "paginated") {
+    this.viewSession.mode = value;
+  }
+
+  private get publisherStyles(): PublisherStylesMode {
+    return this.viewSession.publisherStyles;
+  }
+
+  private set publisherStyles(value: PublisherStylesMode) {
+    this.viewSession.publisherStyles = value;
+  }
+
+  private get publisherColorOverride(): PublisherColorOverride {
+    return this.viewSession.publisherColorOverride;
+  }
+
+  private set publisherColorOverride(value: PublisherColorOverride) {
+    this.viewSession.publisherColorOverride = value;
+  }
+
+  private get experimentalRtl(): boolean {
+    return this.viewSession.experimentalRtl;
+  }
+
+  private set experimentalRtl(value: boolean) {
+    this.viewSession.experimentalRtl = value;
+  }
+
+  private get spreadMode(): ReaderSpreadMode {
+    return this.viewSession.spreadMode;
+  }
+
+  private set spreadMode(value: ReaderSpreadMode) {
+    this.viewSession.spreadMode = value;
+  }
+
+  private get debugMode(): boolean {
+    return this.viewSession.debugMode;
+  }
+
+  private set debugMode(value: boolean) {
+    this.viewSession.debugMode = value;
+  }
+
+  private get theme(): Theme {
+    return this.viewSession.theme;
+  }
+
+  private set theme(value: Theme) {
+    this.viewSession.theme = value;
+  }
+
+  private get typography(): TypographyOptions {
+    return this.viewSession.typography;
+  }
+
+  private set typography(value: TypographyOptions) {
+    this.viewSession.typography = value;
+  }
+
+  private get textSelectionSnapshot(): ReaderTextSelectionSnapshot | null {
+    return this.selectionSession.textSelectionSnapshot;
+  }
+
+  private get pinnedTextSelectionSnapshot(): ReaderTextSelectionSnapshot | null {
+    return this.selectionSession.pinnedTextSelectionSnapshot;
+  }
 
   private get locator(): Locator | null {
     return this.navigationSession.locator;
@@ -488,30 +606,19 @@ export class EpubReader {
       theme: { ...settings.theme },
       typography: { ...settings.typography }
     });
+    this.documentSession = new ReaderDocumentSession(this.sessionState.document);
+    this.annotationSession = new ReaderAnnotationSession(
+      this.sessionState.annotations
+    );
+    this.viewSession = new ReaderViewSession(this.sessionState.view);
     this.navigationSession = new ReaderNavigationSession(
       this.sessionState.position
     );
     this.renderSession = new ReaderRenderSession(this.sessionState.render);
-    this.book = this.sessionState.document.book;
-    this.sourceName = this.sessionState.document.sourceName;
-    this.resources = this.sessionState.document.resources;
-    this.chapterRenderInputs = this.sessionState.document.chapterRenderInputs;
-    this.sectionIndexById = this.sessionState.document.sectionIndexById;
-    this.annotations = this.sessionState.annotations.annotations;
-    this.preferences = this.sessionState.view.preferences;
-    this.mode = this.sessionState.view.mode;
-    this.publisherStyles = this.sessionState.view.publisherStyles;
-    this.publisherColorOverride = this.sessionState.view.publisherColorOverride;
-    this.experimentalRtl = this.sessionState.view.experimentalRtl;
-    this.spreadMode = this.sessionState.view.spreadMode;
-    this.debugMode = this.sessionState.view.debugMode;
-    this.theme = this.sessionState.view.theme;
-    this.typography = this.sessionState.view.typography;
+    this.selectionSession = new ReaderSelectionSession(
+      this.sessionState.selection
+    );
     this.measuredDomPaginationBySectionId = new Map();
-    this.textSelectionSnapshot =
-      this.sessionState.selection.textSelectionSnapshot;
-    this.pinnedTextSelectionSnapshot =
-      this.sessionState.selection.pinnedTextSelectionSnapshot;
     this.scrollCoordinator = new ScrollCoordinator({
       container: this.options.container,
       onScrollFrame: (emitEvent) => {
@@ -761,15 +868,17 @@ export class EpubReader {
 
     const parsed = await this.parser.parseDetailed(parserInput);
     this.layoutEngine.clearCache();
-    this.book = parsed.book;
-    this.rebuildSectionIndex();
-    this.sourceName = normalized.sourceName ?? null;
-    this.resources = parsed.resources;
-    this.annotations = [];
-    this.revokeObjectUrls();
-    this.chapterRenderInputs = parsed.sectionContents.map((entry) =>
+    const chapterRenderInputs = parsed.sectionContents.map((entry) =>
       createSharedChapterRenderInput(entry)
     );
+    this.documentSession.resetForOpen({
+      book: parsed.book,
+      sourceName: normalized.sourceName ?? null,
+      resources: parsed.resources,
+      chapterRenderInputs
+    });
+    this.annotationSession.reset();
+    this.revokeObjectUrls();
     const startLocator = parsed.book.metadata.startHref
       ? resolveBookHrefLocator({
           book: parsed.book,
@@ -780,15 +889,15 @@ export class EpubReader {
     this.navigationSession.resetForOpen(startLocator);
     this.renderSession.resetForOpen();
     this.measuredDomPaginationBySectionId.clear();
-    this.updateTextSelectionSnapshot(null);
+    this.selectionSession.reset();
     this.decorationManager.clearAll();
     this.scrollCoordinator.reset();
     if (this.options.container) {
       this.options.container.scrollTop = 0;
       this.options.container.scrollLeft = 0;
     }
-    this.events.emit("opened", { book: this.book });
-    return this.book;
+    this.events.emit("opened", { book: parsed.book });
+    return parsed.book;
   }
 
   async render(): Promise<void> {
@@ -1333,8 +1442,7 @@ export class EpubReader {
     ) {
       window.getSelection()?.removeAllRanges();
     }
-    this.pinnedTextSelectionSnapshot = null;
-    this.updateTextSelectionSnapshot(null);
+    this.setPinnedTextSelectionSnapshot(null);
   }
 
   addAnnotation(annotation: Annotation): void {
@@ -1343,7 +1451,7 @@ export class EpubReader {
       return;
     }
 
-    this.annotations = [...this.annotations, annotation];
+    this.annotationSession.append(annotation);
     this.syncAnnotationDecorations();
   }
 
@@ -1800,14 +1908,12 @@ export class EpubReader {
     this.detachScrollListener();
     this.detachPointerListener();
     this.detachKeyboardListener();
-    this.book = null;
+    this.documentSession.resetForDestroy();
     this.layoutEngine.clearCache();
-    this.resources = null;
-    this.chapterRenderInputs = [];
     this.navigationSession.resetForDestroy();
     this.renderSession.resetForDestroy();
     this.measuredDomPaginationBySectionId.clear();
-    this.textSelectionSnapshot = null;
+    this.selectionSession.reset();
     this.scrollCoordinator.clearAll();
     this.revokeObjectUrls();
     if (this.options.container) {
@@ -1870,15 +1976,7 @@ export class EpubReader {
   }
 
   getSettings(): ReaderSettings {
-    return {
-      mode: this.mode,
-      publisherStyles: this.publisherStyles,
-      publisherColorOverride: this.publisherColorOverride,
-      experimentalRtl: this.experimentalRtl,
-      spreadMode: this.spreadMode,
-      theme: { ...this.theme },
-      typography: { ...this.typography }
-    };
+    return this.viewSession.snapshotSettings();
   }
 
   getReadingLanguageContext(): ReadingLanguageContext | null {
@@ -2078,14 +2176,10 @@ export class EpubReader {
     const capturedModeSwitchLocator =
       modeChanged && this.book ? this.captureModeSwitchLocator() : null;
 
-    this.preferences = nextPreferences;
-    this.mode = nextSettings.mode;
-    this.publisherStyles = nextSettings.publisherStyles;
-    this.publisherColorOverride = nextSettings.publisherColorOverride;
-    this.experimentalRtl = nextSettings.experimentalRtl;
-    this.spreadMode = nextSettings.spreadMode;
-    this.theme = { ...nextSettings.theme };
-    this.typography = { ...nextSettings.typography };
+    this.viewSession.applySettings({
+      preferences: nextPreferences,
+      settings: nextSettings
+    });
     this.applyContainerTheme();
 
     if (didChange) {
@@ -5323,14 +5417,7 @@ export class EpubReader {
   }
 
   private rebuildSectionIndex(): void {
-    this.sectionIndexById.clear();
-    if (!this.book) {
-      return;
-    }
-
-    this.book.sections.forEach((section, index) => {
-      this.sectionIndexById.set(section.id, index);
-    });
+    this.documentSession.rebuildSectionIndex();
   }
 
   private getSectionIndexById(sectionId?: string | null): number {
@@ -5338,22 +5425,7 @@ export class EpubReader {
       return -1;
     }
 
-    const indexed = this.sectionIndexById.get(sectionId);
-    if (typeof indexed === "number") {
-      return indexed;
-    }
-
-    if (!this.book) {
-      return -1;
-    }
-
-    const fallbackIndex = this.book.sections.findIndex(
-      (section) => section.id === sectionId
-    );
-    if (fallbackIndex >= 0) {
-      this.sectionIndexById.set(sectionId, fallbackIndex);
-    }
-    return fallbackIndex;
+    return this.documentSession.resolveSectionIndexById(sectionId);
   }
 
   private findSectionIndexForOffset(offset: number): number {
@@ -5577,9 +5649,16 @@ export class EpubReader {
   private setPinnedTextSelectionSnapshot(
     selection: ReaderTextSelectionSnapshot | null
   ): void {
-    this.pinnedTextSelectionSnapshot =
-      cloneReaderTextSelectionSnapshot(selection);
-    this.updateTextSelectionSnapshot(selection);
+    const updatedSelection =
+      this.selectionSession.setPinnedTextSelectionSnapshot(selection);
+    if (!updatedSelection.changed) {
+      return;
+    }
+    const payload = {
+      selection: updatedSelection.selection
+    } satisfies ReaderEventMap["textSelectionChanged"];
+    this.events.emit("textSelectionChanged", payload);
+    void this.options.onTextSelectionChanged?.(payload);
   }
 
   private resolveSelectionHighlightState(
@@ -5790,15 +5869,13 @@ export class EpubReader {
   private updateTextSelectionSnapshot(
     selection: ReaderTextSelectionSnapshot | null
   ): void {
-    if (
-      readerTextSelectionSnapshotsEqual(this.textSelectionSnapshot, selection)
-    ) {
+    const result = this.selectionSession.updateTextSelectionSnapshot(selection);
+    if (!result.changed) {
       return;
     }
 
-    this.textSelectionSnapshot = cloneReaderTextSelectionSnapshot(selection);
     const payload = {
-      selection: cloneReaderTextSelectionSnapshot(this.textSelectionSnapshot)
+      selection: result.selection
     } satisfies ReaderEventMap["textSelectionChanged"];
     this.events.emit("textSelectionChanged", payload);
     void this.options.onTextSelectionChanged?.(payload);

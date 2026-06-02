@@ -19,7 +19,7 @@ import type { IntrinsicImageSize } from "../utils/image-intrinsic-size";
 import type { ReaderPage } from "./paginated-render-plan";
 import type { SharedChapterRenderInput } from "./chapter-render-input";
 
-type ResourceReader = {
+export type ReaderResourceReader = {
   readBinary(path: string): Promise<Uint8Array>;
   exists(path: string): boolean;
 };
@@ -28,7 +28,7 @@ export type ReaderSessionState = {
   document: {
     book: Book | null;
     sourceName: string | null;
-    resources: ResourceReader | null;
+    resources: ReaderResourceReader | null;
     chapterRenderInputs: SharedChapterRenderInput[];
     sectionIndexById: Map<string, number>;
   };
@@ -84,6 +84,10 @@ export type ReaderSessionState = {
 
 export type ReaderNavigationSessionState = ReaderSessionState["position"];
 export type ReaderRenderSessionState = ReaderSessionState["render"];
+export type ReaderDocumentSessionState = ReaderSessionState["document"];
+export type ReaderAnnotationSessionState = ReaderSessionState["annotations"];
+export type ReaderViewSessionState = ReaderSessionState["view"];
+export type ReaderSelectionSessionState = ReaderSessionState["selection"];
 
 export function createReaderSessionState(input: {
   preferences: ReaderPreferences;
