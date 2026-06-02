@@ -7,6 +7,7 @@ import {
   type HtmlDomNode
 } from "../parser/html-dom-adapter";
 import { parseXhtmlDomDocument } from "../parser/xhtml-dom-parser";
+import { sanitizeEmbeddedResourceUrl } from "../utils/url-boundary";
 
 export type PreprocessedChapterNode =
   | {
@@ -30,6 +31,36 @@ export type PreprocessedChapter = {
   bodyAttributes?: Record<string, string>;
   nodes: PreprocessedChapterNode[];
 };
+
+const UNSAFE_CHAPTER_TAGS = new Set([
+  "applet",
+  "audio",
+  "base",
+  "button",
+  "canvas",
+  "embed",
+  "form",
+  "frame",
+  "frameset",
+  "iframe",
+  "input",
+  "link",
+  "meta",
+  "object",
+  "optgroup",
+  "option",
+  "param",
+  "portal",
+  "script",
+  "select",
+  "style",
+  "template",
+  "textarea",
+  "video",
+  "foreignobject"
+]);
+
+const UNSAFE_ATTRIBUTE_NAMES = new Set(["srcdoc", "srcset"]);
 
 export function preprocessChapterDocument(input: {
   href: string;
@@ -92,12 +123,15 @@ function preprocessChapterNode(node: HtmlDomNode): PreprocessedChapterNode | nul
   return {
     kind: "element",
     tagName: getHtmlTagName(node),
-    attributes: normalizeAttributes(node.attribs),
+    attributes: normalizeAttributes(node.attribs, getHtmlTagName(node)),
     children: preprocessChapterChildren(node)
   };
 }
 
-function normalizeAttributes(attributes: Record<string, string>): Record<string, string> {
+function normalizeAttributes(
+  attributes: Record<string, string>,
+  tagName?: string
+): Record<string, string> {
   const normalized: Record<string, string> = {};
 
   for (const [name, value] of Object.entries(attributes)) {
@@ -110,7 +144,12 @@ function normalizeAttributes(attributes: Record<string, string>): Record<string,
       continue;
     }
 
-    normalized[name.toLowerCase()] = trimmedValue;
+    const normalizedName = name.toLowerCase();
+    if (isUnsafeAttributeValue(normalizedName, trimmedValue, tagName)) {
+      continue;
+    }
+
+    normalized[normalizedName] = trimmedValue;
   }
 
   return normalized;
@@ -130,11 +169,45 @@ function normalizeRootAttributes(attributes: Record<string, string>): Record<str
 }
 
 function isUnsafeChapterTag(tagName: string): boolean {
-  return tagName.trim().toLowerCase() === "script"
+  return UNSAFE_CHAPTER_TAGS.has(tagName.trim().toLowerCase())
 }
 
 function isUnsafeAttributeName(attributeName: string): boolean {
-  return attributeName.trim().toLowerCase().startsWith("on")
+  const normalized = attributeName.trim().toLowerCase()
+  return normalized.startsWith("on") || UNSAFE_ATTRIBUTE_NAMES.has(normalized)
+}
+
+function isUnsafeAttributeValue(
+  attributeName: string,
+  value: string,
+  tagName?: string
+): boolean {
+  const normalizedTagName = tagName?.trim().toLowerCase()
+
+  if (
+    isEmbeddedResourceAttributeName(normalizedTagName, attributeName) &&
+    sanitizeEmbeddedResourceUrl(value, {
+      allowExternalEmbeddedResources: true
+    }) !== value.trim()
+  ) {
+    return true
+  }
+
+  return false
+}
+
+function isEmbeddedResourceAttributeName(
+  tagName: string | undefined,
+  attributeName: string
+): boolean {
+  if (attributeName === "src" && (tagName === "img" || tagName === "source")) {
+    return true
+  }
+
+  return (
+    (attributeName === "href" || attributeName === "xlink:href") &&
+    (tagName === "image" || tagName === "use")
+  )
 }
 
 function isSupportedRootAttributeName(attributeName: string): boolean {

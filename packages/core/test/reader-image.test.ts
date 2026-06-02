@@ -4,6 +4,36 @@ import type { Book, SectionDocument } from "../src/model/types"
 import { EpubReader } from "../src/runtime/reader"
 
 describe("EpubReader image resources", () => {
+  it("sanitizes remote canvas image resources unless explicitly enabled", () => {
+    const defaultReader = new EpubReader()
+    const defaultState = defaultReader as unknown as {
+      resolveCanvasResourceUrl(path: string): string
+    }
+
+    expect(
+      defaultState.resolveCanvasResourceUrl("https://cdn.example.com/plate.png")
+    ).toBe("data:,")
+    expect(defaultState.resolveCanvasResourceUrl("OPS/images/plate.png")).toBe(
+      "OPS/images/plate.png"
+    )
+    defaultReader.destroy()
+
+    const externalReader = new EpubReader({
+      allowExternalEmbeddedResources: true
+    })
+    const externalState = externalReader as unknown as {
+      resolveCanvasResourceUrl(path: string): string
+    }
+
+    expect(
+      externalState.resolveCanvasResourceUrl("https://cdn.example.com/plate.png")
+    ).toBe("https://cdn.example.com/plate.png")
+    expect(
+      externalState.resolveCanvasResourceUrl("javascript:alert(1)")
+    ).toBe("data:,")
+    externalReader.destroy()
+  })
+
   it("converts EPUB image resources into object URLs for rendering", async () => {
     const createObjectURL = vi.fn(() => "blob:cover-image")
     const revokeObjectURL = vi.fn()

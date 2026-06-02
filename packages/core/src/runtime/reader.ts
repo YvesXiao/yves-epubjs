@@ -168,7 +168,10 @@ import {
   mapDomLocatorToViewport,
   mapDomPointToLocator
 } from "./dom-viewport-mapper";
-import { classifyNavigationHref } from "./external-boundary";
+import {
+  classifyNavigationHref,
+  resolveEmbeddedResourceUrl
+} from "./external-boundary";
 import { resolveDomClickInteraction } from "./dom-interaction-model";
 import { findRenderedSearchResultTarget } from "./dom-search-result-target";
 import { resolveRenderBackendCapabilities } from "./render-backend-capabilities";
@@ -2922,7 +2925,12 @@ export class EpubReader {
   }
 
   private resolveCanvasResourceUrl(path: string): string {
-    return this.resolveRenderableResourceUrl(path, "canvas");
+    return resolveEmbeddedResourceUrl(path, {
+      allowExternalEmbeddedResources:
+        this.options.allowExternalEmbeddedResources === true,
+      resolveInternalResourceUrl: (resourcePath) =>
+        this.resolveRenderableResourceUrl(resourcePath, "canvas")
+    });
   }
 
   private resolveDomResourceUrl(path: string): string {

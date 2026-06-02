@@ -14,8 +14,9 @@ test("external epub search result jump keeps the hit near the visible viewport",
   await page.goto("/")
   await page.locator('input[type="file"]').setInputFiles(BOOK_PATH)
 
-  await expect(page.locator(".reader-meta")).not.toContainText("No book loaded")
+  await expect(page.locator(".reader-root article").first()).toBeVisible()
 
+  await openDrawer(page, "Find")
   await page.getByRole("searchbox").fill(SEARCH_QUERY)
   await page.getByRole("button", { name: "Search" }).click()
 
@@ -31,11 +32,13 @@ test("external epub search result jump keeps the hit near the visible viewport",
 
   await searchResults.nth(SEARCH_RESULT_INDEX).click()
 
-  const metaText = (await page.locator(".reader-meta").textContent()) ?? ""
-  const actualBackend = extractBackend(metaText)
+  const factsText = (await page.locator(".reading-topbar-facts").textContent()) ?? ""
+  const actualBackend = extractBackend(factsText)
 
   if (EXPECT_BACKEND) {
-    await expect(page.locator(".reader-meta")).toContainText(`· ${EXPECT_BACKEND}`)
+    await expect(page.locator(".reading-topbar-facts")).toContainText(
+      `${EXPECT_BACKEND} /`
+    )
   }
 
   await expect
@@ -77,6 +80,11 @@ test("external epub search result jump keeps the hit near the visible viewport",
   }
 })
 
+async function openDrawer(page, name) {
+  await page.getByRole("button", { name }).click()
+  await expect(page.locator(".reading-drawer")).toBeVisible()
+}
+
 function extractSearchSnippet(excerpt, fallbackQuery) {
   const normalizedExcerpt = excerpt.replace(/^\.{3}/, "").replace(/\.{3}$/, "").trim()
   if (!normalizedExcerpt) {
@@ -92,6 +100,6 @@ function extractSearchSnippet(excerpt, fallbackQuery) {
 }
 
 function extractBackend(metaText) {
-  const match = metaText.match(/·\s+(canvas|dom)\s*$/)
+  const match = metaText.match(/\b(canvas|dom)\s*\//)
   return match ? match[1] : ""
 }

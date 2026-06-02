@@ -152,4 +152,70 @@ describe("chapter preprocess", () => {
       }
     ] satisfies PreprocessedChapter["nodes"])
   })
+
+  it("drops active embedded content and unsafe URL attributes from DOM preprocessing", () => {
+    const chapter = preprocessChapterDocument({
+      href: "OPS/active-content.xhtml",
+      content: `<?xml version="1.0" encoding="utf-8"?>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+          <body>
+            <section>
+              <iframe src="https://cdn.example.com/frame.html"></iframe>
+              <object data="https://cdn.example.com/object.swf"></object>
+              <form action="/submit"><input name="q" value="leak" /></form>
+              <video src="https://cdn.example.com/movie.mp4"></video>
+              <canvas></canvas>
+              <style>@import url("https://cdn.example.com/book.css");</style>
+              <p>
+                <a href="javascript:alert(1)">Unsafe link</a>
+                <img src="javascript:alert(1)" srcset="https://cdn.example.com/bad.png 2x" alt="Bad" />
+                <img src="https://cdn.example.com/remote.png" alt="Remote" />
+              </p>
+            </section>
+          </body>
+        </html>`
+    })
+
+    expect(chapter.nodes).toEqual([
+      {
+        kind: "element",
+        tagName: "section",
+        attributes: {},
+        children: [
+          {
+            kind: "element",
+            tagName: "p",
+            attributes: {},
+            children: [
+              {
+                kind: "element",
+                tagName: "a",
+                attributes: {
+                  href: "javascript:alert(1)"
+                },
+                children: [{ kind: "text", text: "Unsafe link" }]
+              },
+              {
+                kind: "element",
+                tagName: "img",
+                attributes: {
+                  alt: "Bad"
+                },
+                children: []
+              },
+              {
+                kind: "element",
+                tagName: "img",
+                attributes: {
+                  src: "https://cdn.example.com/remote.png",
+                  alt: "Remote"
+                },
+                children: []
+              }
+            ]
+          }
+        ]
+      }
+    ] satisfies PreprocessedChapter["nodes"])
+  })
 });
