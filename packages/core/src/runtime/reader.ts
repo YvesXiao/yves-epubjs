@@ -113,33 +113,33 @@ type ReaderTextSelection = Omit<
 >;
 
 export class EpubReader {
-  private readonly parser = new BookParser();
-  private readonly events = new EventEmitter<ReaderEventMap>();
-  private readonly layoutEngine = new LayoutEngine();
-  private readonly displayListBuilder = new DisplayListBuilder();
-  private readonly canvasRenderer = new CanvasRenderer();
-  private readonly domChapterRenderer = new DomChapterRenderer();
-  private readonly chapterRenderDecisionCache =
+  protected readonly parser = new BookParser();
+  protected readonly events = new EventEmitter<ReaderEventMap>();
+  protected readonly layoutEngine = new LayoutEngine();
+  protected readonly displayListBuilder = new DisplayListBuilder();
+  protected readonly canvasRenderer = new CanvasRenderer();
+  protected readonly domChapterRenderer = new DomChapterRenderer();
+  protected readonly chapterRenderDecisionCache =
     new ChapterRenderDecisionCache();
-  private readonly scrollCoordinator: ScrollCoordinator;
-  private readonly renderableResourceManager: RenderableResourceManager;
-  private readonly decorationManager = new DecorationManager();
-  private readonly interactionController: ReaderInteractionController;
-  private readonly navigationController: ReaderNavigationController;
-  private readonly renderOrchestrator: ReaderRenderOrchestrator;
-  private readonly annotationService: ReaderAnnotationService;
-  private readonly domPaginationService = new ReaderDomPaginationService();
-  private readonly scrollPositionService = new ReaderScrollPositionService();
-  private readonly sessionState: ReaderSessionState;
-  private readonly documentSession: ReaderDocumentSession;
-  private readonly annotationSession: ReaderAnnotationSession;
-  private readonly viewSession: ReaderViewSession;
-  private readonly navigationSession: ReaderNavigationSession;
-  private readonly renderSession: ReaderRenderSession;
-  private readonly selectionSession: ReaderSelectionSession;
-  private readonly runtimeController: ReaderRuntimeController;
-  private resizeObserver: ResizeObserver | null = null;
-  private readonly measuredDomPaginationBySectionId: Map<
+  protected readonly scrollCoordinator: ScrollCoordinator;
+  protected readonly renderableResourceManager: RenderableResourceManager;
+  protected readonly decorationManager = new DecorationManager();
+  protected readonly interactionController: ReaderInteractionController;
+  protected readonly navigationController: ReaderNavigationController;
+  protected readonly renderOrchestrator: ReaderRenderOrchestrator;
+  protected readonly annotationService: ReaderAnnotationService;
+  protected readonly domPaginationService = new ReaderDomPaginationService();
+  protected readonly scrollPositionService = new ReaderScrollPositionService();
+  protected readonly sessionState: ReaderSessionState;
+  protected readonly documentSession: ReaderDocumentSession;
+  protected readonly annotationSession: ReaderAnnotationSession;
+  protected readonly viewSession: ReaderViewSession;
+  protected readonly navigationSession: ReaderNavigationSession;
+  protected readonly renderSession: ReaderRenderSession;
+  protected readonly selectionSession: ReaderSelectionSession;
+  protected readonly runtimeController: ReaderRuntimeController;
+  protected resizeObserver: ResizeObserver | null = null;
+  protected readonly measuredDomPaginationBySectionId: Map<
     string,
     {
       pages: ReaderPage[];
@@ -148,38 +148,34 @@ export class EpubReader {
       height: number;
     }
   >;
-  private readonly handleDocumentSelectionChange = (): void => {
+  protected readonly handleDocumentSelectionChange = (): void => {
     this.syncTextSelectionState();
   };
 
-  private static readonly SCROLL_WINDOW_RADIUS = 1;
-  private static readonly SCROLL_SLICE_OVERSCAN_MULTIPLIER = 0.75;
-  private static readonly PAGINATED_CLICK_NAV_ZONE_RATIO = 0.28;
-
-  private get book(): Book | null {
+  protected get book(): Book | null {
     return this.documentSession.book;
   }
 
-  private set book(value: Book | null) {
+  protected set book(value: Book | null) {
     this.documentSession.book = value;
   }
 
-  private get sourceName(): string | null {
+  protected get sourceName(): string | null {
     return this.documentSession.sourceName;
   }
 
-  private set sourceName(value: string | null) {
+  protected set sourceName(value: string | null) {
     this.documentSession.sourceName = value;
   }
 
-  private get resources(): {
+  protected get resources(): {
     readBinary(path: string): Promise<Uint8Array>;
     exists(path: string): boolean;
   } | null {
     return this.documentSession.resources;
   }
 
-  private set resources(
+  protected set resources(
     value: {
       readBinary(path: string): Promise<Uint8Array>;
       exists(path: string): boolean;
@@ -188,293 +184,293 @@ export class EpubReader {
     this.documentSession.resources = value;
   }
 
-  private get chapterRenderInputs(): SharedChapterRenderInput[] {
+  protected get chapterRenderInputs(): SharedChapterRenderInput[] {
     return this.documentSession.chapterRenderInputs;
   }
 
-  private set chapterRenderInputs(value: SharedChapterRenderInput[]) {
+  protected set chapterRenderInputs(value: SharedChapterRenderInput[]) {
     this.documentSession.chapterRenderInputs = value;
   }
 
-  private get sectionIndexById(): Map<string, number> {
+  protected get sectionIndexById(): Map<string, number> {
     return this.documentSession.sectionIndexById;
   }
 
-  private get annotations(): Annotation[] {
+  protected get annotations(): Annotation[] {
     return this.annotationSession.annotations;
   }
 
-  private set annotations(value: Annotation[]) {
+  protected set annotations(value: Annotation[]) {
     this.annotationSession.annotations = value;
   }
 
-  private get preferences(): ReaderPreferences {
+  protected get preferences(): ReaderPreferences {
     return this.viewSession.preferences;
   }
 
-  private set preferences(value: ReaderPreferences) {
+  protected set preferences(value: ReaderPreferences) {
     this.viewSession.preferences = value;
   }
 
-  private get mode(): "scroll" | "paginated" {
+  protected get mode(): "scroll" | "paginated" {
     return this.viewSession.mode;
   }
 
-  private set mode(value: "scroll" | "paginated") {
+  protected set mode(value: "scroll" | "paginated") {
     this.viewSession.mode = value;
   }
 
-  private get publisherStyles(): PublisherStylesMode {
+  protected get publisherStyles(): PublisherStylesMode {
     return this.viewSession.publisherStyles;
   }
 
-  private set publisherStyles(value: PublisherStylesMode) {
+  protected set publisherStyles(value: PublisherStylesMode) {
     this.viewSession.publisherStyles = value;
   }
 
-  private get publisherColorOverride(): PublisherColorOverride {
+  protected get publisherColorOverride(): PublisherColorOverride {
     return this.viewSession.publisherColorOverride;
   }
 
-  private set publisherColorOverride(value: PublisherColorOverride) {
+  protected set publisherColorOverride(value: PublisherColorOverride) {
     this.viewSession.publisherColorOverride = value;
   }
 
-  private get experimentalRtl(): boolean {
+  protected get experimentalRtl(): boolean {
     return this.viewSession.experimentalRtl;
   }
 
-  private set experimentalRtl(value: boolean) {
+  protected set experimentalRtl(value: boolean) {
     this.viewSession.experimentalRtl = value;
   }
 
-  private get spreadMode(): ReaderSpreadMode {
+  protected get spreadMode(): ReaderSpreadMode {
     return this.viewSession.spreadMode;
   }
 
-  private set spreadMode(value: ReaderSpreadMode) {
+  protected set spreadMode(value: ReaderSpreadMode) {
     this.viewSession.spreadMode = value;
   }
 
-  private get debugMode(): boolean {
+  protected get debugMode(): boolean {
     return this.viewSession.debugMode;
   }
 
-  private set debugMode(value: boolean) {
+  protected set debugMode(value: boolean) {
     this.viewSession.debugMode = value;
   }
 
-  private get theme(): Theme {
+  protected get theme(): Theme {
     return this.viewSession.theme;
   }
 
-  private set theme(value: Theme) {
+  protected set theme(value: Theme) {
     this.viewSession.theme = value;
   }
 
-  private get typography(): TypographyOptions {
+  protected get typography(): TypographyOptions {
     return this.viewSession.typography;
   }
 
-  private set typography(value: TypographyOptions) {
+  protected set typography(value: TypographyOptions) {
     this.viewSession.typography = value;
   }
 
-  private get textSelectionSnapshot(): ReaderTextSelectionSnapshot | null {
+  protected get textSelectionSnapshot(): ReaderTextSelectionSnapshot | null {
     return this.selectionSession.textSelectionSnapshot;
   }
 
-  private get pinnedTextSelectionSnapshot(): ReaderTextSelectionSnapshot | null {
+  protected get pinnedTextSelectionSnapshot(): ReaderTextSelectionSnapshot | null {
     return this.selectionSession.pinnedTextSelectionSnapshot;
   }
 
-  private get locator(): Locator | null {
+  protected get locator(): Locator | null {
     return this.navigationSession.locator;
   }
 
-  private set locator(value: Locator | null) {
+  protected set locator(value: Locator | null) {
     this.navigationSession.locator = value;
   }
 
-  private get currentSectionIndex(): number {
+  protected get currentSectionIndex(): number {
     return this.navigationSession.currentSectionIndex;
   }
 
-  private set currentSectionIndex(value: number) {
+  protected set currentSectionIndex(value: number) {
     this.navigationSession.currentSectionIndex = value;
   }
 
-  private get pages(): ReaderPage[] {
+  protected get pages(): ReaderPage[] {
     return this.navigationSession.pages;
   }
 
-  private set pages(value: ReaderPage[]) {
+  protected set pages(value: ReaderPage[]) {
     this.navigationSession.pages = value;
   }
 
-  private get currentPageNumber(): number {
+  protected get currentPageNumber(): number {
     return this.navigationSession.currentPageNumber;
   }
 
-  private set currentPageNumber(value: number) {
+  protected set currentPageNumber(value: number) {
     this.navigationSession.currentPageNumber = value;
   }
 
-  private get pendingModeSwitchLocator(): Locator | null {
+  protected get pendingModeSwitchLocator(): Locator | null {
     return this.navigationSession.pendingModeSwitchLocator;
   }
 
-  private set pendingModeSwitchLocator(value: Locator | null) {
+  protected set pendingModeSwitchLocator(value: Locator | null) {
     this.navigationSession.pendingModeSwitchLocator = value;
   }
 
-  private get preferLocatorOnNextDomPaginationSync(): boolean {
+  protected get preferLocatorOnNextDomPaginationSync(): boolean {
     return this.navigationSession.preferLocatorOnNextDomPaginationSync;
   }
 
-  private set preferLocatorOnNextDomPaginationSync(value: boolean) {
+  protected set preferLocatorOnNextDomPaginationSync(value: boolean) {
     this.navigationSession.preferLocatorOnNextDomPaginationSync = value;
   }
 
-  private get lastMeasuredWidth(): number {
+  protected get lastMeasuredWidth(): number {
     return this.renderSession.lastMeasuredWidth;
   }
 
-  private set lastMeasuredWidth(value: number) {
+  protected set lastMeasuredWidth(value: number) {
     this.renderSession.lastMeasuredWidth = value;
   }
 
-  private get lastMeasuredHeight(): number {
+  protected get lastMeasuredHeight(): number {
     return this.renderSession.lastMeasuredHeight;
   }
 
-  private set lastMeasuredHeight(value: number) {
+  protected set lastMeasuredHeight(value: number) {
     this.renderSession.lastMeasuredHeight = value;
   }
 
-  private get sectionEstimatedHeights(): number[] {
+  protected get sectionEstimatedHeights(): number[] {
     return this.renderSession.sectionEstimatedHeights;
   }
 
-  private set sectionEstimatedHeights(value: number[]) {
+  protected set sectionEstimatedHeights(value: number[]) {
     this.renderSession.sectionEstimatedHeights = value;
   }
 
-  private get scrollWindowStart(): number {
+  protected get scrollWindowStart(): number {
     return this.renderSession.scrollWindowStart;
   }
 
-  private set scrollWindowStart(value: number) {
+  protected set scrollWindowStart(value: number) {
     this.renderSession.scrollWindowStart = value;
   }
 
-  private get scrollWindowEnd(): number {
+  protected get scrollWindowEnd(): number {
     return this.renderSession.scrollWindowEnd;
   }
 
-  private set scrollWindowEnd(value: number) {
+  protected set scrollWindowEnd(value: number) {
     this.renderSession.scrollWindowEnd = value;
   }
 
-  private get lastVisibleBounds(): VisibleDrawBounds {
+  protected get lastVisibleBounds(): VisibleDrawBounds {
     return this.renderSession.lastVisibleBounds;
   }
 
-  private set lastVisibleBounds(value: VisibleDrawBounds) {
+  protected set lastVisibleBounds(value: VisibleDrawBounds) {
     this.renderSession.lastVisibleBounds = value;
   }
 
-  private get lastInteractionRegions(): InteractionRegion[] {
+  protected get lastInteractionRegions(): InteractionRegion[] {
     return this.renderSession.lastInteractionRegions;
   }
 
-  private set lastInteractionRegions(value: InteractionRegion[]) {
+  protected set lastInteractionRegions(value: InteractionRegion[]) {
     this.renderSession.lastInteractionRegions = value;
   }
 
-  private get lastRenderedSectionIds(): string[] {
+  protected get lastRenderedSectionIds(): string[] {
     return this.renderSession.lastRenderedSectionIds;
   }
 
-  private set lastRenderedSectionIds(value: string[]) {
+  protected set lastRenderedSectionIds(value: string[]) {
     this.renderSession.lastRenderedSectionIds = value;
   }
 
-  private get lastScrollRenderWindows(): Map<
+  protected get lastScrollRenderWindows(): Map<
     string,
     Array<{ top: number; height: number }>
   > {
     return this.renderSession.lastScrollRenderWindows;
   }
 
-  private set lastScrollRenderWindows(
+  protected set lastScrollRenderWindows(
     value: Map<string, Array<{ top: number; height: number }>>
   ) {
     this.renderSession.lastScrollRenderWindows = value;
   }
 
-  private get lastRenderMetrics(): RenderMetrics {
+  protected get lastRenderMetrics(): RenderMetrics {
     return this.renderSession.lastRenderMetrics;
   }
 
-  private set lastRenderMetrics(value: RenderMetrics) {
+  protected set lastRenderMetrics(value: RenderMetrics) {
     this.renderSession.lastRenderMetrics = value;
   }
 
-  private get renderVersion(): number {
+  protected get renderVersion(): number {
     return this.renderSession.renderVersion;
   }
 
-  private set renderVersion(value: number) {
+  protected set renderVersion(value: number) {
     this.renderSession.renderVersion = value;
   }
 
-  private get lastChapterRenderDecision(): ChapterRenderDecision | null {
+  protected get lastChapterRenderDecision(): ChapterRenderDecision | null {
     return this.renderSession.lastChapterRenderDecision;
   }
 
-  private set lastChapterRenderDecision(value: ChapterRenderDecision | null) {
+  protected set lastChapterRenderDecision(value: ChapterRenderDecision | null) {
     this.renderSession.lastChapterRenderDecision = value;
   }
 
-  private get imageIntrinsicSizeCache(): Map<
+  protected get imageIntrinsicSizeCache(): Map<
     string,
     IntrinsicImageSize | null
   > {
     return this.renderSession.imageIntrinsicSizeCache;
   }
 
-  private get pendingImageIntrinsicSizePaths(): Set<string> {
+  protected get pendingImageIntrinsicSizePaths(): Set<string> {
     return this.renderSession.pendingImageIntrinsicSizePaths;
   }
 
-  private get lastLocatorRestoreDiagnostics(): LocatorRestoreDiagnostics | null {
+  protected get lastLocatorRestoreDiagnostics(): LocatorRestoreDiagnostics | null {
     return this.renderSession.lastLocatorRestoreDiagnostics;
   }
 
-  private set lastLocatorRestoreDiagnostics(
+  protected set lastLocatorRestoreDiagnostics(
     value: LocatorRestoreDiagnostics | null
   ) {
     this.renderSession.lastLocatorRestoreDiagnostics = value;
   }
 
-  private get lastFixedLayoutRenderSignature(): string | null {
+  protected get lastFixedLayoutRenderSignature(): string | null {
     return this.renderSession.lastFixedLayoutRenderSignature;
   }
 
-  private set lastFixedLayoutRenderSignature(value: string | null) {
+  protected set lastFixedLayoutRenderSignature(value: string | null) {
     this.renderSession.lastFixedLayoutRenderSignature = value;
   }
 
-  private get lastPresentationRenderSignature(): string | null {
+  protected get lastPresentationRenderSignature(): string | null {
     return this.renderSession.lastPresentationRenderSignature;
   }
 
-  private set lastPresentationRenderSignature(value: string | null) {
+  protected set lastPresentationRenderSignature(value: string | null) {
     this.renderSession.lastPresentationRenderSignature = value;
   }
 
-  constructor(private readonly options: ReaderOptions = {}) {
+  constructor(protected readonly options: ReaderOptions = {}) {
     const preferences = mergeReaderPreferences(
       {
         ...(options.mode ? { mode: options.mode } : {}),
@@ -763,7 +759,7 @@ export class EpubReader {
     return this.runtimeController.prev();
   }
 
-  private isAtRenderedPaginatedDomSectionStart(): boolean {
+  protected isAtRenderedPaginatedDomSectionStart(): boolean {
     return this.runtimeController.isAtRenderedPaginatedDomSectionStart();
   }
 
@@ -817,11 +813,11 @@ export class EpubReader {
     return this.runtimeController.goToPage(pageNumber);
   }
 
-  private async goToScrollSection(sectionNumber: number): Promise<void> {
+  protected async goToScrollSection(sectionNumber: number): Promise<void> {
     return this.runtimeController.goToScrollSection(sectionNumber);
   }
 
-  private async goToLeafPage(pageNumber: number): Promise<void> {
+  protected async goToLeafPage(pageNumber: number): Promise<void> {
     return this.runtimeController.goToLeafPage(pageNumber);
   }
 
@@ -933,11 +929,11 @@ export class EpubReader {
     return this.runtimeController.clearAnnotations();
   }
 
-  private updateLocator(locator: Locator | null): void {
+  protected updateLocator(locator: Locator | null): void {
     return this.runtimeController.updateLocator(locator);
   }
 
-  private hitTestDom(point: Point): HitTestResult | null {
+  protected hitTestDom(point: Point): HitTestResult | null {
     return this.runtimeController.hitTestDom(point);
   }
 
@@ -945,15 +941,15 @@ export class EpubReader {
     return this.runtimeController.hitTest(point);
   }
 
-  private hitTestScrollableCanvas(point: Point): HitTestResult | null {
+  protected hitTestScrollableCanvas(point: Point): HitTestResult | null {
     return this.runtimeController.hitTestScrollableCanvas(point);
   }
 
-  private getScrollableCanvasSectionOffsetX(sectionId: string): number {
+  protected getScrollableCanvasSectionOffsetX(sectionId: string): number {
     return this.runtimeController.getScrollableCanvasSectionOffsetX(sectionId);
   }
 
-  private resolveDomLinkHref(sectionHref: string, href: string): string {
+  protected resolveDomLinkHref(sectionHref: string, href: string): string {
     return this.runtimeController.resolveDomLinkHref(sectionHref, href);
   }
 
@@ -981,15 +977,15 @@ export class EpubReader {
     return this.runtimeController.mapViewportToLocator(point);
   }
 
-  private captureModeSwitchLocator(): Locator | null {
+  protected captureModeSwitchLocator(): Locator | null {
     return this.runtimeController.captureModeSwitchLocator();
   }
 
-  private mapCanvasTextLayerPointToLocator(point: Point): Locator | null {
+  protected mapCanvasTextLayerPointToLocator(point: Point): Locator | null {
     return this.runtimeController.mapCanvasTextLayerPointToLocator(point);
   }
 
-  private applyPendingModeSwitchLocator(): void {
+  protected applyPendingModeSwitchLocator(): void {
     return this.runtimeController.applyPendingModeSwitchLocator();
   }
 
@@ -1076,7 +1072,7 @@ export class EpubReader {
     return this.runtimeController.goToHref(href);
   }
 
-  private async activateLink(input: {
+  protected async activateLink(input: {
     href: string;
     source: "dom" | "canvas";
     text?: string;
@@ -1086,7 +1082,7 @@ export class EpubReader {
     return this.runtimeController.activateLink(input);
   }
 
-  private getSectionProgressWeights(): number[] {
+  protected getSectionProgressWeights(): number[] {
     return this.runtimeController.getSectionProgressWeights();
   }
 
@@ -1094,70 +1090,70 @@ export class EpubReader {
     return this.runtimeController.resolveHrefLocator(href);
   }
 
-  private async applyPreferences(
+  protected async applyPreferences(
     preferences: ReaderPreferences
   ): Promise<ReaderSettings> {
     return this.runtimeController.applyPreferences(preferences);
   }
 
-  private emitRelocated(): void {
+  protected emitRelocated(): void {
     return this.runtimeController.emitRelocated();
   }
 
-  private buildSectionRelocatedEvent(): SectionRelocatedEvent | null {
+  protected buildSectionRelocatedEvent(): SectionRelocatedEvent | null {
     return this.runtimeController.buildSectionRelocatedEvent();
   }
 
-  private emitSectionRendered(section: SectionDocument): void {
+  protected emitSectionRendered(section: SectionDocument): void {
     return this.runtimeController.emitSectionRendered(section);
   }
 
-  private buildSectionRenderedEvent(
+  protected buildSectionRenderedEvent(
     section: SectionDocument
   ): SectionRenderedEvent | null {
     return this.runtimeController.buildSectionRenderedEvent(section);
   }
 
-  private resolveSectionHookElements(sectionId: string): {
+  protected resolveSectionHookElements(sectionId: string): {
     containerElement?: HTMLElement;
     contentElement?: HTMLElement;
   } {
     return this.runtimeController.resolveSectionHookElements(sectionId);
   }
 
-  private invokeReaderHook(
+  protected invokeReaderHook(
     callback: () => void | Promise<void> | undefined
   ): void {
     return this.runtimeController.invokeReaderHook(callback);
   }
 
-  private renderCurrentSection(
+  protected renderCurrentSection(
     renderBehavior: RenderBehavior = "relocate"
   ): void {
     return this.runtimeController.renderCurrentSection(renderBehavior);
   }
 
-  private renderDomSection(
+  protected renderDomSection(
     section: SectionDocument,
     renderVersion: number
   ): void {
     return this.runtimeController.renderDomSection(section, renderVersion);
   }
 
-  private renderPaginatedDomSpread(
+  protected renderPaginatedDomSpread(
     page: ReaderPage,
     renderVersion: number
   ): void {
     return this.runtimeController.renderPaginatedDomSpread(page, renderVersion);
   }
 
-  private syncFixedLayoutContainerState(
+  protected syncFixedLayoutContainerState(
     input: DomChapterRenderInput | null
   ): void {
     return this.runtimeController.syncFixedLayoutContainerState(input);
   }
 
-  private syncDomSectionStateAfterRender(
+  protected syncDomSectionStateAfterRender(
     renderBehavior: RenderBehavior,
     preservedScrollAnchor: ScrollAnchor | null,
     paginatedPage: ReaderPage | null = null
@@ -1169,38 +1165,38 @@ export class EpubReader {
     );
   }
 
-  private scrollDomSectionToProgress(progressInSection: number): void {
+  protected scrollDomSectionToProgress(progressInSection: number): void {
     return this.runtimeController.scrollDomSectionToProgress(progressInSection);
   }
 
-  private scrollDomSectionToPaginatedPage(page: ReaderPage | null): void {
+  protected scrollDomSectionToPaginatedPage(page: ReaderPage | null): void {
     return this.runtimeController.scrollDomSectionToPaginatedPage(page);
   }
 
-  private positionPaginatedDomSection(
+  protected positionPaginatedDomSection(
     section: HTMLElement,
     page: ReaderPage
   ): void {
     return this.runtimeController.positionPaginatedDomSection(section, page);
   }
 
-  private syncMeasuredPaginatedDomPages(
+  protected syncMeasuredPaginatedDomPages(
     section: SectionDocument
   ): ReaderPage | null {
     return this.runtimeController.syncMeasuredPaginatedDomPages(section);
   }
 
-  private resolveChapterRenderDecision(
+  protected resolveChapterRenderDecision(
     sectionIndex: number
   ): ChapterRenderDecision {
     return this.runtimeController.resolveChapterRenderDecision(sectionIndex);
   }
 
-  private applyContainerTheme(): void {
+  protected applyContainerTheme(): void {
     return this.runtimeController.applyContainerTheme();
   }
 
-  private renderPaginatedCanvas(
+  protected renderPaginatedCanvas(
     section: SectionDocument,
     page: ReaderPage | null,
     renderVersion: number
@@ -1212,62 +1208,62 @@ export class EpubReader {
     );
   }
 
-  private renderScrollableCanvas(renderVersion: number): void {
+  protected renderScrollableCanvas(renderVersion: number): void {
     return this.runtimeController.renderScrollableCanvas(renderVersion);
   }
 
-  private buildDisplayListForPage(
+  protected buildDisplayListForPage(
     section: SectionDocument,
     page: ReaderPage
   ): SectionDisplayList {
     return this.runtimeController.buildDisplayListForPage(section, page);
   }
 
-  private estimateBlockHeightForPage(block: BlockNode): number {
+  protected estimateBlockHeightForPage(block: BlockNode): number {
     return this.runtimeController.estimateBlockHeightForPage(block);
   }
 
-  private isImageResourceReady(src: string): boolean {
+  protected isImageResourceReady(src: string): boolean {
     return this.runtimeController.isImageResourceReady(src);
   }
 
-  private resolveImageIntrinsicSizeForLayout(
+  protected resolveImageIntrinsicSizeForLayout(
     src: string
   ): IntrinsicImageSize | null | undefined {
     return this.runtimeController.resolveImageIntrinsicSizeForLayout(src);
   }
 
-  private extractBlockText(block: BlockNode): string {
+  protected extractBlockText(block: BlockNode): string {
     return this.runtimeController.extractBlockText(block);
   }
 
-  private extractInlineText(inlines: InlineNode[]): string {
+  protected extractInlineText(inlines: InlineNode[]): string {
     return this.runtimeController.extractInlineText(inlines);
   }
 
-  private resolveCanvasResourceUrl(path: string): string {
+  protected resolveCanvasResourceUrl(path: string): string {
     return this.runtimeController.resolveCanvasResourceUrl(path);
   }
 
-  private resolveDomResourceUrl(path: string): string {
+  protected resolveDomResourceUrl(path: string): string {
     return this.runtimeController.resolveDomResourceUrl(path);
   }
 
-  private resolveRenderableResourceUrl(
+  protected resolveRenderableResourceUrl(
     path: string,
     consumer: RenderableResourceConsumer
   ): string {
     return this.runtimeController.resolveRenderableResourceUrl(path, consumer);
   }
 
-  private createDomRenderInput(
+  protected createDomRenderInput(
     section: SectionDocument,
     input: SharedChapterRenderInput
   ): DomChapterRenderInput {
     return this.runtimeController.createDomRenderInput(section, input);
   }
 
-  private resolveReadingLanguageContextForSection(
+  protected resolveReadingLanguageContextForSection(
     section: SectionDocument
   ): ReadingLanguageContext | null {
     return this.runtimeController.resolveReadingLanguageContextForSection(
@@ -1275,7 +1271,7 @@ export class EpubReader {
     );
   }
 
-  private resolveReadingLanguageContextForSectionIndex(
+  protected resolveReadingLanguageContextForSectionIndex(
     spineIndex: number
   ): ReadingLanguageContext | null {
     return this.runtimeController.resolveReadingLanguageContextForSectionIndex(
@@ -1283,7 +1279,7 @@ export class EpubReader {
     );
   }
 
-  private resolveReadingNavigationContextForSectionIndex(
+  protected resolveReadingNavigationContextForSectionIndex(
     spineIndex: number
   ): ReadingNavigationContext | null {
     return this.runtimeController.resolveReadingNavigationContextForSectionIndex(
@@ -1291,7 +1287,7 @@ export class EpubReader {
     );
   }
 
-  private resolveReadingSpreadContextForSectionIndex(
+  protected resolveReadingSpreadContextForSectionIndex(
     spineIndex: number
   ): ReadingSpreadContext | null {
     return this.runtimeController.resolveReadingSpreadContextForSectionIndex(
@@ -1299,117 +1295,117 @@ export class EpubReader {
     );
   }
 
-  private getSectionsForRender(): SectionDocument[] {
+  protected getSectionsForRender(): SectionDocument[] {
     return this.runtimeController.getSectionsForRender();
   }
 
-  private getSectionForRender(section: SectionDocument): SectionDocument {
+  protected getSectionForRender(section: SectionDocument): SectionDocument {
     return this.runtimeController.getSectionForRender(section);
   }
 
-  private revokeObjectUrls(): void {
+  protected revokeObjectUrls(): void {
     return this.runtimeController.revokeObjectUrls();
   }
 
-  private getContainerInnerDimensions(): { width: number; height: number } {
+  protected getContainerInnerDimensions(): { width: number; height: number } {
     return this.runtimeController.getContainerInnerDimensions();
   }
 
-  private getPaginationMeasurement(): { width: number; height: number } {
+  protected getPaginationMeasurement(): { width: number; height: number } {
     return this.runtimeController.getPaginationMeasurement();
   }
 
-  private getFixedLayoutViewportBox(
+  protected getFixedLayoutViewportBox(
     section: SectionDocument
   ): { width: number; height: number } | null {
     return this.runtimeController.getFixedLayoutViewportBox(section);
   }
 
-  private getPresentationViewportBox(
+  protected getPresentationViewportBox(
     section: SectionDocument
   ): { width: number; height: number } | null {
     return this.runtimeController.getPresentationViewportBox(section);
   }
 
-  private resolveFixedLayoutRenderSignature(
+  protected resolveFixedLayoutRenderSignature(
     section: SectionDocument
   ): string | null {
     return this.runtimeController.resolveFixedLayoutRenderSignature(section);
   }
 
-  private resolvePresentationRenderSignature(
+  protected resolvePresentationRenderSignature(
     section: SectionDocument
   ): string | null {
     return this.runtimeController.resolvePresentationRenderSignature(section);
   }
 
-  private getContentWidth(): number {
+  protected getContentWidth(): number {
     return this.runtimeController.getContentWidth();
   }
 
-  private getFontFamily(): string {
+  protected getFontFamily(): string {
     return this.runtimeController.getFontFamily();
   }
 
-  private attachResizeObserver(): void {
+  protected attachResizeObserver(): void {
     return this.runtimeController.attachResizeObserver();
   }
 
-  private attachScrollListener(): void {
+  protected attachScrollListener(): void {
     return this.runtimeController.attachScrollListener();
   }
 
-  private detachScrollListener(): void {
+  protected detachScrollListener(): void {
     return this.runtimeController.detachScrollListener();
   }
 
-  private attachSelectionChangeListener(): void {
+  protected attachSelectionChangeListener(): void {
     return this.runtimeController.attachSelectionChangeListener();
   }
 
-  private attachPointerListener(): void {
+  protected attachPointerListener(): void {
     return this.runtimeController.attachPointerListener();
   }
 
-  private detachPointerListener(): void {
+  protected detachPointerListener(): void {
     return this.runtimeController.detachPointerListener();
   }
 
-  private attachKeyboardListener(): void {
+  protected attachKeyboardListener(): void {
     return this.runtimeController.attachKeyboardListener();
   }
 
-  private detachKeyboardListener(): void {
+  protected detachKeyboardListener(): void {
     return this.runtimeController.detachKeyboardListener();
   }
 
-  private handleDomClick(event: MouseEvent): void {
+  protected handleDomClick(event: MouseEvent): void {
     return this.runtimeController.handleDomClick(event);
   }
 
-  private handlePaginatedViewportClick(event: MouseEvent): void {
+  protected handlePaginatedViewportClick(event: MouseEvent): void {
     return this.runtimeController.handlePaginatedViewportClick(event);
   }
 
-  private resolvePaginatedClickNavigationAction(input: {
+  protected resolvePaginatedClickNavigationAction(input: {
     offsetX: number;
     target?: HTMLElement;
   }): "previous" | "next" | null {
     return this.runtimeController.resolvePaginatedClickNavigationAction(input);
   }
 
-  private resolvePaginatedSpreadClickSlot(input: {
+  protected resolvePaginatedSpreadClickSlot(input: {
     offsetX: number;
     target?: HTMLElement;
   }): "left" | "right" | null {
     return this.runtimeController.resolvePaginatedSpreadClickSlot(input);
   }
 
-  private performPaginatedNavigationAction(action: "previous" | "next"): void {
+  protected performPaginatedNavigationAction(action: "previous" | "next"): void {
     return this.runtimeController.performPaginatedNavigationAction(action);
   }
 
-  private emitPaginatedCenterTapped(input: {
+  protected emitPaginatedCenterTapped(input: {
     source: "dom" | "canvas";
     offsetX: number;
     locator?: Locator | null;
@@ -1418,37 +1414,37 @@ export class EpubReader {
     return this.runtimeController.emitPaginatedCenterTapped(input);
   }
 
-  private mapDomViewportPointToLocator(point: Point): Locator | null {
+  protected mapDomViewportPointToLocator(point: Point): Locator | null {
     return this.runtimeController.mapDomViewportPointToLocator(point);
   }
 
-  private getViewportCenterProbePoints(): Point[] {
+  protected getViewportCenterProbePoints(): Point[] {
     return this.runtimeController.getViewportCenterProbePoints();
   }
 
-  private getContainerRelativePoint(event: MouseEvent): Point | null {
+  protected getContainerRelativePoint(event: MouseEvent): Point | null {
     return this.runtimeController.getContainerRelativePoint(event);
   }
 
-  private getClientPointForContainerPoint(
+  protected getClientPointForContainerPoint(
     point: Point
   ): { x: number; y: number } | null {
     return this.runtimeController.getClientPointForContainerPoint(point);
   }
 
-  private realignDomSearchResult(result: SearchResult): void {
+  protected realignDomSearchResult(result: SearchResult): void {
     return this.runtimeController.realignDomSearchResult(result);
   }
 
-  private async waitForFonts(): Promise<void> {
+  protected async waitForFonts(): Promise<void> {
     return this.runtimeController.waitForFonts();
   }
 
-  private ensurePages(sectionLayout?: LayoutResult): void {
+  protected ensurePages(sectionLayout?: LayoutResult): void {
     return this.runtimeController.ensurePages(sectionLayout);
   }
 
-  private applyMeasuredDomPagination(plan: {
+  protected applyMeasuredDomPagination(plan: {
     pages: ReaderPage[];
     sectionEstimatedHeights: number[];
   }): {
@@ -1458,41 +1454,41 @@ export class EpubReader {
     return this.runtimeController.applyMeasuredDomPagination(plan);
   }
 
-  private getPageHeight(): number {
+  protected getPageHeight(): number {
     return this.runtimeController.getPageHeight();
   }
 
-  private findCurrentPageForSection(sectionId: string): ReaderPage | null {
+  protected findCurrentPageForSection(sectionId: string): ReaderPage | null {
     return this.runtimeController.findCurrentPageForSection(sectionId);
   }
 
-  private findPageForLocator(locator: Locator): ReaderPage | null {
+  protected findPageForLocator(locator: Locator): ReaderPage | null {
     return this.runtimeController.findPageForLocator(locator);
   }
 
-  private resolveRenderedPage(sectionId: string): ReaderPage | null {
+  protected resolveRenderedPage(sectionId: string): ReaderPage | null {
     return this.runtimeController.resolveRenderedPage(sectionId);
   }
 
-  private findPageByNumber(pageNumber: number): ReaderPage | null {
+  protected findPageByNumber(pageNumber: number): ReaderPage | null {
     return this.runtimeController.findPageByNumber(pageNumber);
   }
 
-  private resolvePaginatedSpread(
+  protected resolvePaginatedSpread(
     page: ReaderPage | null
   ): PaginatedSpread | null {
     return this.runtimeController.resolvePaginatedSpread(page);
   }
 
-  private resolveCurrentPaginatedSpread(): PaginatedSpread | null {
+  protected resolveCurrentPaginatedSpread(): PaginatedSpread | null {
     return this.runtimeController.resolveCurrentPaginatedSpread();
   }
 
-  private getVisiblePaginatedSpreads(): PaginatedSpread[] {
+  protected getVisiblePaginatedSpreads(): PaginatedSpread[] {
     return this.runtimeController.getVisiblePaginatedSpreads();
   }
 
-  private resolveDisplayPageNumberToLeafPage(
+  protected resolveDisplayPageNumberToLeafPage(
     pageNumber: number
   ): number | null {
     return this.runtimeController.resolveDisplayPageNumberToLeafPage(
@@ -1500,29 +1496,29 @@ export class EpubReader {
     );
   }
 
-  private resolveSpreadNavigationTarget(
+  protected resolveSpreadNavigationTarget(
     action: "previous" | "next"
   ): number | null {
     return this.runtimeController.resolveSpreadNavigationTarget(action);
   }
 
-  private syncCurrentPageFromSection(): void {
+  protected syncCurrentPageFromSection(): void {
     return this.runtimeController.syncCurrentPageFromSection();
   }
 
-  private createLocatorForPage(page: ReaderPage): Locator {
+  protected createLocatorForPage(page: ReaderPage): Locator {
     return this.runtimeController.createLocatorForPage(page);
   }
 
-  private getProgressForCurrentLocator(): number {
+  protected getProgressForCurrentLocator(): number {
     return this.runtimeController.getProgressForCurrentLocator();
   }
 
-  private syncDerivedDecorationGroups(): void {
+  protected syncDerivedDecorationGroups(): void {
     return this.runtimeController.syncDerivedDecorationGroups();
   }
 
-  private getHighlightedCanvasBlockIdsForSection(
+  protected getHighlightedCanvasBlockIdsForSection(
     sectionIndex: number
   ): Set<string> {
     return this.runtimeController.getHighlightedCanvasBlockIdsForSection(
@@ -1530,7 +1526,7 @@ export class EpubReader {
     );
   }
 
-  private getHighlightedCanvasTextRangesForSection(
+  protected getHighlightedCanvasTextRangesForSection(
     sectionIndex: number
   ): Map<string, Array<{ start: number; end: number; color: string }>> {
     return this.runtimeController.getHighlightedCanvasTextRangesForSection(
@@ -1538,7 +1534,7 @@ export class EpubReader {
     );
   }
 
-  private getActiveCanvasBlockIdForSection(
+  protected getActiveCanvasBlockIdForSection(
     sectionIndex: number
   ): string | undefined {
     return this.runtimeController.getActiveCanvasBlockIdForSection(
@@ -1546,7 +1542,7 @@ export class EpubReader {
     );
   }
 
-  private getUnderlinedCanvasBlockIdsForSection(
+  protected getUnderlinedCanvasBlockIdsForSection(
     sectionIndex: number
   ): Set<string> {
     return this.runtimeController.getUnderlinedCanvasBlockIdsForSection(
@@ -1554,7 +1550,7 @@ export class EpubReader {
     );
   }
 
-  private getUnderlinedCanvasBlockColorsForSection(
+  protected getUnderlinedCanvasBlockColorsForSection(
     sectionIndex: number
   ): Map<string, string> {
     return this.runtimeController.getUnderlinedCanvasBlockColorsForSection(
@@ -1562,7 +1558,7 @@ export class EpubReader {
     );
   }
 
-  private getUnderlinedCanvasTextRangesForSection(
+  protected getUnderlinedCanvasTextRangesForSection(
     sectionIndex: number
   ): Map<string, Array<{ start: number; end: number; color: string }>> {
     return this.runtimeController.getUnderlinedCanvasTextRangesForSection(
@@ -1570,19 +1566,19 @@ export class EpubReader {
     );
   }
 
-  private resolveCanvasViewportBlockIds(locator: Locator): string[] {
+  protected resolveCanvasViewportBlockIds(locator: Locator): string[] {
     return this.runtimeController.resolveCanvasViewportBlockIds(locator);
   }
 
-  private syncAnnotationDecorations(): void {
+  protected syncAnnotationDecorations(): void {
     return this.runtimeController.syncAnnotationDecorations();
   }
 
-  private resolveAnnotationQuote(locator: Locator): string | undefined {
+  protected resolveAnnotationQuote(locator: Locator): string | undefined {
     return this.runtimeController.resolveAnnotationQuote(locator);
   }
 
-  private resolveAnnotationTextRangeQuote(
+  protected resolveAnnotationTextRangeQuote(
     locator: Locator,
     textRange: TextRangeSelector
   ): string | undefined {
@@ -1592,11 +1588,11 @@ export class EpubReader {
     );
   }
 
-  private getLocatorScrollAlignment(): "start" | "center" {
+  protected getLocatorScrollAlignment(): "start" | "center" {
     return this.runtimeController.getLocatorScrollAlignment();
   }
 
-  private resolveScrollTopForRect(
+  protected resolveScrollTopForRect(
     rectTop: number,
     rectHeight: number,
     alignment: "start" | "center"
@@ -1608,7 +1604,7 @@ export class EpubReader {
     );
   }
 
-  private findRenderedDomBlockTarget(
+  protected findRenderedDomBlockTarget(
     sectionElement: HTMLElement,
     blockId: string | undefined
   ): HTMLElement | null {
@@ -1618,7 +1614,7 @@ export class EpubReader {
     );
   }
 
-  private resolveRenderedDomTextPosition(
+  protected resolveRenderedDomTextPosition(
     sectionElement: HTMLElement,
     blockId: string | undefined,
     inlineOffset: number
@@ -1633,11 +1629,11 @@ export class EpubReader {
     );
   }
 
-  private scrollToLocatorBlock(): boolean {
+  protected scrollToLocatorBlock(): boolean {
     return this.runtimeController.scrollToLocatorBlock();
   }
 
-  private resolveScrollCanvasBlockRect(
+  protected resolveScrollCanvasBlockRect(
     sourceSection: SectionDocument,
     sectionIndex: number,
     blockIds: string[]
@@ -1649,83 +1645,83 @@ export class EpubReader {
     );
   }
 
-  private scrollToLocatorInlineOffset(): boolean {
+  protected scrollToLocatorInlineOffset(): boolean {
     return this.runtimeController.scrollToLocatorInlineOffset();
   }
 
-  private scrollToLocatorAnchor(): boolean {
+  protected scrollToLocatorAnchor(): boolean {
     return this.runtimeController.scrollToLocatorAnchor();
   }
 
-  private refreshScrollSlicesAfterModeSwitchRelocation(): void {
+  protected refreshScrollSlicesAfterModeSwitchRelocation(): void {
     return this.runtimeController.refreshScrollSlicesAfterModeSwitchRelocation();
   }
 
-  private scrollToCurrentLocation(): void {
+  protected scrollToCurrentLocation(): void {
     return this.runtimeController.scrollToCurrentLocation();
   }
 
-  private syncPositionFromScroll(emitEvent: boolean): boolean {
+  protected syncPositionFromScroll(emitEvent: boolean): boolean {
     return this.runtimeController.syncPositionFromScroll(emitEvent);
   }
 
-  private findRenderedSectionIndexForOffset(offset: number): number {
+  protected findRenderedSectionIndexForOffset(offset: number): number {
     return this.runtimeController.findRenderedSectionIndexForOffset(offset);
   }
 
-  private updateScrollWindowBounds(): void {
+  protected updateScrollWindowBounds(): void {
     return this.runtimeController.updateScrollWindowBounds();
   }
 
-  private refreshScrollWindowIfNeeded(): boolean {
+  protected refreshScrollWindowIfNeeded(): boolean {
     return this.runtimeController.refreshScrollWindowIfNeeded();
   }
 
-  private refreshScrollSlicesIfNeeded(): boolean {
+  protected refreshScrollSlicesIfNeeded(): boolean {
     return this.runtimeController.refreshScrollSlicesIfNeeded();
   }
 
-  private scheduleDeferredScrollRefresh(): void {
+  protected scheduleDeferredScrollRefresh(): void {
     return this.runtimeController.scheduleDeferredScrollRefresh();
   }
 
-  private clearDeferredScrollRefresh(): void {
+  protected clearDeferredScrollRefresh(): void {
     return this.runtimeController.clearDeferredScrollRefresh();
   }
 
-  private rerenderScrollSlicesPreservingScrollTop(): void {
+  protected rerenderScrollSlicesPreservingScrollTop(): void {
     return this.runtimeController.rerenderScrollSlicesPreservingScrollTop();
   }
 
-  private scheduleDeferredResourceRenderRefresh(): void {
+  protected scheduleDeferredResourceRenderRefresh(): void {
     return this.runtimeController.scheduleDeferredResourceRenderRefresh();
   }
 
-  private clearDeferredResourceRenderRefresh(): void {
+  protected clearDeferredResourceRenderRefresh(): void {
     return this.runtimeController.clearDeferredResourceRenderRefresh();
   }
 
-  private scheduleDeferredAnchorRealignment(): void {
+  protected scheduleDeferredAnchorRealignment(): void {
     return this.runtimeController.scheduleDeferredAnchorRealignment();
   }
 
-  private clearDeferredAnchorRealignment(): void {
+  protected clearDeferredAnchorRealignment(): void {
     return this.runtimeController.clearDeferredAnchorRealignment();
   }
 
-  private captureScrollAnchor(): ScrollAnchor | null {
+  protected captureScrollAnchor(): ScrollAnchor | null {
     return this.runtimeController.captureScrollAnchor();
   }
 
-  private restoreScrollAnchor(anchor: ScrollAnchor | null): void {
+  protected restoreScrollAnchor(anchor: ScrollAnchor | null): void {
     return this.runtimeController.restoreScrollAnchor(anchor);
   }
 
-  private setProgrammaticScrollTop(nextScrollTop: number): void {
+  protected setProgrammaticScrollTop(nextScrollTop: number): void {
     return this.runtimeController.setProgrammaticScrollTop(nextScrollTop);
   }
 
-  private collectRenderedCanvasSections(): Array<{
+  protected collectRenderedCanvasSections(): Array<{
     sectionId: string;
     height: number;
     canvas: HTMLCanvasElement;
@@ -1734,7 +1730,7 @@ export class EpubReader {
     return this.runtimeController.collectRenderedCanvasSections();
   }
 
-  private offsetInteractionRegionsForScroll(
+  protected offsetInteractionRegionsForScroll(
     sections: Array<{
       sectionId: string;
       height: number;
@@ -1744,7 +1740,7 @@ export class EpubReader {
     return this.runtimeController.offsetInteractionRegionsForScroll(sections);
   }
 
-  private collectVisibleBoundsForScroll(
+  protected collectVisibleBoundsForScroll(
     sectionsToRender: Array<{
       sectionId: string;
       sectionHref: string;
@@ -1761,11 +1757,11 @@ export class EpubReader {
     );
   }
 
-  private getSectionElement(sectionId: string): HTMLElement | null {
+  protected getSectionElement(sectionId: string): HTMLElement | null {
     return this.runtimeController.getSectionElement(sectionId);
   }
 
-  private findRenderedDomSectionAtPoint(point: Point): {
+  protected findRenderedDomSectionAtPoint(point: Point): {
     section: SectionDocument;
     sectionIndex: number;
     sectionElement: HTMLElement;
@@ -1773,27 +1769,27 @@ export class EpubReader {
     return this.runtimeController.findRenderedDomSectionAtPoint(point);
   }
 
-  private getSectionTop(sectionId: string): number {
+  protected getSectionTop(sectionId: string): number {
     return this.runtimeController.getSectionTop(sectionId);
   }
 
-  private getSectionHeight(sectionId: string): number {
+  protected getSectionHeight(sectionId: string): number {
     return this.runtimeController.getSectionHeight(sectionId);
   }
 
-  private rebuildSectionIndex(): void {
+  protected rebuildSectionIndex(): void {
     return this.runtimeController.rebuildSectionIndex();
   }
 
-  private getSectionIndexById(sectionId?: string | null): number {
+  protected getSectionIndexById(sectionId?: string | null): number {
     return this.runtimeController.getSectionIndexById(sectionId);
   }
 
-  private findSectionIndexForOffset(offset: number): number {
+  protected findSectionIndexForOffset(offset: number): number {
     return this.runtimeController.findSectionIndexForOffset(offset);
   }
 
-  private resolveSelectionTarget(node: Node | null): {
+  protected resolveSelectionTarget(node: Node | null): {
     element: HTMLElement;
     locator: Locator;
     sectionId: string;
@@ -1802,7 +1798,7 @@ export class EpubReader {
     return this.runtimeController.resolveSelectionTarget(node);
   }
 
-  private resolveSelectionEndpoint(input: {
+  protected resolveSelectionEndpoint(input: {
     node: Node | null;
     offset: number;
   }): {
@@ -1815,41 +1811,41 @@ export class EpubReader {
     return this.runtimeController.resolveSelectionEndpoint(input);
   }
 
-  private resolveCurrentTextSelectionSnapshot(): ReaderTextSelectionSnapshot | null {
+  protected resolveCurrentTextSelectionSnapshot(): ReaderTextSelectionSnapshot | null {
     return this.runtimeController.resolveCurrentTextSelectionSnapshot();
   }
 
-  private setPinnedTextSelectionSnapshot(
+  protected setPinnedTextSelectionSnapshot(
     selection: ReaderTextSelectionSnapshot | null
   ): void {
     return this.runtimeController.setPinnedTextSelectionSnapshot(selection);
   }
 
-  private resolveSelectionHighlightState(
+  protected resolveSelectionHighlightState(
     selection: ReaderTextSelectionSnapshot
   ): ReaderSelectionHighlightState {
     return this.runtimeController.resolveSelectionHighlightState(selection);
   }
 
-  private resolveAnnotationRangesForSection(
+  protected resolveAnnotationRangesForSection(
     spineIndex: number
   ): ResolvedAnnotationRange[] {
     return this.runtimeController.resolveAnnotationRangesForSection(spineIndex);
   }
 
-  private resolveAnnotationRange(
+  protected resolveAnnotationRange(
     annotation: Annotation
   ): ResolvedAnnotationRange | null {
     return this.runtimeController.resolveAnnotationRange(annotation);
   }
 
-  private createSectionTextRangeContext(
+  protected createSectionTextRangeContext(
     section: SectionDocument
   ): SectionTextRangeContext {
     return this.runtimeController.createSectionTextRangeContext(section);
   }
 
-  private normalizeTextRangeForSection(
+  protected normalizeTextRangeForSection(
     spineIndex: number,
     textRange: TextRangeSelector
   ): TextRangeSelector | null {
@@ -1859,14 +1855,14 @@ export class EpubReader {
     );
   }
 
-  private resolveFullBlockTextRange(
+  protected resolveFullBlockTextRange(
     section: SectionDocument,
     blockId: string | undefined
   ): TextRangeSelector | null {
     return this.runtimeController.resolveFullBlockTextRange(section, blockId);
   }
 
-  private createAnnotationForResolvedRange(input: {
+  protected createAnnotationForResolvedRange(input: {
     annotation?: Annotation;
     locator: Locator;
     range: TextRangeSelector;
@@ -1878,14 +1874,14 @@ export class EpubReader {
     return this.runtimeController.createAnnotationForResolvedRange(input);
   }
 
-  private resolveTextRangeQuote(
+  protected resolveTextRangeQuote(
     section: SectionDocument,
     textRange: TextRangeSelector
   ): string | undefined {
     return this.runtimeController.resolveTextRangeQuote(section, textRange);
   }
 
-  private resolveAnnotationViewportRects(
+  protected resolveAnnotationViewportRects(
     annotation: Annotation,
     locator: Locator
   ): VisibleDrawBounds {
@@ -1895,7 +1891,7 @@ export class EpubReader {
     );
   }
 
-  private resolveCanvasTextRangeViewportRects(
+  protected resolveCanvasTextRangeViewportRects(
     sectionId: string,
     textRange: TextRangeSelector
   ): VisibleDrawBounds {
@@ -1905,7 +1901,7 @@ export class EpubReader {
     );
   }
 
-  private resolveAnnotationSelectionAtPoint(
+  protected resolveAnnotationSelectionAtPoint(
     point: Point
   ): ReaderTextSelectionSnapshot | null {
     return this.runtimeController.resolveAnnotationSelectionAtPoint(point);
@@ -1925,7 +1921,7 @@ export class EpubReader {
     );
   }
 
-  private emitAnnotationActivationPayload(
+  protected emitAnnotationActivationPayload(
     activation: ResolvedAnnotationActivation,
     point: Point
   ): boolean {
@@ -1935,21 +1931,21 @@ export class EpubReader {
     );
   }
 
-  private getAnnotationActivationFallbackPoint(
+  protected getAnnotationActivationFallbackPoint(
     rects: VisibleDrawBounds
   ): Point {
     return this.runtimeController.getAnnotationActivationFallbackPoint(rects);
   }
 
-  private toAnnotationViewportPoint(point: Point): Point {
+  protected toAnnotationViewportPoint(point: Point): Point {
     return this.runtimeController.toAnnotationViewportPoint(point);
   }
 
-  private syncTextSelectionState(): void {
+  protected syncTextSelectionState(): void {
     return this.runtimeController.syncTextSelectionState();
   }
 
-  private updateTextSelectionSnapshot(
+  protected updateTextSelectionSnapshot(
     selection: ReaderTextSelectionSnapshot | null
   ): void {
     return this.runtimeController.updateTextSelectionSnapshot(selection);

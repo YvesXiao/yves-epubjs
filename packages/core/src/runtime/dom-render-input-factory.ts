@@ -344,7 +344,7 @@ function resolveDomCssUrlValues(
 ): string {
   return value.replace(
     /url\(\s*(['"]?)([^)"']+)\1\s*\)/gi,
-    (match, quote: string, path: string) => {
+    (_match, quote: string, path: string) => {
       const resolved = resolveEmbeddedResourceUrl(path, {
         allowExternalEmbeddedResources: allowExternalEmbeddedResources === true,
         resolveInternalResourceUrl: (resourcePath) =>

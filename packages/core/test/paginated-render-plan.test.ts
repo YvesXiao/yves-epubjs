@@ -14,7 +14,7 @@ import {
 describe("paginated render plan", () => {
   it("splits pretext content into multiple pages and updates section height", () => {
     const section = createSection("section-1", "OPS/one.xhtml")
-    const layout = createLayout(section, [
+    const layout = createLayout([
       {
         type: "pretext",
         id: "text-1",
@@ -142,7 +142,7 @@ describe("paginated render plan", () => {
       ],
       estimatedHeight: 150
     } satisfies LayoutPretextBlock
-    const layout = createLayout(section, [block])
+    const layout = createLayout([block])
 
     const plan = buildPaginatedPages({
       sections: [section],
@@ -294,7 +294,7 @@ describe("paginated render plan", () => {
       ],
       estimatedHeight: 90
     } satisfies LayoutPretextBlock
-    const layout = createLayout(section, [introBlock, imageBlock])
+    const layout = createLayout([introBlock, imageBlock])
 
     const plan = buildPaginatedPages({
       sections: [section],
@@ -333,10 +333,7 @@ function createSection(id: string, href: string): SectionDocument {
   }
 }
 
-function createLayout(
-  section: SectionDocument,
-  blocks: LayoutResult["blocks"]
-): LayoutResult {
+function createLayout(blocks: LayoutResult["blocks"]): LayoutResult {
   return {
     mode: "paginated",
     width: 640,
