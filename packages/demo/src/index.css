@@ -278,10 +278,21 @@ select {
   isolation: isolate;
 }
 
+.reading-drawer[data-panel="search"] .reading-drawer-body {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+
 .drawer-search-stack,
 .drawer-settings-stack {
   display: grid;
   gap: 14px;
+}
+
+.drawer-search-stack {
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .reading-drawer .controls-settings-row {
@@ -470,10 +481,13 @@ select {
 .hero-search-results {
   margin-top: 0;
   max-width: none;
+  min-height: 0;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: rgba(247, 249, 251, 0.9);
   padding: 10px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .eyebrow {
@@ -494,7 +508,8 @@ select {
 }
 
 .hero-search-results-body {
-  max-height: 152px;
+  min-height: 0;
+  max-height: none;
   overflow: auto;
 }
 

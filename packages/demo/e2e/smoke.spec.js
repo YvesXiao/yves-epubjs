@@ -59,6 +59,49 @@ test("opens an epub and navigates with toc and search", async ({ page }) => {
   await expect(page.locator(".reader-root")).toContainText("Chapter Two")
 })
 
+test("search results panel fills the drawer body", async ({ page }) => {
+  await page.goto("/")
+  await openSmokeBook(page)
+
+  await openDrawer(page, "Find")
+  await page.getByRole("searchbox").fill("beta-keyword")
+  await page.getByRole("button", { name: "Search" }).click()
+  await expect(page.locator(".search-card").first()).toBeVisible()
+
+  const layout = await page.evaluate(() => {
+    const drawerBody = document.querySelector(".reading-drawer-body")
+    const panel = document.querySelector(".hero-search-results")
+    const resultsBody = document.querySelector(".hero-search-results-body")
+
+    if (!(drawerBody instanceof HTMLElement)) {
+      throw new Error("Missing drawer body")
+    }
+    if (!(panel instanceof HTMLElement)) {
+      throw new Error("Missing search results panel")
+    }
+    if (!(resultsBody instanceof HTMLElement)) {
+      throw new Error("Missing search results body")
+    }
+
+    const drawerBodyRect = drawerBody.getBoundingClientRect()
+    const panelRect = panel.getBoundingClientRect()
+    const resultsBodyRect = resultsBody.getBoundingClientRect()
+    const drawerBodyStyle = window.getComputedStyle(drawerBody)
+    const paddingBottom = Number.parseFloat(drawerBodyStyle.paddingBottom)
+
+    return {
+      expectedPanelBottom: drawerBodyRect.bottom - paddingBottom,
+      panelBottom: panelRect.bottom,
+      panelHeight: panelRect.height,
+      resultsBodyHeight: resultsBodyRect.height
+    }
+  })
+
+  expect(Math.abs(layout.panelBottom - layout.expectedPanelBottom)).toBeLessThanOrEqual(2)
+  expect(layout.panelHeight).toBeGreaterThan(320)
+  expect(layout.resultsBodyHeight).toBeGreaterThan(260)
+})
+
 test("supports paginated next and previous navigation", async ({ page }) => {
   await page.goto("/")
   await openSmokeBook(page)
