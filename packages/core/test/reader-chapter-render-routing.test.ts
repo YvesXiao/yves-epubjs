@@ -82,41 +82,139 @@ describe("EpubReader chapter render routing", () => {
     (
       reader as unknown as {
         book: Book;
-        chapterRenderInputs: ReturnType<typeof createSharedChapterRenderInput>[];
+        chapterRenderInputs: ReturnType<
+          typeof createSharedChapterRenderInput
+        >[];
       }
     ).book = book;
     (
       reader as unknown as {
         book: Book;
-        chapterRenderInputs: ReturnType<typeof createSharedChapterRenderInput>[];
+        chapterRenderInputs: ReturnType<
+          typeof createSharedChapterRenderInput
+        >[];
       }
     ).chapterRenderInputs = [simpleInput, complexInput];
 
     await reader.render();
 
-    expect(onSectionRendered).toHaveBeenCalledWith(expect.objectContaining({
-      spineIndex: 0,
-      sectionId: "section-1",
-      sectionHref: "OPS/simple.xhtml",
-      backend: "canvas",
-      mode: "scroll",
-      isCurrent: true
-    }));
+    expect(onSectionRendered).toHaveBeenCalledWith(
+      expect.objectContaining({
+        spineIndex: 0,
+        sectionId: "section-1",
+        sectionHref: "OPS/simple.xhtml",
+        backend: "canvas",
+        mode: "scroll",
+        isCurrent: true
+      })
+    );
 
     await reader.goToLocation({
       spineIndex: 1,
       progressInSection: 0
     });
 
-    expect(onSectionRendered).toHaveBeenCalledWith(expect.objectContaining({
-      spineIndex: 1,
-      sectionId: "section-2",
-      sectionHref: "OPS/complex.xhtml",
-      backend: "dom",
-      mode: "scroll",
-      isCurrent: true,
-      contentElement: expect.any(HTMLElement)
-    }));
+    expect(onSectionRendered).toHaveBeenCalledWith(
+      expect.objectContaining({
+        spineIndex: 1,
+        sectionId: "section-2",
+        sectionHref: "OPS/complex.xhtml",
+        backend: "dom",
+        mode: "scroll",
+        isCurrent: true,
+        contentElement: expect.any(HTMLElement)
+      })
+    );
+  });
+
+  it("sanitizes active content when a high-risk chapter routes to the dom backend", async () => {
+    const container = document.createElement("div");
+    Object.defineProperty(container, "clientWidth", {
+      configurable: true,
+      value: 320
+    });
+    Object.defineProperty(container, "clientHeight", {
+      configurable: true,
+      value: 480
+    });
+    document.body.appendChild(container);
+
+    const sharedInput = createSharedChapterRenderInput({
+      href: "OPS/unsafe-dom.xhtml",
+      content: `<?xml version="1.0" encoding="utf-8"?>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+          <body>
+            <section onclick="alert(1)">
+              <h1>Unsafe DOM</h1>
+              <p><a href="javascript:alert(1)">Blocked link</a></p>
+              <table><tr><td>DOM route</td></tr></table>
+              <iframe src="https://cdn.example.com/frame.html"></iframe>
+              <object data="https://cdn.example.com/object.swf"></object>
+              <embed src="https://cdn.example.com/plugin.swf" />
+              <form action="/submit"><input name="q" value="leak" /></form>
+              <svg viewBox="0 0 10 10">
+                <foreignObject><iframe src="https://bad.example"></iframe></foreignObject>
+                <path d="M0 0 L10 10" />
+              </svg>
+            </section>
+          </body>
+        </html>`
+    });
+    const section: SectionDocument = {
+      ...toCanvasChapterRenderInput(sharedInput).section,
+      id: "section-unsafe"
+    };
+    const book: Book = {
+      metadata: { title: "Sanitized DOM" },
+      manifest: [],
+      spine: [{ idref: "item-unsafe", href: section.href, linear: true }],
+      toc: [],
+      sections: [section]
+    };
+
+    const reader = new EpubReader({ container, mode: "scroll" });
+    (
+      reader as unknown as {
+        book: Book;
+        chapterRenderInputs: ReturnType<
+          typeof createSharedChapterRenderInput
+        >[];
+      }
+    ).book = book;
+    (
+      reader as unknown as {
+        book: Book;
+        chapterRenderInputs: ReturnType<
+          typeof createSharedChapterRenderInput
+        >[];
+      }
+    ).chapterRenderInputs = [sharedInput];
+
+    await reader.render();
+
+    expect(reader.getRenderMetrics().backend).toBe("dom");
+    expect(reader.getRenderDiagnostics()).toEqual(
+      expect.objectContaining({
+        mode: "dom",
+        sectionId: "section-unsafe"
+      })
+    );
+    expect(container.dataset.renderMode).toBe("dom");
+    expect(container.textContent).toContain("Unsafe DOM");
+    expect(container.textContent).toContain("DOM route");
+    expect(container.querySelector(".epub-dom-section")).toBeTruthy();
+    expect(
+      container.querySelector("iframe, object, embed, form, input")
+    ).toBeFalsy();
+    expect(container.querySelector("script, foreignObject")).toBeFalsy();
+    expect(
+      container.querySelector("[onclick], [onload], [srcdoc]")
+    ).toBeFalsy();
+    expect(
+      container.querySelector(".epub-dom-section a")?.getAttribute("href")
+    ).toBeNull();
+    expect(container.querySelector(".epub-dom-section svg path")).toBeTruthy();
+    expect(container.innerHTML).not.toContain("javascript:");
   });
 
   it("keeps stylesheet-backed simple chapters on the canvas path", async () => {
@@ -135,7 +233,9 @@ describe("EpubReader chapter render routing", () => {
       href: "OPS/styles/chapter.css",
       mediaType: "text/css",
       text: ".badge { float: right; height: 1.1em; margin-left: 0.1em; }",
-      ast: parseCssStyleSheet(".badge { float: right; height: 1.1em; margin-left: 0.1em; }")
+      ast: parseCssStyleSheet(
+        ".badge { float: right; height: 1.1em; margin-left: 0.1em; }"
+      )
     };
     const sharedInput = createSharedChapterRenderInput({
       href: "OPS/simple.xhtml",
@@ -166,33 +266,39 @@ describe("EpubReader chapter render routing", () => {
     (
       reader as unknown as {
         book: Book;
-        chapterRenderInputs: ReturnType<typeof createSharedChapterRenderInput>[];
+        chapterRenderInputs: ReturnType<
+          typeof createSharedChapterRenderInput
+        >[];
       }
     ).book = book;
     (
       reader as unknown as {
         book: Book;
-        chapterRenderInputs: ReturnType<typeof createSharedChapterRenderInput>[];
+        chapterRenderInputs: ReturnType<
+          typeof createSharedChapterRenderInput
+        >[];
       }
     ).chapterRenderInputs = [sharedInput];
 
     await reader.render();
 
     expect(reader.getRenderMetrics().backend).toBe("canvas");
-    expect(reader.getRenderDiagnostics()).toEqual(expect.objectContaining({
-      mode: "canvas",
-      score: 15,
-      reasons: ["complex-style:float"],
-      layoutAuthority: "project-layout",
-      geometrySource: "interaction-map",
-      interactionModel: "canvas-hit-test",
-      flowModel: "scroll-slices",
-      alignmentTarget: "dom-baseline",
-      publisherStyles: "enabled",
-      styleProfile: "default-reflowable",
-      sectionId: "section-1",
-      sectionHref: "OPS/simple.xhtml"
-    }));
+    expect(reader.getRenderDiagnostics()).toEqual(
+      expect.objectContaining({
+        mode: "canvas",
+        score: 15,
+        reasons: ["complex-style:float"],
+        layoutAuthority: "project-layout",
+        geometrySource: "interaction-map",
+        interactionModel: "canvas-hit-test",
+        flowModel: "scroll-slices",
+        alignmentTarget: "dom-baseline",
+        publisherStyles: "enabled",
+        styleProfile: "default-reflowable",
+        sectionId: "section-1",
+        sectionHref: "OPS/simple.xhtml"
+      })
+    );
     expect(container.dataset.renderMode).toBe("canvas");
     expect(container.querySelector("canvas.epub-canvas-section")).toBeTruthy();
   });
@@ -241,33 +347,39 @@ describe("EpubReader chapter render routing", () => {
     (
       reader as unknown as {
         book: Book;
-        chapterRenderInputs: ReturnType<typeof createSharedChapterRenderInput>[];
+        chapterRenderInputs: ReturnType<
+          typeof createSharedChapterRenderInput
+        >[];
       }
     ).book = book;
     (
       reader as unknown as {
         book: Book;
-        chapterRenderInputs: ReturnType<typeof createSharedChapterRenderInput>[];
+        chapterRenderInputs: ReturnType<
+          typeof createSharedChapterRenderInput
+        >[];
       }
     ).chapterRenderInputs = [simpleInput, complexInput];
 
     await reader.render();
 
     expect(reader.getRenderMetrics().backend).toBe("canvas");
-    expect(reader.getRenderDiagnostics()).toEqual(expect.objectContaining({
-      mode: "canvas",
-      score: 0,
-      reasons: [],
-      layoutAuthority: "project-layout",
-      geometrySource: "interaction-map",
-      interactionModel: "canvas-hit-test",
-      flowModel: "scroll-slices",
-      alignmentTarget: "dom-baseline",
-      publisherStyles: "enabled",
-      styleProfile: "default-reflowable",
-      sectionId: "section-1",
-      sectionHref: "OPS/simple.xhtml"
-    }));
+    expect(reader.getRenderDiagnostics()).toEqual(
+      expect.objectContaining({
+        mode: "canvas",
+        score: 0,
+        reasons: [],
+        layoutAuthority: "project-layout",
+        geometrySource: "interaction-map",
+        interactionModel: "canvas-hit-test",
+        flowModel: "scroll-slices",
+        alignmentTarget: "dom-baseline",
+        publisherStyles: "enabled",
+        styleProfile: "default-reflowable",
+        sectionId: "section-1",
+        sectionHref: "OPS/simple.xhtml"
+      })
+    );
     expect(reader.getVisibleSectionDiagnostics()).toEqual([
       expect.objectContaining({
         mode: "canvas",
@@ -301,7 +413,9 @@ describe("EpubReader chapter render routing", () => {
       })
     ]);
     expect(container.querySelector("canvas.epub-canvas-section")).toBeTruthy();
-    expect(container.querySelector("article.epub-section-dom .epub-dom-section")).toBeTruthy();
+    expect(
+      container.querySelector("article.epub-section-dom .epub-dom-section")
+    ).toBeTruthy();
     expect(container.dataset.renderMode).toBe("canvas");
 
     await reader.goToLocation({
@@ -310,20 +424,22 @@ describe("EpubReader chapter render routing", () => {
     });
 
     expect(reader.getRenderMetrics().backend).toBe("dom");
-    expect(reader.getRenderDiagnostics()).toEqual(expect.objectContaining({
-      mode: "dom",
-      score: 20,
-      reasons: ["high-risk-tag:table"],
-      layoutAuthority: "browser-layout",
-      geometrySource: "dom-geometry",
-      interactionModel: "dom-events",
-      flowModel: "dom-flow",
-      alignmentTarget: "dom-baseline",
-      publisherStyles: "enabled",
-      styleProfile: "default-reflowable",
-      sectionId: "section-2",
-      sectionHref: "OPS/complex.xhtml"
-    }));
+    expect(reader.getRenderDiagnostics()).toEqual(
+      expect.objectContaining({
+        mode: "dom",
+        score: 20,
+        reasons: ["high-risk-tag:table"],
+        layoutAuthority: "browser-layout",
+        geometrySource: "dom-geometry",
+        interactionModel: "dom-events",
+        flowModel: "dom-flow",
+        alignmentTarget: "dom-baseline",
+        publisherStyles: "enabled",
+        styleProfile: "default-reflowable",
+        sectionId: "section-2",
+        sectionHref: "OPS/complex.xhtml"
+      })
+    );
     expect(reader.getVisibleSectionDiagnostics()).toEqual([
       expect.objectContaining({
         mode: "canvas",
@@ -357,7 +473,11 @@ describe("EpubReader chapter render routing", () => {
       })
     ]);
     expect(container.querySelector(".epub-dom-section")).toBeTruthy();
-    expect(container.querySelector("article.epub-section-canvas canvas.epub-canvas-section")).toBeTruthy();
+    expect(
+      container.querySelector(
+        "article.epub-section-canvas canvas.epub-canvas-section"
+      )
+    ).toBeTruthy();
     expect(container.dataset.renderMode).toBe("dom");
 
     const domLink = container.querySelector(".epub-dom-section a");
@@ -378,7 +498,9 @@ describe("EpubReader chapter render routing", () => {
       progressInSection: 0
     });
 
-    const domSection = container.querySelector(".epub-dom-section") as HTMLElement | null;
+    const domSection = container.querySelector(
+      ".epub-dom-section"
+    ) as HTMLElement | null;
     expect(domSection).toBeTruthy();
     Object.defineProperty(domSection!, "scrollHeight", {
       configurable: true,
@@ -430,7 +552,9 @@ describe("EpubReader chapter render routing", () => {
       })
     );
 
-    expect(reader.getCurrentLocation()?.progressInSection).toBe(relocated?.progressInSection);
+    expect(reader.getCurrentLocation()?.progressInSection).toBe(
+      relocated?.progressInSection
+    );
 
     Object.defineProperty(window, "getSelection", {
       configurable: true,
@@ -504,33 +628,39 @@ describe("EpubReader chapter render routing", () => {
     (
       reader as unknown as {
         book: Book;
-        chapterRenderInputs: ReturnType<typeof createSharedChapterRenderInput>[];
+        chapterRenderInputs: ReturnType<
+          typeof createSharedChapterRenderInput
+        >[];
       }
     ).book = book;
     (
       reader as unknown as {
         book: Book;
-        chapterRenderInputs: ReturnType<typeof createSharedChapterRenderInput>[];
+        chapterRenderInputs: ReturnType<
+          typeof createSharedChapterRenderInput
+        >[];
       }
     ).chapterRenderInputs = [sharedInput];
 
     await reader.render();
 
     expect(reader.getRenderMetrics().backend).toBe("dom");
-    expect(reader.getRenderDiagnostics()).toEqual(expect.objectContaining({
-      mode: "dom",
-      score: 30,
-      reasons: ["complex-style:float", "complex-style:text-indent"],
-      layoutAuthority: "browser-layout",
-      geometrySource: "dom-geometry",
-      interactionModel: "dom-events",
-      flowModel: "dom-flow",
-      alignmentTarget: "dom-baseline",
-      publisherStyles: "enabled",
-      styleProfile: "default-reflowable",
-      sectionId: "section-1",
-      sectionHref: "OPS/publisher.xhtml"
-    }));
+    expect(reader.getRenderDiagnostics()).toEqual(
+      expect.objectContaining({
+        mode: "dom",
+        score: 30,
+        reasons: ["complex-style:float", "complex-style:text-indent"],
+        layoutAuthority: "browser-layout",
+        geometrySource: "dom-geometry",
+        interactionModel: "dom-events",
+        flowModel: "dom-flow",
+        alignmentTarget: "dom-baseline",
+        publisherStyles: "enabled",
+        styleProfile: "default-reflowable",
+        sectionId: "section-1",
+        sectionHref: "OPS/publisher.xhtml"
+      })
+    );
     expect(container.dataset.renderMode).toBe("dom");
     expect(container.querySelector(".epub-dom-section")).toBeTruthy();
   });

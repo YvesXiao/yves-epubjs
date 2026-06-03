@@ -2,12 +2,16 @@ import { expect, test } from "@playwright/test"
 import fs from "node:fs"
 import path from "node:path"
 
-const DEBUG_BOOK_PATH =
-  "C:\\Users\\cbs\\Downloads\\epubTest\\剑指Offer_名企面试官精讲典型编程题_--_何海涛_--_2011_--_电子工业出版社_--_214aa1542d6778be54e208760805863d_--_Anna’s_Archive.epub"
+const DEBUG_BOOK_PATH = process.env.DEBUG_BOOK_PATH
 const DEBUG_OUTPUT_DIR = path.resolve(process.cwd(), "artifacts")
 const DEBUG_SCREENSHOT_PATH = path.join(DEBUG_OUTPUT_DIR, "canvas-selection-debug.png")
 const DEBUG_METRICS_PATH = path.join(DEBUG_OUTPUT_DIR, "canvas-selection-debug.json")
-const DEBUG_QUERY = "二维数组中没有查找的数字"
+const DEBUG_QUERY = process.env.DEBUG_QUERY ?? "二维数组中没有查找的数字"
+
+test.skip(
+  !DEBUG_BOOK_PATH,
+  "DEBUG_BOOK_PATH is required for canvas selection debug capture"
+)
 
 test("captures canvas selection alignment on the debug epub", async ({ page }) => {
   fs.mkdirSync(DEBUG_OUTPUT_DIR, { recursive: true })

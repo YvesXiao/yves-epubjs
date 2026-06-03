@@ -58,6 +58,34 @@ describe("resource containers", () => {
     );
   });
 
+  it("rejects ZIP archives that exceed configured resource limits", async () => {
+    const zipBytes = zipSync({
+      "OPS/a.txt": Buffer.from("aaa"),
+      "OPS/b.txt": Buffer.from("bbb")
+    });
+
+    await expect(
+      ZipResourceContainer.fromZip(zipBytes, {
+        maxCompressedBytes: 1
+      })
+    ).rejects.toThrowError("compressed size exceeds limit");
+    await expect(
+      ZipResourceContainer.fromZip(zipBytes, {
+        maxEntryCount: 1
+      })
+    ).rejects.toThrowError("entry count exceeds limit");
+    await expect(
+      ZipResourceContainer.fromZip(zipBytes, {
+        maxEntryBytes: 2
+      })
+    ).rejects.toThrowError("entry exceeds uncompressed size limit");
+    await expect(
+      ZipResourceContainer.fromZip(zipBytes, {
+        maxTotalUncompressedBytes: 5
+      })
+    ).rejects.toThrowError("total uncompressed size exceeds limit");
+  });
+
   it("throws a clear error for invalid ZIP data", async () => {
     await expect(
       ZipResourceContainer.fromZip(new Uint8Array([1, 2, 3, 4]))

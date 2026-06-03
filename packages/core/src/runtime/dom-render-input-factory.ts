@@ -9,7 +9,7 @@ import type {
 } from "../model/types";
 import type { DomChapterRenderInput } from "../renderer/dom-chapter-renderer";
 import type { SharedChapterRenderInput } from "./chapter-render-input";
-import { sanitizeEmbeddedResourceUrl } from "./external-boundary";
+import { resolveEmbeddedResourceUrl } from "./external-boundary";
 import { stripPublisherStylesFromPreprocessedNodes } from "./publisher-styles";
 
 type DomRenderInputFactoryOptions = {
@@ -154,7 +154,10 @@ export function createDomChapterRenderInput(
 
   return {
     ...renderInput,
-    presentationImageSrc: options.resolveDomResourceUrl(presentationImage.src),
+    presentationImageSrc: resolveEmbeddedResourceUrl(presentationImage.src, {
+      allowExternalEmbeddedResources,
+      resolveInternalResourceUrl: options.resolveDomResourceUrl
+    }),
     ...(presentationImage.alt
       ? { presentationImageAlt: presentationImage.alt }
       : {})
@@ -293,21 +296,12 @@ function resolveDomAttributeValue(input: {
     return input.value;
   }
 
-  const sanitizedResourceValue = sanitizeEmbeddedResourceUrl(input.value, {
+  return resolveEmbeddedResourceUrl(input.value, {
     allowExternalEmbeddedResources:
-      input.allowExternalEmbeddedResources === true
+      input.allowExternalEmbeddedResources === true,
+    resolveInternalResourceUrl: (path) =>
+      input.resolveDomResourceUrl(resolveResourcePath(input.sectionHref, path))
   });
-  if (sanitizedResourceValue !== input.value.trim()) {
-    return sanitizedResourceValue;
-  }
-
-  if (isExternalResourceValue(input.value)) {
-    return sanitizedResourceValue;
-  }
-
-  return input.resolveDomResourceUrl(
-    resolveResourcePath(input.sectionHref, input.value)
-  );
 }
 
 function shouldResolveDomResourceAttribute(
@@ -351,30 +345,14 @@ function resolveDomCssUrlValues(
   return value.replace(
     /url\(\s*(['"]?)([^)"']+)\1\s*\)/gi,
     (match, quote: string, path: string) => {
-      if (!path || isExternalResourceValue(path)) {
-        const sanitized = sanitizeEmbeddedResourceUrl(path, {
-          allowExternalEmbeddedResources:
-            allowExternalEmbeddedResources === true
-        });
-        const wrappedQuote = quote || '"';
-        return `url(${wrappedQuote}${sanitized}${wrappedQuote})`;
-      }
-
-      const resolved = resolveDomResourceUrl(
-        resolveResourcePath(sectionHref, path)
-      );
+      const resolved = resolveEmbeddedResourceUrl(path, {
+        allowExternalEmbeddedResources: allowExternalEmbeddedResources === true,
+        resolveInternalResourceUrl: (resourcePath) =>
+          resolveDomResourceUrl(resolveResourcePath(sectionHref, resourcePath))
+      });
       const wrappedQuote = quote || '"';
       return `url(${wrappedQuote}${resolved}${wrappedQuote})`;
     }
-  );
-}
-
-function isExternalResourceValue(value: string): boolean {
-  return (
-    value.startsWith("data:") ||
-    value.startsWith("blob:") ||
-    value.startsWith("//") ||
-    /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(value)
   );
 }
 

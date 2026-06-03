@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "code-review": {
+      "source": "mrgoonie/claudekit-skills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/code-review/SKILL.md",
+      "computedHash": "afd3255c87492a92dc86a0165108845ce546b8250650d677d82f0aa6463c0c5c"
+    }
+  }
+}

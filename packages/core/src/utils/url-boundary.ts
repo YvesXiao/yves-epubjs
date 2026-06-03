@@ -18,6 +18,11 @@ export type NavigationHrefResolution =
       scheme: string;
     };
 
+export type EmbeddedResourceUrlOptions = {
+  allowExternalEmbeddedResources?: boolean;
+  resolveInternalResourceUrl?: (path: string) => string;
+};
+
 export function classifyNavigationHref(href: string): NavigationHrefResolution {
   const normalized = href.trim();
   if (!normalized) {
@@ -86,6 +91,33 @@ export function sanitizeEmbeddedResourceUrl(
       SAFE_EXTERNAL_EMBEDDED_RESOURCE_SCHEMES.has(scheme))
     ? normalized
     : SANITIZED_EMBEDDED_RESOURCE_URL;
+}
+
+export function resolveEmbeddedResourceUrl(
+  value: string,
+  options: EmbeddedResourceUrlOptions = {}
+): string {
+  const sanitized = sanitizeEmbeddedResourceUrl(value, {
+    allowExternalEmbeddedResources:
+      options.allowExternalEmbeddedResources === true
+  });
+
+  if (!sanitized || sanitized !== value.trim()) {
+    return sanitized;
+  }
+
+  if (isExternalEmbeddedResourceUrl(sanitized)) {
+    return sanitized;
+  }
+
+  return options.resolveInternalResourceUrl
+    ? options.resolveInternalResourceUrl(sanitized)
+    : sanitized;
+}
+
+export function isExternalEmbeddedResourceUrl(value: string): boolean {
+  const normalized = value.trim();
+  return Boolean(normalized.startsWith("//") || extractUrlScheme(normalized));
 }
 
 function extractUrlScheme(value: string): string | null {

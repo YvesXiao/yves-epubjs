@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DomChapterRenderer,
   buildDomChapterNormalizationCss,
+  preprocessChapterDocument,
   serializeDomPageViewportAttributes
 } from "../src";
 
@@ -104,6 +105,63 @@ describe("DomChapterRenderer", () => {
     renderer.clear(container);
 
     expect(container.querySelector("style[data-epub-dom-source]")).toBeFalsy();
+  });
+
+  it("renders sanitized preprocessed chapter markup without active content", () => {
+    const container = document.createElement("div");
+    const renderer = new DomChapterRenderer();
+    const chapter = preprocessChapterDocument({
+      href: "OPS/unsafe.xhtml",
+      content: `<?xml version="1.0" encoding="utf-8"?>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+          <body class="chapter">
+            <section onclick="alert(1)">
+              <p>Safe text <a href="javascript:alert(1)">link</a></p>
+              <iframe src="https://cdn.example.com/frame.html"></iframe>
+              <object data="https://cdn.example.com/movie.swf"></object>
+              <embed src="https://cdn.example.com/plugin.swf" />
+              <form action="/submit"><input name="q" value="leak" /></form>
+              <svg viewBox="0 0 20 20">
+                <script>alert(1)</script>
+                <foreignObject><iframe src="https://bad.example"></iframe></foreignObject>
+                <path d="M0 0 L20 20" />
+              </svg>
+            </section>
+          </body>
+        </html>`
+    });
+
+    renderer.render(container, {
+      sectionId: "section-1",
+      sectionHref: chapter.href,
+      ...(chapter.bodyAttributes
+        ? { bodyAttributes: chapter.bodyAttributes }
+        : {}),
+      theme: {
+        color: "#1f2328",
+        background: "#fffdf7"
+      },
+      typography: {
+        fontSize: 18,
+        lineHeight: 1.6,
+        paragraphSpacing: 12
+      },
+      fontFamily: '"Iowan Old Style", serif',
+      nodes: chapter.nodes
+    });
+
+    expect(container.querySelector(".epub-dom-section")).toBeTruthy();
+    expect(container.textContent).toContain("Safe text link");
+    expect(
+      container.querySelector("iframe, object, embed, form, input")
+    ).toBeFalsy();
+    expect(container.querySelector("script, foreignObject")).toBeFalsy();
+    expect(
+      container.querySelector("[onclick], [onload], [srcdoc]")
+    ).toBeFalsy();
+    expect(container.querySelector("a")?.getAttribute("href")).toBeNull();
+    expect(container.querySelector("svg path")).toBeTruthy();
+    expect(container.innerHTML).not.toContain("javascript:");
   });
 
   it("maps html and body root attributes onto the rendered dom section", () => {
@@ -582,9 +640,7 @@ describe("DomChapterRenderer", () => {
       ]
     });
 
-    expect(markup).toContain(
-      'class="image-single epub-dom-media-wrapper"'
-    );
+    expect(markup).toContain('class="image-single epub-dom-media-wrapper"');
     expect(markup).toContain("图6-2 央行债券持有规模");
   });
 

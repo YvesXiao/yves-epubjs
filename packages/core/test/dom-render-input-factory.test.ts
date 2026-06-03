@@ -165,6 +165,87 @@ describe("dom render input factory", () => {
     expect(renderInput.presentationImageAlt).toBe("Factory Book");
   });
 
+  it("sanitizes remote metadata cover images by default", () => {
+    const section: SectionDocument = {
+      ...createSection(
+        `<?xml version="1.0"?>
+        <html><body><p>Cover</p></body></html>`,
+        "cover-section",
+        "OPS/cover.xhtml"
+      ),
+      presentationRole: "cover"
+    };
+    const input = createSharedChapterRenderInput({
+      href: section.href,
+      content: `<?xml version="1.0"?><html><body><p>Cover</p></body></html>`
+    });
+    const book: Book = {
+      metadata: {
+        title: "Remote Cover Book",
+        coverImageHref: "https://cdn.example.com/cover.jpg"
+      },
+      manifest: [],
+      spine: [],
+      toc: [],
+      sections: [section]
+    };
+
+    const renderInput = createDomChapterRenderInput({
+      book,
+      section,
+      input,
+      theme: THEME,
+      typography: TYPOGRAPHY,
+      fontFamily: "serif",
+      publisherStyles: "enabled",
+      resolveDomResourceUrl: (path) => `asset:${path}`
+    });
+
+    expect(renderInput.presentationImageSrc).toBe("data:,");
+  });
+
+  it("allows remote metadata cover images when explicitly enabled", () => {
+    const section: SectionDocument = {
+      ...createSection(
+        `<?xml version="1.0"?>
+        <html><body><p>Cover</p></body></html>`,
+        "cover-section",
+        "OPS/cover.xhtml"
+      ),
+      presentationRole: "cover"
+    };
+    const input = createSharedChapterRenderInput({
+      href: section.href,
+      content: `<?xml version="1.0"?><html><body><p>Cover</p></body></html>`
+    });
+    const book: Book = {
+      metadata: {
+        title: "Remote Cover Book",
+        coverImageHref: "https://cdn.example.com/cover.jpg"
+      },
+      manifest: [],
+      spine: [],
+      toc: [],
+      sections: [section]
+    };
+
+    const renderInput = createDomChapterRenderInput({
+      book,
+      section,
+      input,
+      theme: THEME,
+      typography: TYPOGRAPHY,
+      fontFamily: "serif",
+      publisherStyles: "enabled",
+      allowExternalEmbeddedResources: true,
+      resolveDomResourceUrl: (path) => `asset:${path}`
+    });
+
+    expect(renderInput.presentationImageSrc).toBe(
+      "https://cdn.example.com/cover.jpg"
+    );
+  });
+
   it("uses a single inline image for image-page sections", () => {
     const content = `<?xml version="1.0"?>
       <html>
