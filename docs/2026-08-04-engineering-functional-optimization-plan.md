@@ -112,7 +112,7 @@ Reader 内部增加单调递增 `publicationVersion`：
 
 ## 7. 完成标准
 
-1. `task.md` 中实施任务全部完成或以证据标明“评估后保留”。
+1. `2026-08-04-engineering-functional-optimization-tasks.md` 中实施任务全部完成或以证据标明“评估后保留”。
 2. P0 新测试经历 red 和 green。
 3. `pnpm ci:check` exit 0。
 4. `pnpm test:e2e` 本地 fixture 全部通过。

@@ -1,13 +1,13 @@
 # Engineering and Functional Optimization Tasks
 
-执行依据：`docs/2026-08-04-engineering-functional-optimization-review.md` 与 `plan.md`。
+执行依据：`2026-08-04-engineering-functional-optimization-review.md` 与 `2026-08-04-engineering-functional-optimization-plan.md`。
 
 状态说明：`[ ]` 待执行，`[~]` 执行中，`[x]` 已完成，`[!]` 评估后保留现状并附证据。
 
 ## Task 1：建立计划与基线
 
 - [x] 创建分支 `chore/engineering-functional-optimization`。
-- [x] 生成 `plan.md` 和 `task.md`。
+- [x] 生成 `2026-08-04-engineering-functional-optimization-plan.md` 和 `2026-08-04-engineering-functional-optimization-tasks.md`。
 - [x] 运行 `pnpm ci:check`：96 个测试文件、464 个测试通过；core ESM 671.16 KB，CJS 679.69 KB，DTS 114.40 KB；demo JS 933.25 KB，gzip 270.26 KB。
 - [x] 运行 `pnpm test:e2e`：本地 fixture 6 个通过；3 个依赖外部书源的用例按环境条件跳过。
 - [x] 计划与审查文档纳入分支交付提交。
