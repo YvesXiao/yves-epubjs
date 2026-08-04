@@ -81,19 +81,21 @@ describe("dom viewport mapper", () => {
               }
             }
           }
-          return originalGetBoundingClientRect?.value?.call(this) ?? {
-            x: 0,
-            y: 0,
-            top: 0,
-            left: 0,
-            bottom: 0,
-            right: 0,
-            width: 0,
-            height: 0,
-            toJSON() {
-              return this
+          return (
+            originalGetBoundingClientRect?.value?.call(this) ?? {
+              x: 0,
+              y: 0,
+              top: 0,
+              left: 0,
+              bottom: 0,
+              right: 0,
+              width: 0,
+              height: 0,
+              toJSON() {
+                return this
+              }
             }
-          }
+          )
         }
       })
 
@@ -269,19 +271,21 @@ describe("dom viewport mapper", () => {
               }
             }
           }
-          return originalGetBoundingClientRect?.value?.call(this) ?? {
-            x: 0,
-            y: 0,
-            top: 0,
-            left: 0,
-            bottom: 0,
-            right: 0,
-            width: 0,
-            height: 0,
-            toJSON() {
-              return this
+          return (
+            originalGetBoundingClientRect?.value?.call(this) ?? {
+              x: 0,
+              y: 0,
+              top: 0,
+              left: 0,
+              bottom: 0,
+              right: 0,
+              width: 0,
+              height: 0,
+              toJSON() {
+                return this
+              }
             }
-          }
+          )
         }
       })
 
@@ -304,10 +308,18 @@ describe("dom viewport mapper", () => {
       })
     } finally {
       if (originalOffsetHeight) {
-        Object.defineProperty(HTMLElement.prototype, "offsetHeight", originalOffsetHeight)
+        Object.defineProperty(
+          HTMLElement.prototype,
+          "offsetHeight",
+          originalOffsetHeight
+        )
       }
       if (originalScrollHeight) {
-        Object.defineProperty(HTMLElement.prototype, "scrollHeight", originalScrollHeight)
+        Object.defineProperty(
+          HTMLElement.prototype,
+          "scrollHeight",
+          originalScrollHeight
+        )
       }
       if (originalGetBoundingClientRect) {
         Object.defineProperty(
@@ -439,19 +451,21 @@ describe("dom viewport mapper", () => {
               }
             }
           }
-          return originalGetBoundingClientRect?.value?.call(this) ?? {
-            x: 0,
-            y: 0,
-            top: 0,
-            left: 0,
-            bottom: 0,
-            right: 0,
-            width: 0,
-            height: 0,
-            toJSON() {
-              return this
+          return (
+            originalGetBoundingClientRect?.value?.call(this) ?? {
+              x: 0,
+              y: 0,
+              top: 0,
+              left: 0,
+              bottom: 0,
+              right: 0,
+              width: 0,
+              height: 0,
+              toJSON() {
+                return this
+              }
             }
-          }
+          )
         }
       })
 
@@ -474,10 +488,18 @@ describe("dom viewport mapper", () => {
       })
     } finally {
       if (originalOffsetHeight) {
-        Object.defineProperty(HTMLElement.prototype, "offsetHeight", originalOffsetHeight)
+        Object.defineProperty(
+          HTMLElement.prototype,
+          "offsetHeight",
+          originalOffsetHeight
+        )
       }
       if (originalScrollHeight) {
-        Object.defineProperty(HTMLElement.prototype, "scrollHeight", originalScrollHeight)
+        Object.defineProperty(
+          HTMLElement.prototype,
+          "scrollHeight",
+          originalScrollHeight
+        )
       }
       if (originalGetBoundingClientRect) {
         Object.defineProperty(

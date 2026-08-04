@@ -30,7 +30,9 @@ function createContainer(): HTMLDivElement {
   return container
 }
 
-function createPagedSection(overrides: Partial<SectionDocument> = {}): SectionDocument {
+function createPagedSection(
+  overrides: Partial<SectionDocument> = {}
+): SectionDocument {
   return {
     id: "section-1",
     href: "OPS/chapter-1.xhtml",
@@ -92,11 +94,15 @@ describe("EpubReader reading navigation", () => {
     expect(container.dataset.nextPageKey).toBe("ArrowRight")
     expect(reader.getPaginationInfo().currentPage).toBe(1)
 
-    container.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))
+    container.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })
+    )
     await flushKeyboardNavigation()
     expect(reader.getPaginationInfo().currentPage).toBe(2)
 
-    container.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }))
+    container.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true })
+    )
     await flushKeyboardNavigation()
     expect(reader.getPaginationInfo().currentPage).toBe(1)
   })
@@ -144,11 +150,15 @@ describe("EpubReader reading navigation", () => {
     expect(container.dir).toBe("rtl")
     expect(reader.getPaginationInfo().currentPage).toBe(1)
 
-    container.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }))
+    container.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true })
+    )
     await flushKeyboardNavigation()
     expect(reader.getPaginationInfo().currentPage).toBe(2)
 
-    container.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))
+    container.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })
+    )
     await flushKeyboardNavigation()
     expect(reader.getPaginationInfo().currentPage).toBe(1)
   })
@@ -389,7 +399,9 @@ describe("EpubReader reading navigation", () => {
     expect(targetPage).toBeGreaterThan(1)
 
     const bookmark = reader.createBookmark({ label: "rtl target" })
-    expect(bookmark?.publicationId).toBe("identifier:urn:uuid:rtl-bookmark-reader")
+    expect(bookmark?.publicationId).toBe(
+      "identifier:urn:uuid:rtl-bookmark-reader"
+    )
     expect(bookmark?.locator.blockId).toBe("text-2")
 
     await reader.goToPage(1)
@@ -425,7 +437,7 @@ describe("EpubReader reading navigation", () => {
     const startSnapshot = reader.getReadingProgress()
     expect(startSnapshot?.overallProgress).toBe(0)
     expect(startSnapshot?.currentPage).toBe(1)
-    expect((startSnapshot?.totalPages ?? 0)).toBeGreaterThan(1)
+    expect(startSnapshot?.totalPages ?? 0).toBeGreaterThan(1)
 
     const endLocator = await reader.goToProgress(1)
     expect(endLocator?.spineIndex).toBe(0)

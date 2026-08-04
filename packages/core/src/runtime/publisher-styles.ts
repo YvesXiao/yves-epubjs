@@ -1,8 +1,4 @@
-import type {
-  BlockNode,
-  InlineNode,
-  SectionDocument
-} from "../model/types"
+import type { BlockNode, InlineNode, SectionDocument } from "../model/types"
 import type { PreprocessedChapterNode } from "./chapter-preprocess"
 
 export function stripPublisherStylesFromSection(
@@ -100,14 +96,18 @@ function stripBlockPublisherStyles(block: BlockNode): BlockNode {
             ...(cell.header !== undefined ? { header: cell.header } : {})
           }))
         })),
-        ...(block.caption ? { caption: block.caption.map(stripBlockPublisherStyles) } : {})
+        ...(block.caption
+          ? { caption: block.caption.map(stripBlockPublisherStyles) }
+          : {})
       }
     case "figure":
       return {
         ...base,
         kind: "figure",
         blocks: block.blocks.map(stripBlockPublisherStyles),
-        ...(block.caption ? { caption: block.caption.map(stripBlockPublisherStyles) } : {})
+        ...(block.caption
+          ? { caption: block.caption.map(stripBlockPublisherStyles) }
+          : {})
       }
     case "aside":
       return {
@@ -208,7 +208,10 @@ function stripPreprocessedNodePublisherStyles(
     return null
   }
 
-  if (node.tagName === "link" && node.attributes.rel?.split(/\s+/).includes("stylesheet")) {
+  if (
+    node.tagName === "link" &&
+    node.attributes.rel?.split(/\s+/).includes("stylesheet")
+  ) {
     return null
   }
 

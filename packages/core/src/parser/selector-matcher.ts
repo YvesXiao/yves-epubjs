@@ -1,8 +1,4 @@
-import {
-  is as matchesSelector,
-  selectAll,
-  selectOne
-} from "css-select"
+import { is as matchesSelector, selectAll, selectOne } from "css-select"
 import type {
   HtmlDomDocument,
   HtmlDomElement,

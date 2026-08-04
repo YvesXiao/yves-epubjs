@@ -26,11 +26,13 @@ describe("EpubReader image resources", () => {
     }
 
     expect(
-      externalState.resolveCanvasResourceUrl("https://cdn.example.com/plate.png")
+      externalState.resolveCanvasResourceUrl(
+        "https://cdn.example.com/plate.png"
+      )
     ).toBe("https://cdn.example.com/plate.png")
-    expect(
-      externalState.resolveCanvasResourceUrl("javascript:alert(1)")
-    ).toBe("data:,")
+    expect(externalState.resolveCanvasResourceUrl("javascript:alert(1)")).toBe(
+      "data:,"
+    )
     externalReader.destroy()
   })
 
@@ -84,16 +86,22 @@ describe("EpubReader image resources", () => {
       reader as unknown as {
         resources: typeof resources
         resolveDomResourceUrl(path: string): string
-        resolveImageIntrinsicSizeForLayout(path: string): { width: number; height: number } | null | undefined
+        resolveImageIntrinsicSizeForLayout(
+          path: string
+        ): { width: number; height: number } | null | undefined
       }
     ).resources = resources
 
     const state = reader as unknown as {
       resolveDomResourceUrl(path: string): string
-      resolveImageIntrinsicSizeForLayout(path: string): { width: number; height: number } | null | undefined
+      resolveImageIntrinsicSizeForLayout(
+        path: string
+      ): { width: number; height: number } | null | undefined
     }
 
-    expect(() => state.resolveDomResourceUrl("OPS/images/missing.png")).not.toThrow()
+    expect(() =>
+      state.resolveDomResourceUrl("OPS/images/missing.png")
+    ).not.toThrow()
     expect(state.resolveDomResourceUrl("OPS/images/missing.png")).toBe(
       "OPS/images/missing.png"
     )
@@ -268,7 +276,11 @@ describe("EpubReader image resources", () => {
     ;(
       reader as unknown as {
         book: Book
-        lastChapterRenderDecision: { mode: "dom"; score: number; reasons: string[] }
+        lastChapterRenderDecision: {
+          mode: "dom"
+          score: number
+          reasons: string[]
+        }
       }
     ).book = {
       metadata: { title: "DOM Layout Change" },
@@ -286,7 +298,11 @@ describe("EpubReader image resources", () => {
     }
     ;(
       reader as unknown as {
-        lastChapterRenderDecision: { mode: "dom"; score: number; reasons: string[] }
+        lastChapterRenderDecision: {
+          mode: "dom"
+          score: number
+          reasons: string[]
+        }
       }
     ).lastChapterRenderDecision = {
       mode: "dom",
@@ -357,7 +373,11 @@ describe("EpubReader image resources", () => {
     ;(
       reader as unknown as {
         book: Book
-        lastChapterRenderDecision: { mode: "dom"; score: number; reasons: string[] }
+        lastChapterRenderDecision: {
+          mode: "dom"
+          score: number
+          reasons: string[]
+        }
       }
     ).book = {
       metadata: { title: "Stale DOM Layout Change" },
@@ -375,7 +395,11 @@ describe("EpubReader image resources", () => {
     }
     ;(
       reader as unknown as {
-        lastChapterRenderDecision: { mode: "dom"; score: number; reasons: string[] }
+        lastChapterRenderDecision: {
+          mode: "dom"
+          score: number
+          reasons: string[]
+        }
       }
     ).lastChapterRenderDecision = {
       mode: "dom",
@@ -399,7 +423,6 @@ describe("EpubReader image resources", () => {
         resolveDomResourceUrl(path: string): string
       }
     ).resources = resources
-
     ;(
       reader as unknown as {
         resolveDomResourceUrl(path: string): string
@@ -442,7 +465,11 @@ describe("EpubReader image resources", () => {
     ;(
       reader as unknown as {
         book: Book
-        lastChapterRenderDecision: { mode: "dom"; score: number; reasons: string[] }
+        lastChapterRenderDecision: {
+          mode: "dom"
+          score: number
+          reasons: string[]
+        }
       }
     ).book = {
       metadata: { title: "FXL DOM Layout Change" },
@@ -465,7 +492,11 @@ describe("EpubReader image resources", () => {
     }
     ;(
       reader as unknown as {
-        lastChapterRenderDecision: { mode: "dom"; score: number; reasons: string[] }
+        lastChapterRenderDecision: {
+          mode: "dom"
+          score: number
+          reasons: string[]
+        }
       }
     ).lastChapterRenderDecision = {
       mode: "dom",
@@ -489,7 +520,6 @@ describe("EpubReader image resources", () => {
         resolveDomResourceUrl(path: string): string
       }
     ).resources = resources
-
     ;(
       reader as unknown as {
         resolveDomResourceUrl(path: string): string

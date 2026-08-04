@@ -34,13 +34,16 @@ export function deserializeBookmark(raw: unknown): Bookmark | null {
     return null
   }
 
-  const id = typeof value.id === "string" && value.id.trim() ? value.id.trim() : null
+  const id =
+    typeof value.id === "string" && value.id.trim() ? value.id.trim() : null
   const publicationId =
     typeof value.publicationId === "string" && value.publicationId.trim()
       ? value.publicationId.trim()
       : null
   const createdAt =
-    typeof value.createdAt === "string" && value.createdAt.trim() ? value.createdAt.trim() : null
+    typeof value.createdAt === "string" && value.createdAt.trim()
+      ? value.createdAt.trim()
+      : null
   const locator = deserializeLocator(value.locator)
 
   if (!id || !publicationId || !createdAt || !locator) {
@@ -52,7 +55,9 @@ export function deserializeBookmark(raw: unknown): Bookmark | null {
     publicationId,
     locator,
     createdAt,
-    ...(typeof value.label === "string" && value.label.trim() ? { label: value.label.trim() } : {}),
+    ...(typeof value.label === "string" && value.label.trim()
+      ? { label: value.label.trim() }
+      : {}),
     ...(typeof value.excerpt === "string" && value.excerpt.trim()
       ? { excerpt: value.excerpt.trim() }
       : {})
@@ -77,13 +82,17 @@ function parseBookmarkValue(raw: unknown): Record<string, unknown> | null {
   if (typeof raw === "string") {
     try {
       const parsed = JSON.parse(raw)
-      return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null
+      return parsed && typeof parsed === "object"
+        ? (parsed as Record<string, unknown>)
+        : null
     } catch {
       return null
     }
   }
 
-  return raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null
+  return raw && typeof raw === "object"
+    ? (raw as Record<string, unknown>)
+    : null
 }
 
 export type { SerializedLocator }

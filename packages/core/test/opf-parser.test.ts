@@ -1,9 +1,9 @@
 // @vitest-environment node
 
-import { zipSync } from "fflate";
-import { describe, expect, it } from "vitest";
-import { BookParser } from "../src/parser/book-parser";
-import { parseOpfDocument } from "../src/parser/opf-parser";
+import { zipSync } from "fflate"
+import { describe, expect, it } from "vitest"
+import { BookParser } from "../src/parser/book-parser"
+import { parseOpfDocument } from "../src/parser/opf-parser"
 
 describe("parseOpfDocument", () => {
   it("parses metadata, manifest, and spine from a standard OPF document", () => {
@@ -25,9 +25,9 @@ describe("parseOpfDocument", () => {
           <itemref idref="chapter-1" />
           <itemref idref="nav" linear="no" properties="auxiliary" />
         </spine>
-      </package>`;
+      </package>`
 
-    const result = parseOpfDocument(xml, "OPS/content.opf");
+    const result = parseOpfDocument(xml, "OPS/content.opf")
 
     expect(result.metadata).toEqual({
       title: "Alice in Wonderland",
@@ -35,7 +35,7 @@ describe("parseOpfDocument", () => {
       identifier: "urn:uuid:alice",
       creator: "Lewis Carroll",
       publisher: "Macmillan"
-    });
+    })
     expect(result.manifest).toEqual([
       {
         id: "nav",
@@ -53,7 +53,7 @@ describe("parseOpfDocument", () => {
         href: "images/cover.jpg",
         mediaType: "image/jpeg"
       }
-    ]);
+    ])
     expect(result.spine).toEqual([
       {
         idref: "chapter-1",
@@ -68,8 +68,8 @@ describe("parseOpfDocument", () => {
         mediaType: "application/xhtml+xml",
         properties: "auxiliary"
       }
-    ]);
-  });
+    ])
+  })
 
   it("skips incomplete manifest and unresolved spine entries", () => {
     const xml = `<?xml version="1.0"?>
@@ -85,11 +85,11 @@ describe("parseOpfDocument", () => {
           <itemref idref="valid" />
           <itemref idref="missing" />
         </spine>
-      </package>`;
+      </package>`
 
-    const result = parseOpfDocument(xml, "OPS/content.opf");
+    const result = parseOpfDocument(xml, "OPS/content.opf")
 
-    expect(result.manifest).toHaveLength(1);
+    expect(result.manifest).toHaveLength(1)
     expect(result.spine).toEqual([
       {
         idref: "valid",
@@ -97,8 +97,8 @@ describe("parseOpfDocument", () => {
         linear: true,
         mediaType: "application/xhtml+xml"
       }
-    ]);
-  });
+    ])
+  })
 
   it("extracts cover image metadata from epub3 properties and epub2 meta cover ids", () => {
     const epub3 = parseOpfDocument(
@@ -192,7 +192,7 @@ describe("parseOpfDocument", () => {
     expect(result.spine[0]?.pageSpreadPlacement).toBe("right")
     expect(result.spine[1]?.renditionLayout).toBe("reflowable")
   })
-});
+})
 
 describe("BookParser", () => {
   it("builds a minimal Book model from container.xml, OPF, and NAV", async () => {
@@ -241,9 +241,9 @@ describe("BookParser", () => {
           <body><h1>Chapter 1</h1><p>Hello Alice</p></body>
         </html>`
       )
-    });
+    })
 
-    const book = await new BookParser().parse({ data: zipBytes });
+    const book = await new BookParser().parse({ data: zipBytes })
 
     expect(book).toEqual({
       metadata: {
@@ -302,8 +302,8 @@ describe("BookParser", () => {
           anchors: {}
         }
       ]
-    });
-  });
+    })
+  })
 
   it("marks the cover section when the section contains the declared cover image", async () => {
     const zipBytes = zipSync({
@@ -501,9 +501,9 @@ describe("BookParser", () => {
           <body><h1>Chapter 1</h1><p>NCX chapter</p></body>
         </html>`
       )
-    });
+    })
 
-    const book = await new BookParser().parse({ data: zipBytes });
+    const book = await new BookParser().parse({ data: zipBytes })
 
     expect(book.toc).toEqual([
       {
@@ -512,8 +512,8 @@ describe("BookParser", () => {
         href: "OPS/chapter-1.xhtml",
         children: []
       }
-    ]);
-  });
+    ])
+  })
 
   it("rejects non-XHTML spine documents before chapter parsing", async () => {
     const zipBytes = zipSync({
@@ -547,4 +547,4 @@ describe("BookParser", () => {
       "Unsupported spine content media type: text/css (OPS/styles.css)"
     )
   })
-});
+})

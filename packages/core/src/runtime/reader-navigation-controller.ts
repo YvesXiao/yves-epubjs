@@ -76,7 +76,9 @@ export class ReaderNavigationController {
     this.dependencies.emitRelocated()
   }
 
-  async restoreLocation(locator: Locator | SerializedLocator): Promise<boolean> {
+  async restoreLocation(
+    locator: Locator | SerializedLocator
+  ): Promise<boolean> {
     const book = this.dependencies.getBook()
     if (!book) {
       this.dependencies.setLastLocatorRestoreDiagnostics({
@@ -240,7 +242,8 @@ export class ReaderNavigationController {
     const spineIndex = Math.max(
       0,
       Math.min(
-        currentLocator?.spineIndex ?? this.dependencies.getCurrentSectionIndex(),
+        currentLocator?.spineIndex ??
+          this.dependencies.getCurrentSectionIndex(),
         book.sections.length - 1
       )
     )
@@ -392,8 +395,7 @@ export class ReaderNavigationController {
     let consumedHeight = 0
 
     for (let index = 0; index < heights.length; index += 1) {
-      const sectionHeight =
-        heights[index] ?? this.dependencies.getPageHeight()
+      const sectionHeight = heights[index] ?? this.dependencies.getPageHeight()
       const nextConsumedHeight = consumedHeight + sectionHeight
       if (targetOffset <= nextConsumedHeight || index === heights.length - 1) {
         return {
@@ -413,7 +415,10 @@ export class ReaderNavigationController {
     }
   }
 
-  private findTocItem(items: Book["toc"], id: string): Book["toc"][number] | null {
+  private findTocItem(
+    items: Book["toc"],
+    id: string
+  ): Book["toc"][number] | null {
     for (const item of items) {
       if (item.id === id) {
         return item

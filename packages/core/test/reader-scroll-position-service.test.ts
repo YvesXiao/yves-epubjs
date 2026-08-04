@@ -54,7 +54,8 @@ describe("ReaderScrollPositionService", () => {
         container: document.createElement("div"),
         sections,
         offset: 1200,
-        getSectionHeight: (sectionId) => (sectionId === "section-1" ? 1000 : 500)
+        getSectionHeight: (sectionId) =>
+          sectionId === "section-1" ? 1000 : 500
       })
     ).toBe(1)
   })

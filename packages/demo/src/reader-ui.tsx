@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react"
 import type {
   AnnotationStyle,
   AnnotationViewportSnapshot,
@@ -12,22 +12,22 @@ import type {
   RenderDiagnostics,
   TocItem,
   VisibleSectionDiagnostics
-} from "@yves-epub/core";
-import type { ReaderDecorationOverlay } from "./reader-overlays";
-import type { AnnotationColor } from "./use-reader-controller";
+} from "@yves-epub/core"
+import type { ReaderDecorationOverlay } from "./reader-overlays"
+import type { AnnotationColor } from "./use-reader-controller"
 
 export type ReaderSelectionToolbarAction = {
-  id: string;
-  label: string;
-  disabled?: boolean;
-  tone?: "primary" | "secondary";
-  onSelect: () => void | Promise<void>;
-};
+  id: string
+  label: string
+  disabled?: boolean
+  tone?: "primary" | "secondary"
+  onSelect: () => void | Promise<void>
+}
 
 export function SearchResultsPanel(props: {
-  query: string;
-  results: Array<{ sectionId: string; href: string; excerpt: string }>;
-  onSelect: (index: number) => void | Promise<void>;
+  query: string
+  results: Array<{ sectionId: string; href: string; excerpt: string }>
+  onSelect: (index: number) => void | Promise<void>
 }): JSX.Element {
   return (
     <div className="hero-search-results">
@@ -46,7 +46,7 @@ export function SearchResultsPanel(props: {
               type="button"
               className="search-card"
               onClick={() => {
-                void props.onSelect(index);
+                void props.onSelect(index)
               }}
             >
               <span className="block text-sm font-semibold">{result.href}</span>
@@ -58,15 +58,15 @@ export function SearchResultsPanel(props: {
         )}
       </div>
     </div>
-  );
+  )
 }
 
 export function ReaderSidebar(props: {
-  toc: TocItem[];
-  activeId: string | null;
-  expandedIds: Set<string>;
-  onToggle: (id: string) => void;
-  onSelect: (id: string) => void | Promise<void>;
+  toc: TocItem[]
+  activeId: string | null
+  expandedIds: Set<string>
+  onToggle: (id: string) => void
+  onSelect: (id: string) => void | Promise<void>
 }): JSX.Element {
   return (
     <aside className="sidebar">
@@ -91,38 +91,38 @@ export function ReaderSidebar(props: {
         </div>
       </div>
     </aside>
-  );
+  )
 }
 
 export function ReaderToolbar(props: {
-  mode: "scroll" | "paginated";
-  currentPage: number;
-  totalPages: number;
-  pageValue: string;
-  hasSavedBookmark: boolean;
-  annotationStyle: AnnotationStyle;
-  annotationColor: AnnotationColor;
-  annotationColors: readonly AnnotationColor[];
-  isFullscreen: boolean;
-  fullscreenAvailable: boolean;
-  onPageValueChange: (value: string) => void;
-  onGoToPage: (page: number) => void | Promise<void>;
-  onPrevious: () => void | Promise<void>;
-  onNext: () => void | Promise<void>;
-  onSaveBookmark: () => void | Promise<void>;
-  onRestoreBookmark: () => void | Promise<void>;
-  onAddHighlight: () => void | Promise<void>;
-  onClearHighlights: () => void;
-  onAnnotationStyleChange: (style: AnnotationStyle) => void;
-  onAnnotationColorChange: (color: AnnotationColor) => void;
-  onModeChange: (mode: "scroll" | "paginated") => void | Promise<void>;
-  onToggleFullscreen: () => void | Promise<void>;
+  mode: "scroll" | "paginated"
+  currentPage: number
+  totalPages: number
+  pageValue: string
+  hasSavedBookmark: boolean
+  annotationStyle: AnnotationStyle
+  annotationColor: AnnotationColor
+  annotationColors: readonly AnnotationColor[]
+  isFullscreen: boolean
+  fullscreenAvailable: boolean
+  onPageValueChange: (value: string) => void
+  onGoToPage: (page: number) => void | Promise<void>
+  onPrevious: () => void | Promise<void>
+  onNext: () => void | Promise<void>
+  onSaveBookmark: () => void | Promise<void>
+  onRestoreBookmark: () => void | Promise<void>
+  onAddHighlight: () => void | Promise<void>
+  onClearHighlights: () => void
+  onAnnotationStyleChange: (style: AnnotationStyle) => void
+  onAnnotationColorChange: (color: AnnotationColor) => void
+  onModeChange: (mode: "scroll" | "paginated") => void | Promise<void>
+  onToggleFullscreen: () => void | Promise<void>
 }): JSX.Element {
-  const positionLabel = props.mode === "scroll" ? "Section" : "Page";
+  const positionLabel = props.mode === "scroll" ? "Section" : "Page"
   const modeOptions: Array<{ value: "scroll" | "paginated"; label: string }> = [
     { value: "scroll", label: "Scroll" },
     { value: "paginated", label: "Paginated" }
-  ];
+  ]
 
   return (
     <div className="reader-toolbar">
@@ -141,7 +141,7 @@ export function ReaderToolbar(props: {
             onChange={(event) => props.onPageValueChange(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
-                void props.onGoToPage(Number(props.pageValue));
+                void props.onGoToPage(Number(props.pageValue))
               }
             }}
             className="field-input page-input"
@@ -219,9 +219,9 @@ export function ReaderToolbar(props: {
             aria-pressed={props.mode === option.value}
             onClick={() => {
               if (props.mode === option.value) {
-                return;
+                return
               }
-              void props.onModeChange(option.value);
+              void props.onModeChange(option.value)
             }}
           >
             {option.label}
@@ -237,29 +237,29 @@ export function ReaderToolbar(props: {
         </ToolbarButton>
       </div>
     </div>
-  );
+  )
 }
 
 export function ReaderViewportOverlay(props: {
-  searchOverlays: ReaderDecorationOverlay[];
-  annotationOverlays: AnnotationViewportSnapshot[];
+  searchOverlays: ReaderDecorationOverlay[]
+  annotationOverlays: AnnotationViewportSnapshot[]
   viewportOffset: {
-    x: number;
-    y: number;
-  };
+    x: number
+    y: number
+  }
 }): JSX.Element | null {
   const visibleSearchOverlays = props.searchOverlays.filter(
     (overlay) => overlay.visible
-  );
+  )
   const visibleAnnotationOverlays = props.annotationOverlays.filter(
     (overlay) => overlay.visible
-  );
+  )
 
   if (
     visibleSearchOverlays.length === 0 &&
     visibleAnnotationOverlays.length === 0
   ) {
-    return null;
+    return null
   }
 
   return (
@@ -294,29 +294,29 @@ export function ReaderViewportOverlay(props: {
         ))
       )}
     </div>
-  );
+  )
 }
 
 export function ReaderSelectionToolbar(props: {
-  selection: ReaderTextSelectionSnapshot | null;
+  selection: ReaderTextSelectionSnapshot | null
   viewportOffset: {
-    x: number;
-    y: number;
-  };
-  actions: ReaderSelectionToolbarAction[];
+    x: number
+    y: number
+  }
+  actions: ReaderSelectionToolbarAction[]
 }): JSX.Element | null {
   if (
     !props.selection?.visible ||
     props.selection.rects.length === 0 ||
     props.actions.length === 0
   ) {
-    return null;
+    return null
   }
 
   const anchor = resolveSelectionToolbarAnchor(
     props.selection.rects,
     props.viewportOffset
-  );
+  )
   return (
     <div
       className="reader-selection-toolbar"
@@ -325,7 +325,7 @@ export function ReaderSelectionToolbar(props: {
         top: `${anchor.y}px`
       }}
       onMouseDown={(event) => {
-        event.preventDefault();
+        event.preventDefault()
       }}
     >
       {props.actions.map((action) => (
@@ -337,32 +337,32 @@ export function ReaderSelectionToolbar(props: {
           }`}
           disabled={action.disabled}
           onMouseDown={(event) => {
-            event.preventDefault();
+            event.preventDefault()
           }}
           onClick={() => {
             if (action.disabled) {
-              return;
+              return
             }
-            void action.onSelect();
+            void action.onSelect()
           }}
         >
           {action.label}
         </button>
       ))}
     </div>
-  );
+  )
 }
 
 export function ReaderDiagnosticsPanel(props: {
-  renderBackend: "canvas" | "dom" | null;
-  publisherStyles: "enabled" | "disabled";
-  locator: Locator | null;
-  restoreDiagnostics: LocatorRestoreDiagnostics | null;
-  languageContext: ReadingLanguageContext | null;
-  navigationContext: ReadingNavigationContext | null;
-  spreadContext: ReadingSpreadContext | null;
-  diagnostics: RenderDiagnostics | null;
-  visibleSectionDiagnostics: VisibleSectionDiagnostics[];
+  renderBackend: "canvas" | "dom" | null
+  publisherStyles: "enabled" | "disabled"
+  locator: Locator | null
+  restoreDiagnostics: LocatorRestoreDiagnostics | null
+  languageContext: ReadingLanguageContext | null
+  navigationContext: ReadingNavigationContext | null
+  spreadContext: ReadingSpreadContext | null
+  diagnostics: RenderDiagnostics | null
+  visibleSectionDiagnostics: VisibleSectionDiagnostics[]
 }): JSX.Element {
   return (
     <div
@@ -489,71 +489,71 @@ export function ReaderDiagnosticsPanel(props: {
         )}
       </div>
     </div>
-  );
+  )
 }
 
 function formatLocatorSummary(locator: Locator | null): string {
   if (!locator) {
-    return "none";
+    return "none"
   }
 
-  const parts = [`s${locator.spineIndex + 1}`];
+  const parts = [`s${locator.spineIndex + 1}`]
   if (locator.blockId) {
-    parts.push(`block:${locator.blockId}`);
+    parts.push(`block:${locator.blockId}`)
   }
   if (locator.anchorId) {
-    parts.push(`anchor:${locator.anchorId}`);
+    parts.push(`anchor:${locator.anchorId}`)
   }
   if (typeof locator.progressInSection === "number") {
-    parts.push(`progress:${locator.progressInSection.toFixed(3)}`);
+    parts.push(`progress:${locator.progressInSection.toFixed(3)}`)
   }
-  return parts.join(" / ");
+  return parts.join(" / ")
 }
 
 function formatRestoreSummary(
   diagnostics: LocatorRestoreDiagnostics | null
 ): string {
   if (!diagnostics) {
-    return "none";
+    return "none"
   }
 
   return `${diagnostics.status} / ${diagnostics.requestedPrecision} -> ${
     diagnostics.resolvedPrecision ?? "none"
-  }`;
+  }`
 }
 
 function formatRestoreMatch(
   diagnostics: LocatorRestoreDiagnostics | null
 ): string {
   if (!diagnostics) {
-    return "none / fallback:no";
+    return "none / fallback:no"
   }
 
-  return `${diagnostics.matchedBy ?? "none"} / fallback:${diagnostics.fallbackApplied ? "yes" : "no"}`;
+  return `${diagnostics.matchedBy ?? "none"} / fallback:${diagnostics.fallbackApplied ? "yes" : "no"}`
 }
 
 export function CustomSelect(props: {
-  value: string;
-  options: Array<{ value: string; label: string }>;
-  onChange: (value: string) => void | Promise<void>;
+  value: string
+  options: Array<{ value: string; label: string }>
+  onChange: (value: string) => void | Promise<void>
 }): JSX.Element {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const listboxId = useId();
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const listboxId = useId()
   const selected =
     props.options.find((option) => option.value === props.value) ??
-    props.options[0];
+    props.options[0]
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent): void {
       if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
+        setOpen(false)
       }
     }
 
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, []);
+    document.addEventListener("mousedown", handlePointerDown)
+    return () => document.removeEventListener("mousedown", handlePointerDown)
+  }, [])
 
   return (
     <div ref={rootRef} className={`custom-select${open ? " is-open" : ""}`}>
@@ -582,8 +582,8 @@ export function CustomSelect(props: {
                 option.value === props.value ? " is-selected" : ""
               }`}
               onClick={() => {
-                setOpen(false);
-                void props.onChange(option.value);
+                setOpen(false)
+                void props.onChange(option.value)
               }}
             >
               {option.label}
@@ -592,23 +592,23 @@ export function CustomSelect(props: {
         </div>
       ) : null}
     </div>
-  );
+  )
 }
 
 export function toggleId(current: Set<string>, id: string): Set<string> {
-  const next = new Set(current);
+  const next = new Set(current)
   if (next.has(id)) {
-    next.delete(id);
+    next.delete(id)
   } else {
-    next.add(id);
+    next.add(id)
   }
-  return next;
+  return next
 }
 
 function ToolbarButton(props: {
-  children: string;
-  disabled?: boolean;
-  onClick: () => void | Promise<void>;
+  children: string
+  disabled?: boolean
+  onClick: () => void | Promise<void>
 }): JSX.Element {
   return (
     <button
@@ -617,24 +617,24 @@ function ToolbarButton(props: {
       disabled={props.disabled}
       onClick={() => {
         if (props.disabled) {
-          return;
+          return
         }
-        void props.onClick();
+        void props.onClick()
       }}
     >
       {props.children}
     </button>
-  );
+  )
 }
 
 function OverlayRect(props: {
-  rect: Rect;
+  rect: Rect
   viewportOffset: {
-    x: number;
-    y: number;
-  };
-  className: string;
-  label?: string;
+    x: number
+    y: number
+  }
+  className: string
+  label?: string
 }): JSX.Element {
   return (
     <span
@@ -651,18 +651,18 @@ function OverlayRect(props: {
       }
       data-label={props.label}
     />
-  );
+  )
 }
 
 function resolveSelectionToolbarAnchor(
   rects: Rect[],
   viewportOffset: {
-    x: number;
-    y: number;
+    x: number
+    y: number
   }
 ): {
-  x: number;
-  y: number;
+  x: number
+  y: number
 } {
   const bounds = rects.reduce(
     (accumulator, rect) => ({
@@ -677,22 +677,22 @@ function resolveSelectionToolbarAnchor(
       right: Number.NEGATIVE_INFINITY,
       bottom: Number.NEGATIVE_INFINITY
     }
-  );
+  )
 
-  const centerX = (bounds.left + bounds.right) / 2 - viewportOffset.x;
-  const top = bounds.top - viewportOffset.y;
+  const centerX = (bounds.left + bounds.right) / 2 - viewportOffset.x
+  const top = bounds.top - viewportOffset.y
   return {
     x: centerX,
     y: Math.max(12, top - 18)
-  };
+  }
 }
 
 function TocTree(props: {
-  items: TocItem[];
-  activeId: string | null;
-  expandedIds: Set<string>;
-  onToggle: (id: string) => void;
-  onSelect: (id: string) => void | Promise<void>;
+  items: TocItem[]
+  activeId: string | null
+  expandedIds: Set<string>
+  onToggle: (id: string) => void
+  onSelect: (id: string) => void | Promise<void>
 }): JSX.Element {
   return (
     <ul className="toc-tree">
@@ -721,7 +721,7 @@ function TocTree(props: {
               type="button"
               className={`toc-link${props.activeId === item.id ? " is-active" : ""}`}
               onClick={() => {
-                void props.onSelect(item.id);
+                void props.onSelect(item.id)
               }}
             >
               {item.label}
@@ -741,5 +741,5 @@ function TocTree(props: {
         </li>
       ))}
     </ul>
-  );
+  )
 }

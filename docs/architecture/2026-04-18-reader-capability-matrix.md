@@ -50,22 +50,22 @@
 
 ## 4. 能力矩阵
 
-| 能力 | 状态 | 当前仓库判断 | 用户价值 | 技术影响面 | 基础依赖 |
-| --- | --- | --- | --- | --- | --- |
-| Unified Locator / Restore / Bookmark | `Now` | 已有正式 contract、恢复诊断、书签模型和 demo 最小闭环 | 稳定恢复阅读位置，统一 TOC/搜索/书签/批注定位 | `types`、`runtime/locator`、`reader`、demo 持久化 | `locator` 自身是基础层 |
-| Decoration / Annotation | `Now` | 已有 decorations group、annotation 数据模型、`canvas/dom` 基础接线 | 统一搜索高亮、批注、高亮和后续 active/TTS 标记 | `reader`、`canvas` 渲染、DOM decorations、搜索链路 | 依赖 `locator` |
-| Preferences / Settings | `Now` | 已有偏好值与生效值 contract，demo 已通过 preferences 驱动 | 稳定管理主题、字号、阅读模式、publisher styles 等设置 | `types`、`runtime/preferences`、`reader`、demo 持久化 | 独立基础层 |
-| Publisher Styles | `Now` | 已成为正式设置项，DOM/canvas 都遵守同一策略 | 给复杂 EPUB 提供可解释的样式保留与覆盖行为 | `reader`、DOM render input、content model style 清洗 | 依赖 `preferences` |
-| Reader Baseline Stylesheet | `Now` | 已有 `default-reflowable` baseline profile 和双路径样式基线 | 保证弱样式 EPUB 也具备最小可读性 | `reading-style-profile`、DOM baseline CSS、canvas profile | 依赖 `preferences` |
-| Lang / RTL Baseline | `Now` | 已有 `lang` 暴露、方向推断、`experimentalRtl` 开关和测试样本 | 让非拉丁文本和 RTL 不再停留在隐性需求 | parser、chapter preprocess、reader、DOM wrapper/style | 依赖 `preferences`，与 baseline 紧耦合 |
-| Accessibility Baseline | `Now` | 已有 section/publication accessibility snapshot 和搜索一致性测试 | 让语义阅读顺序、alt/caption/footnote/dl 成为正式平台输出 | `runtime/accessibility`、`reader`、搜索一致性 | 依赖 `locator`，后续服务 `annotation/TTS` |
-| RTL Productization | `Next` | 已有方向基线，但还没有 page progression、导航语义和 paginated 产品化 contract | 让 RTL 从“可显示”升级到“可稳定使用” | 导航、分页、交互方向、DOM/canvas 对齐 | 依赖 `preferences`，复用 `reading-language` 和 `locator` |
-| Fixed Layout (FXL) | `Next` | 当前仅有 `presentationRole` 等少量入口，没有正式 FXL reader contract | 支持图文固定版式出版物和更完整 EPUB 生态 | 解析层、viewport/layout 策略、DOM sandbox、分页与手势 | 依赖 `preferences`，部分复用 `locator` |
-| Spread / Synthetic Spread | `Next` | 目前只具备单页 paginated，未形成 spread model | 提升大屏阅读和 FXL/横屏场景体验 | pagination model、viewport metrics、navigation、settings | 依赖 `preferences`，与 FXL 强关联 |
-| TTS / Read Aloud | `Next` | 当前只有 decorations 和 accessibility 入口，还没有朗读 contract | 提升可访问性和伴随阅读能力 | 语义读取、朗读队列、active decoration、事件模型 | 强依赖 `locator`、`decoration`、`accessibility` |
-| Media Overlay | `Later` | 当前没有 SMIL/media overlay 解析与时间轴同步能力 | 支持音频与文本同步阅读 | parser、timeline、resource loading、同步定位 | 依赖 `locator`、`decoration`，与 TTS 相关但不同源 |
-| OPDS | `Later` | 当前只聚焦本地/输入级打开，不包含书库能力 | 支持目录发现、下载与分发流程 | 网络层、认证、下载、书架与元数据管理 | 与当前 reader 核心弱耦合 |
-| DRM / LCP | `Not in current phase` | 当前明确不纳入实现范围 | 对受保护内容发行有价值，但成本和风险高 | 解密链路、license、资源访问、测试资产、产品合规 | 需要独立安全与产品决策，不能直接挂现有 reader |
+| 能力                                 | 状态                   | 当前仓库判断                                                                  | 用户价值                                                 | 技术影响面                                                | 基础依赖                                                 |
+| ------------------------------------ | ---------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------- |
+| Unified Locator / Restore / Bookmark | `Now`                  | 已有正式 contract、恢复诊断、书签模型和 demo 最小闭环                         | 稳定恢复阅读位置，统一 TOC/搜索/书签/批注定位            | `types`、`runtime/locator`、`reader`、demo 持久化         | `locator` 自身是基础层                                   |
+| Decoration / Annotation              | `Now`                  | 已有 decorations group、annotation 数据模型、`canvas/dom` 基础接线            | 统一搜索高亮、批注、高亮和后续 active/TTS 标记           | `reader`、`canvas` 渲染、DOM decorations、搜索链路        | 依赖 `locator`                                           |
+| Preferences / Settings               | `Now`                  | 已有偏好值与生效值 contract，demo 已通过 preferences 驱动                     | 稳定管理主题、字号、阅读模式、publisher styles 等设置    | `types`、`runtime/preferences`、`reader`、demo 持久化     | 独立基础层                                               |
+| Publisher Styles                     | `Now`                  | 已成为正式设置项，DOM/canvas 都遵守同一策略                                   | 给复杂 EPUB 提供可解释的样式保留与覆盖行为               | `reader`、DOM render input、content model style 清洗      | 依赖 `preferences`                                       |
+| Reader Baseline Stylesheet           | `Now`                  | 已有 `default-reflowable` baseline profile 和双路径样式基线                   | 保证弱样式 EPUB 也具备最小可读性                         | `reading-style-profile`、DOM baseline CSS、canvas profile | 依赖 `preferences`                                       |
+| Lang / RTL Baseline                  | `Now`                  | 已有 `lang` 暴露、方向推断、`experimentalRtl` 开关和测试样本                  | 让非拉丁文本和 RTL 不再停留在隐性需求                    | parser、chapter preprocess、reader、DOM wrapper/style     | 依赖 `preferences`，与 baseline 紧耦合                   |
+| Accessibility Baseline               | `Now`                  | 已有 section/publication accessibility snapshot 和搜索一致性测试              | 让语义阅读顺序、alt/caption/footnote/dl 成为正式平台输出 | `runtime/accessibility`、`reader`、搜索一致性             | 依赖 `locator`，后续服务 `annotation/TTS`                |
+| RTL Productization                   | `Next`                 | 已有方向基线，但还没有 page progression、导航语义和 paginated 产品化 contract | 让 RTL 从“可显示”升级到“可稳定使用”                      | 导航、分页、交互方向、DOM/canvas 对齐                     | 依赖 `preferences`，复用 `reading-language` 和 `locator` |
+| Fixed Layout (FXL)                   | `Next`                 | 当前仅有 `presentationRole` 等少量入口，没有正式 FXL reader contract          | 支持图文固定版式出版物和更完整 EPUB 生态                 | 解析层、viewport/layout 策略、DOM sandbox、分页与手势     | 依赖 `preferences`，部分复用 `locator`                   |
+| Spread / Synthetic Spread            | `Next`                 | 目前只具备单页 paginated，未形成 spread model                                 | 提升大屏阅读和 FXL/横屏场景体验                          | pagination model、viewport metrics、navigation、settings  | 依赖 `preferences`，与 FXL 强关联                        |
+| TTS / Read Aloud                     | `Next`                 | 当前只有 decorations 和 accessibility 入口，还没有朗读 contract               | 提升可访问性和伴随阅读能力                               | 语义读取、朗读队列、active decoration、事件模型           | 强依赖 `locator`、`decoration`、`accessibility`          |
+| Media Overlay                        | `Later`                | 当前没有 SMIL/media overlay 解析与时间轴同步能力                              | 支持音频与文本同步阅读                                   | parser、timeline、resource loading、同步定位              | 依赖 `locator`、`decoration`，与 TTS 相关但不同源        |
+| OPDS                                 | `Later`                | 当前只聚焦本地/输入级打开，不包含书库能力                                     | 支持目录发现、下载与分发流程                             | 网络层、认证、下载、书架与元数据管理                      | 与当前 reader 核心弱耦合                                 |
+| DRM / LCP                            | `Not in current phase` | 当前明确不纳入实现范围                                                        | 对受保护内容发行有价值，但成本和风险高                   | 解密链路、license、资源访问、测试资产、产品合规           | 需要独立安全与产品决策，不能直接挂现有 reader            |
 
 ## 5. 进入规则
 

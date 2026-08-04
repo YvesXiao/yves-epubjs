@@ -36,7 +36,9 @@ describe("bookmark helpers", () => {
       blocks: []
     })
 
-    expect(derivePublicationId({ book: identifiedBook })).toBe("identifier:urn:uuid:bookmark-test")
+    expect(derivePublicationId({ book: identifiedBook })).toBe(
+      "identifier:urn:uuid:bookmark-test"
+    )
 
     expect(
       derivePublicationId({

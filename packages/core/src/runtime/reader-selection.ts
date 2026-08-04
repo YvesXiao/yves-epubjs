@@ -40,7 +40,7 @@ export function hasActiveTextSelection(scope?: Node | null): boolean {
   const focusNode = selection.focusNode
   return Boolean(
     (anchorNode && scope.contains(anchorNode)) ||
-      (focusNode && scope.contains(focusNode))
+    (focusNode && scope.contains(focusNode))
   )
 }
 

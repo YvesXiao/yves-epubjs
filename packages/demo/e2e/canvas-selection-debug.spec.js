@@ -4,8 +4,14 @@ import path from "node:path"
 
 const DEBUG_BOOK_PATH = process.env.DEBUG_BOOK_PATH
 const DEBUG_OUTPUT_DIR = path.resolve(process.cwd(), "artifacts")
-const DEBUG_SCREENSHOT_PATH = path.join(DEBUG_OUTPUT_DIR, "canvas-selection-debug.png")
-const DEBUG_METRICS_PATH = path.join(DEBUG_OUTPUT_DIR, "canvas-selection-debug.json")
+const DEBUG_SCREENSHOT_PATH = path.join(
+  DEBUG_OUTPUT_DIR,
+  "canvas-selection-debug.png"
+)
+const DEBUG_METRICS_PATH = path.join(
+  DEBUG_OUTPUT_DIR,
+  "canvas-selection-debug.json"
+)
 const DEBUG_QUERY = process.env.DEBUG_QUERY ?? "二维数组中没有查找的数字"
 
 test.skip(
@@ -13,7 +19,9 @@ test.skip(
   "DEBUG_BOOK_PATH is required for canvas selection debug capture"
 )
 
-test("captures canvas selection alignment on the debug epub", async ({ page }) => {
+test("captures canvas selection alignment on the debug epub", async ({
+  page
+}) => {
   fs.mkdirSync(DEBUG_OUTPUT_DIR, { recursive: true })
 
   await page.goto("/")
@@ -31,8 +39,8 @@ test("captures canvas selection alignment on the debug epub", async ({ page }) =
   await expect(textRun).toBeVisible({ timeout: 30_000 })
 
   const metrics = await page.evaluate(() => {
-    const target = Array.from(document.querySelectorAll(".epub-text-run")).find((node) =>
-      node.textContent?.includes("二维数组中没有查找的数字")
+    const target = Array.from(document.querySelectorAll(".epub-text-run")).find(
+      (node) => node.textContent?.includes("二维数组中没有查找的数字")
     )
     if (!(target instanceof HTMLElement) || !target.firstChild) {
       return null

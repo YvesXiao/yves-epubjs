@@ -1,13 +1,13 @@
-import { describe, expect, it } from "vitest";
-import type { Annotation, Book, SectionDocument } from "../src/model/types";
-import { ReaderAnnotationService } from "../src/runtime/reader-annotation-service";
+import { describe, expect, it } from "vitest"
+import type { Annotation, Book, SectionDocument } from "../src/model/types"
+import { ReaderAnnotationService } from "../src/runtime/reader-annotation-service"
 
 describe("ReaderAnnotationService", () => {
   it("resolves text-range quotes from section text", () => {
-    const section = createTextSection("s1", "Hello world");
+    const section = createTextSection("s1", "Hello world")
     const service = createService({
       book: createBook([section])
-    });
+    })
 
     expect(
       service.resolveTextRangeQuote(section, {
@@ -20,11 +20,11 @@ describe("ReaderAnnotationService", () => {
           inlineOffset: 11
         }
       })
-    ).toBe("world");
-  });
+    ).toBe("world")
+  })
 
   it("detects when a selection is fully covered by an existing annotation", () => {
-    const section = createTextSection("s1", "Hello world");
+    const section = createTextSection("s1", "Hello world")
     const annotation: Annotation = {
       id: "annotation-1",
       publicationId: "book-1",
@@ -45,11 +45,11 @@ describe("ReaderAnnotationService", () => {
       quote: "Hello world",
       createdAt: "2026-04-24T00:00:00.000Z",
       updatedAt: "2026-04-24T00:00:00.000Z"
-    };
+    }
     const service = createService({
       book: createBook([section]),
       annotations: [annotation]
-    });
+    })
 
     expect(
       service.resolveSelectionHighlightState({
@@ -77,11 +77,11 @@ describe("ReaderAnnotationService", () => {
     ).toEqual({
       mode: "remove-highlight",
       disabled: false
-    });
-  });
+    })
+  })
 
   it("resolves annotation activation payloads at viewport points", () => {
-    const section = createTextSection("s1", "Hello world");
+    const section = createTextSection("s1", "Hello world")
     const annotation: Annotation = {
       id: "annotation-1",
       publicationId: "book-1",
@@ -103,12 +103,12 @@ describe("ReaderAnnotationService", () => {
       quote: "Hello",
       createdAt: "2026-04-24T00:00:00.000Z",
       updatedAt: "2026-04-24T00:00:00.000Z"
-    };
+    }
     const service = createService({
       book: createBook([section]),
       annotations: [annotation],
       rects: [{ x: 10, y: 20, width: 120, height: 24 }]
-    });
+    })
 
     expect(
       service.resolveAnnotationActivationAtPoint({ x: 30, y: 30 })
@@ -125,11 +125,11 @@ describe("ReaderAnnotationService", () => {
       sectionId: "s1",
       blockId: "text-1",
       quote: "Hello"
-    });
-  });
+    })
+  })
 
   it("activates annotations from rendered decoration overlay geometry", () => {
-    const section = createTextSection("s1", "Hello world");
+    const section = createTextSection("s1", "Hello world")
     const annotation: Annotation = {
       id: "annotation-1",
       publicationId: "book-1",
@@ -151,31 +151,31 @@ describe("ReaderAnnotationService", () => {
       quote: "Hello",
       createdAt: "2026-04-24T00:00:00.000Z",
       updatedAt: "2026-04-24T00:00:00.000Z"
-    };
-    const container = document.createElement("div");
-    const sectionElement = document.createElement("div");
-    const overlay = document.createElement("span");
-    sectionElement.className = "epub-dom-section";
-    overlay.dataset.epubDecorationId = "annotation:annotation-1";
-    overlay.dataset.epubDecorationStyle = "underline";
-    sectionElement.appendChild(overlay);
-    container.appendChild(sectionElement);
+    }
+    const container = document.createElement("div")
+    const sectionElement = document.createElement("div")
+    const overlay = document.createElement("span")
+    sectionElement.className = "epub-dom-section"
+    overlay.dataset.epubDecorationId = "annotation:annotation-1"
+    overlay.dataset.epubDecorationStyle = "underline"
+    sectionElement.appendChild(overlay)
+    container.appendChild(sectionElement)
 
     Object.defineProperty(container, "getBoundingClientRect", {
       configurable: true,
       value: () => new DOMRect(0, 0, 300, 200)
-    });
+    })
     Object.defineProperty(overlay, "getBoundingClientRect", {
       configurable: true,
       value: () => new DOMRect(24, 50, 120, 2)
-    });
+    })
 
     const service = createService({
       book: createBook([section]),
       annotations: [annotation],
       container,
       sectionElement
-    });
+    })
 
     expect(
       service.resolveAnnotationActivationAtPoint({ x: 40, y: 42 })
@@ -192,11 +192,11 @@ describe("ReaderAnnotationService", () => {
           height: 2
         }
       ]
-    });
-  });
+    })
+  })
 
   it("activates annotations directly from rendered decoration ids", () => {
-    const section = createTextSection("s1", "Hello world");
+    const section = createTextSection("s1", "Hello world")
     const annotation: Annotation = {
       id: "annotation-1",
       publicationId: "book-1",
@@ -218,31 +218,31 @@ describe("ReaderAnnotationService", () => {
       quote: "Hello",
       createdAt: "2026-04-24T00:00:00.000Z",
       updatedAt: "2026-04-24T00:00:00.000Z"
-    };
-    const container = document.createElement("div");
-    const sectionElement = document.createElement("div");
-    const overlay = document.createElement("span");
-    sectionElement.className = "epub-dom-section";
-    overlay.dataset.epubDecorationId = "annotation:annotation-1";
-    overlay.dataset.epubDecorationStyle = "underline";
-    sectionElement.appendChild(overlay);
-    container.appendChild(sectionElement);
+    }
+    const container = document.createElement("div")
+    const sectionElement = document.createElement("div")
+    const overlay = document.createElement("span")
+    sectionElement.className = "epub-dom-section"
+    overlay.dataset.epubDecorationId = "annotation:annotation-1"
+    overlay.dataset.epubDecorationStyle = "underline"
+    sectionElement.appendChild(overlay)
+    container.appendChild(sectionElement)
 
     Object.defineProperty(container, "getBoundingClientRect", {
       configurable: true,
       value: () => new DOMRect(0, 0, 300, 200)
-    });
+    })
     Object.defineProperty(overlay, "getBoundingClientRect", {
       configurable: true,
       value: () => new DOMRect(24, 50, 120, 2)
-    });
+    })
 
     const service = createService({
       book: createBook([section]),
       annotations: [annotation],
       container,
       sectionElement
-    });
+    })
 
     expect(
       service.resolveAnnotationActivationByDecorationId(
@@ -262,11 +262,11 @@ describe("ReaderAnnotationService", () => {
           height: 2
         }
       ]
-    });
-  });
+    })
+  })
 
   it("activates decoration ids when stored annotation ranges cannot be resolved", () => {
-    const section = createTextSection("s1", "Hello world");
+    const section = createTextSection("s1", "Hello world")
     const annotation: Annotation = {
       id: "annotation-1",
       publicationId: "book-1",
@@ -278,31 +278,31 @@ describe("ReaderAnnotationService", () => {
       quote: "Stored quote",
       createdAt: "2026-04-24T00:00:00.000Z",
       updatedAt: "2026-04-24T00:00:00.000Z"
-    };
-    const container = document.createElement("div");
-    const sectionElement = document.createElement("div");
-    const overlay = document.createElement("span");
-    sectionElement.className = "epub-dom-section";
-    overlay.dataset.epubDecorationId = "annotation:annotation-1";
-    overlay.dataset.epubDecorationStyle = "underline";
-    sectionElement.appendChild(overlay);
-    container.appendChild(sectionElement);
+    }
+    const container = document.createElement("div")
+    const sectionElement = document.createElement("div")
+    const overlay = document.createElement("span")
+    sectionElement.className = "epub-dom-section"
+    overlay.dataset.epubDecorationId = "annotation:annotation-1"
+    overlay.dataset.epubDecorationStyle = "underline"
+    sectionElement.appendChild(overlay)
+    container.appendChild(sectionElement)
 
     Object.defineProperty(container, "getBoundingClientRect", {
       configurable: true,
       value: () => new DOMRect(0, 0, 300, 200)
-    });
+    })
     Object.defineProperty(overlay, "getBoundingClientRect", {
       configurable: true,
       value: () => new DOMRect(24, 50, 120, 2)
-    });
+    })
 
     const service = createService({
       book: createBook([section]),
       annotations: [annotation],
       container,
       sectionElement
-    });
+    })
 
     expect(
       service.resolveAnnotationActivationByDecorationId(
@@ -322,18 +322,18 @@ describe("ReaderAnnotationService", () => {
           height: 2
         }
       ]
-    });
-  });
-});
+    })
+  })
+})
 
 function createService(input: {
-  book: Book;
-  annotations?: Annotation[];
-  rects?: Array<{ x: number; y: number; width: number; height: number }>;
-  container?: HTMLElement;
-  sectionElement?: HTMLElement;
+  book: Book
+  annotations?: Annotation[]
+  rects?: Array<{ x: number; y: number; width: number; height: number }>
+  container?: HTMLElement
+  sectionElement?: HTMLElement
 }): ReaderAnnotationService {
-  const container = input.container ?? document.createElement("div");
+  const container = input.container ?? document.createElement("div")
   return new ReaderAnnotationService({
     getBook: () => input.book,
     getAnnotations: () => input.annotations ?? [],
@@ -343,7 +343,7 @@ function createService(input: {
     getSectionElement: () => input.sectionElement ?? null,
     mapLocatorToViewport: () => input.rects ?? [],
     resolveCanvasTextRangeViewportRects: () => []
-  });
+  })
 }
 
 function createBook(sections: SectionDocument[]): Book {
@@ -360,7 +360,7 @@ function createBook(sections: SectionDocument[]): Book {
     })),
     toc: [],
     sections
-  };
+  }
 }
 
 function createTextSection(id: string, text: string): SectionDocument {
@@ -380,5 +380,5 @@ function createTextSection(id: string, text: string): SectionDocument {
         ]
       }
     ]
-  };
+  }
 }

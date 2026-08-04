@@ -14,8 +14,13 @@ export type ParseSpineContentDocumentInput = {
   stylesheets?: CssAstStyleSheet[]
 }
 
-export function canParseSpineContentDocument(mediaType: string | undefined): boolean {
-  return typeof mediaType === "string" && SUPPORTED_SPINE_CONTENT_MEDIA_TYPES.has(mediaType)
+export function canParseSpineContentDocument(
+  mediaType: string | undefined
+): boolean {
+  return (
+    typeof mediaType === "string" &&
+    SUPPORTED_SPINE_CONTENT_MEDIA_TYPES.has(mediaType)
+  )
 }
 
 export function parseSpineContentDocument(
@@ -27,9 +32,5 @@ export function parseSpineContentDocument(
     )
   }
 
-  return parseXhtmlDocument(
-    input.content,
-    input.href,
-    input.stylesheets ?? []
-  )
+  return parseXhtmlDocument(input.content, input.href, input.stylesheets ?? [])
 }

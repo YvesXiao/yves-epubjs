@@ -33,13 +33,13 @@ pnpm add @yves-epub/core
 ## Minimal Usage
 
 ```ts
-import { EpubReader } from "@yves-epub/core";
+import { EpubReader } from "@yves-epub/core"
 
-const container = document.getElementById("reader");
-const file = fileInput.files?.[0];
+const container = document.getElementById("reader")
+const file = fileInput.files?.[0]
 
 if (!container || !file) {
-  throw new Error("Missing reader container or EPUB file");
+  throw new Error("Missing reader container or EPUB file")
 }
 
 const reader = new EpubReader({
@@ -54,32 +54,32 @@ const reader = new EpubReader({
   },
   allowExternalEmbeddedResources: true,
   onExternalLink: ({ href }) => {
-    window.open(href, "_blank", "noopener,noreferrer");
+    window.open(href, "_blank", "noopener,noreferrer")
   }
-});
+})
 
 const offRelocated = reader.on("relocated", ({ locator }) => {
-  localStorage.setItem("lastLocator", JSON.stringify(locator));
-});
+  localStorage.setItem("lastLocator", JSON.stringify(locator))
+})
 
-await reader.open(file);
-await reader.render();
+await reader.open(file)
+await reader.render()
 
-const results = await reader.search("keyword");
+const results = await reader.search("keyword")
 if (results[0]) {
-  await reader.goToSearchResult(results[0]);
+  await reader.goToSearchResult(results[0])
 }
 
-const bookmark = reader.createBookmark({ label: "last read" });
+const bookmark = reader.createBookmark({ label: "last read" })
 if (bookmark) {
   localStorage.setItem(
     `bookmark:${bookmark.publicationId}`,
     JSON.stringify(bookmark)
-  );
+  )
 }
 
-offRelocated();
-reader.destroy();
+offRelocated()
+reader.destroy()
 ```
 
 ## Recommended Host Wrapper
@@ -154,20 +154,20 @@ import type {
   SectionDocument,
   Theme,
   TypographyOptions
-} from "@yves-epub/core";
+} from "@yves-epub/core"
 ```
 
 `Locator` is the main location protocol:
 
 ```ts
 type Locator = {
-  spineIndex: number;
-  blockId?: string;
-  anchorId?: string;
-  inlineOffset?: number;
-  cfi?: string;
-  progressInSection?: number;
-};
+  spineIndex: number
+  blockId?: string
+  anchorId?: string
+  inlineOffset?: number
+  cfi?: string
+  progressInSection?: number
+}
 ```
 
 ## Best Practices

@@ -296,7 +296,7 @@ type BlockNode =
 
 type TextBlock = {
   id: string
-  kind: 'text'
+  kind: "text"
   inlines: InlineNode[]
   style: TextStyle
 }
@@ -306,12 +306,12 @@ type TextBlock = {
 
 ```ts
 type InlineNode =
-  | { kind: 'text'; text: string }
-  | { kind: 'emphasis'; children: InlineNode[] }
-  | { kind: 'strong'; children: InlineNode[] }
-  | { kind: 'code'; text: string }
-  | { kind: 'link'; href: string; children: InlineNode[] }
-  | { kind: 'image'; src: string; alt?: string }
+  | { kind: "text"; text: string }
+  | { kind: "emphasis"; children: InlineNode[] }
+  | { kind: "strong"; children: InlineNode[] }
+  | { kind: "code"; text: string }
+  | { kind: "link"; href: string; children: InlineNode[] }
+  | { kind: "image"; src: string; alt?: string }
 ```
 
 ### 6.3 定位模型
@@ -684,4 +684,3 @@ MVP 阶段建议目标：
 - 测试样本和自动化回归机制尽早建立
 
 只要这三部分成立，后续分页、搜索、书签、高亮和 npm 发布都会顺畅得多。
-

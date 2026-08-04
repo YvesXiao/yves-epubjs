@@ -1,20 +1,20 @@
-import { describe, expect, it } from "vitest";
-import { LayoutEngine } from "../src/layout/layout-engine";
-import type { ImageDrawOp, TextRunDrawOp } from "../src/renderer/draw-ops";
-import { DisplayListBuilder } from "../src/renderer/display-list-builder";
-import { resolveImageLayout } from "../src/utils/image-layout";
-import type { SectionDocument } from "../src/model/types";
+import { describe, expect, it } from "vitest"
+import { LayoutEngine } from "../src/layout/layout-engine"
+import type { ImageDrawOp, TextRunDrawOp } from "../src/renderer/draw-ops"
+import { DisplayListBuilder } from "../src/renderer/display-list-builder"
+import { resolveImageLayout } from "../src/utils/image-layout"
+import type { SectionDocument } from "../src/model/types"
 
 const typography = {
   fontSize: 18,
   lineHeight: 1.6,
   paragraphSpacing: 12
-} as const;
+} as const
 
 const theme = {
   color: "#1f2328",
   background: "#fffdf7"
-} as const;
+} as const
 
 describe("image layout strategy", () => {
   it("keeps small images at their intrinsic width instead of stretching to fill the column", () => {
@@ -23,11 +23,11 @@ describe("image layout strategy", () => {
       viewportHeight: 720,
       intrinsicWidth: 120,
       intrinsicHeight: 90
-    });
+    })
 
-    expect(layout.width).toBe(120);
-    expect(layout.height).toBe(90);
-  });
+    expect(layout.width).toBe(120)
+    expect(layout.height).toBe(90)
+  })
 
   it("caps oversized content images to the content width instead of using heuristic width buckets", () => {
     const wide = resolveImageLayout({
@@ -35,17 +35,17 @@ describe("image layout strategy", () => {
       viewportHeight: 720,
       intrinsicWidth: 1600,
       intrinsicHeight: 900
-    });
+    })
     const regular = resolveImageLayout({
       availableWidth: 480,
       viewportHeight: 720,
       intrinsicWidth: 1000,
       intrinsicHeight: 1000
-    });
+    })
 
-    expect(wide.width).toBe(480);
-    expect(regular.width).toBe(480);
-  });
+    expect(wide.width).toBe(480)
+    expect(regular.width).toBe(480)
+  })
 
   it("caps tall portrait images against the viewport height", () => {
     const layout = resolveImageLayout({
@@ -53,11 +53,11 @@ describe("image layout strategy", () => {
       viewportHeight: 400,
       intrinsicWidth: 600,
       intrinsicHeight: 1800
-    });
+    })
 
-    expect(layout.height).toBeLessThanOrEqual(400 * 0.78);
-    expect(layout.width).toBeLessThan(480 * 0.9);
-  });
+    expect(layout.height).toBeLessThanOrEqual(400 * 0.78)
+    expect(layout.width).toBeLessThan(480 * 0.9)
+  })
 
   it("allows cover images to fill the available width", () => {
     const layout = resolveImageLayout({
@@ -88,9 +88,9 @@ describe("image layout strategy", () => {
           height: 90
         }
       ]
-    };
+    }
 
-    const engine = new LayoutEngine();
+    const engine = new LayoutEngine()
     const layout = engine.layout(
       {
         section,
@@ -101,8 +101,8 @@ describe("image layout strategy", () => {
         fontFamily: "serif"
       },
       "scroll"
-    );
-    const builder = new DisplayListBuilder();
+    )
+    const builder = new DisplayListBuilder()
     const displayList = builder.buildSection({
       section,
       width: 400,
@@ -111,19 +111,21 @@ describe("image layout strategy", () => {
       theme,
       typography,
       activeBlockId: undefined
-    });
-    const imageOp = displayList.ops.find((op): op is ImageDrawOp => op.kind === "image");
+    })
+    const imageOp = displayList.ops.find(
+      (op): op is ImageDrawOp => op.kind === "image"
+    )
 
-    expect(layout.blocks[0]?.estimatedHeight).toBe(106);
-    expect(imageOp).toBeTruthy();
+    expect(layout.blocks[0]?.estimatedHeight).toBe(106)
+    expect(imageOp).toBeTruthy()
     expect(imageOp?.rect).toEqual({
       x: 140,
       y: 8,
       width: 120,
       height: 90
-    });
-    expect(displayList.height).toBe(130);
-  });
+    })
+    expect(displayList.height).toBe(130)
+  })
 
   it("uses resolved resource intrinsic sizes when block metadata is missing", () => {
     const section: SectionDocument = {
@@ -138,9 +140,9 @@ describe("image layout strategy", () => {
           alt: "Inline image"
         }
       ]
-    };
+    }
 
-    const engine = new LayoutEngine();
+    const engine = new LayoutEngine()
     const layout = engine.layout(
       {
         section,
@@ -155,8 +157,8 @@ describe("image layout strategy", () => {
         })
       },
       "scroll"
-    );
-    const builder = new DisplayListBuilder();
+    )
+    const builder = new DisplayListBuilder()
     const displayList = builder.buildSection({
       section,
       width: layout.width,
@@ -170,17 +172,19 @@ describe("image layout strategy", () => {
         height: 90
       }),
       activeBlockId: undefined
-    });
-    const imageOp = displayList.ops.find((op): op is ImageDrawOp => op.kind === "image");
+    })
+    const imageOp = displayList.ops.find(
+      (op): op is ImageDrawOp => op.kind === "image"
+    )
 
-    expect(layout.blocks[0]?.estimatedHeight).toBe(106);
+    expect(layout.blocks[0]?.estimatedHeight).toBe(106)
     expect(imageOp?.rect).toEqual({
       x: 140,
       y: 8,
       width: 120,
       height: 90
-    });
-  });
+    })
+  })
 
   it("keeps code block indentation and wraps long lines consistently", () => {
     const section: SectionDocument = {
@@ -194,9 +198,9 @@ describe("image layout strategy", () => {
           text: "  const answer = 42\nveryLongIdentifierNameThatNeedsWrapping()"
         }
       ]
-    };
+    }
 
-    const engine = new LayoutEngine();
+    const engine = new LayoutEngine()
     const layout = engine.layout(
       {
         section,
@@ -207,8 +211,8 @@ describe("image layout strategy", () => {
         fontFamily: "serif"
       },
       "scroll"
-    );
-    const builder = new DisplayListBuilder();
+    )
+    const builder = new DisplayListBuilder()
     const displayList = builder.buildSection({
       section,
       width: 220,
@@ -217,19 +221,19 @@ describe("image layout strategy", () => {
       theme,
       typography,
       activeBlockId: undefined
-    });
+    })
 
     const codeTextOps = displayList.ops.filter(
       (op): op is TextRunDrawOp => op.kind === "text" && op.blockId === "code-1"
-    );
+    )
 
-    expect(layout.blocks[0]?.estimatedHeight).toBeGreaterThan(70);
-    expect(codeTextOps.length).toBeGreaterThanOrEqual(3);
-    expect(codeTextOps[0]?.text.startsWith("  ")).toBe(true);
+    expect(layout.blocks[0]?.estimatedHeight).toBeGreaterThan(70)
+    expect(codeTextOps.length).toBeGreaterThanOrEqual(3)
+    expect(codeTextOps[0]?.text.startsWith("  ")).toBe(true)
     expect(codeTextOps.map((op) => op.text).join("")).toContain(
       "veryLongIdentifierNameThatNeedsWrapping()"
-    );
-  });
+    )
+  })
 
   it("keeps inline images on the pretext canvas path", () => {
     const section: SectionDocument = {
@@ -253,9 +257,9 @@ describe("image layout strategy", () => {
           ]
         }
       ]
-    };
+    }
 
-    const engine = new LayoutEngine();
+    const engine = new LayoutEngine()
     const layout = engine.layout(
       {
         section,
@@ -266,7 +270,7 @@ describe("image layout strategy", () => {
         fontFamily: "serif"
       },
       "scroll"
-    );
+    )
     const displayList = new DisplayListBuilder().buildSection({
       section,
       width: 260,
@@ -276,16 +280,17 @@ describe("image layout strategy", () => {
       typography,
       resolveImageLoaded: () => true,
       activeBlockId: undefined
-    });
+    })
     const inlineImageOp = displayList.ops.find(
-      (op): op is ImageDrawOp => op.kind === "image" && op.blockId === "text-inline-image"
-    );
+      (op): op is ImageDrawOp =>
+        op.kind === "image" && op.blockId === "text-inline-image"
+    )
 
-    expect(layout.blocks[0]?.type).toBe("pretext");
-    expect(inlineImageOp).toBeTruthy();
-    expect(inlineImageOp?.rect.width).toBe(20);
-    expect(inlineImageOp?.rect.height).toBe(20);
-  });
+    expect(layout.blocks[0]?.type).toBe("pretext")
+    expect(inlineImageOp).toBeTruthy()
+    expect(inlineImageOp?.rect.width).toBe(20)
+    expect(inlineImageOp?.rect.height).toBe(20)
+  })
 
   it("recomputes inline image geometry when resource intrinsic sizes become available", () => {
     const section: SectionDocument = {
@@ -351,9 +356,9 @@ describe("image layout strategy", () => {
     expect(firstImage?.width ?? 0).toBeLessThan(40)
     expect(secondImage?.width).toBe(441)
     expect(secondImage?.height).toBe(177)
-    expect((secondImage?.width ?? 0) - (firstImage?.width ?? 0)).toBeGreaterThan(
-      300
-    )
+    expect(
+      (secondImage?.width ?? 0) - (firstImage?.width ?? 0)
+    ).toBeGreaterThan(300)
   })
 
   it("reserves full block height for centered legacy image paragraphs", () => {
@@ -415,4 +420,4 @@ describe("image layout strategy", () => {
     expect(imageOp).toBeTruthy()
     expect(imageOp?.rect.x ?? 99).toBeLessThanOrEqual(8)
   })
-});
+})

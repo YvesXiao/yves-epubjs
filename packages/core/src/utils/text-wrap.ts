@@ -5,7 +5,11 @@ export function extractFontSize(font: string): number {
 
 const TEXT_WIDTH_CACHE_LIMIT = 20_000
 const textWidthCache = new Map<string, number>()
-let textMeasurementContext: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null | undefined
+let textMeasurementContext:
+  | CanvasRenderingContext2D
+  | OffscreenCanvasRenderingContext2D
+  | null
+  | undefined
 
 export function approximateTextWidth(text: string, font: string): number {
   if (!text) {
@@ -27,9 +31,12 @@ export function approximateTextWidth(text: string, font: string): number {
   }
 
   const fontSize = extractFontSize(font)
-  const wideChars = Array.from(text).filter((char) => char.charCodeAt(0) > 255).length
+  const wideChars = Array.from(text).filter(
+    (char) => char.charCodeAt(0) > 255
+  ).length
   const asciiChars = Math.max(0, text.length - wideChars)
-  const fallbackWidth = wideChars * fontSize * 0.92 + asciiChars * fontSize * 0.56
+  const fallbackWidth =
+    wideChars * fontSize * 0.92 + asciiChars * fontSize * 0.56
   cacheTextWidth(cacheKey, fallbackWidth)
   return fallbackWidth
 }
@@ -40,11 +47,19 @@ export type WrappedTextLine = {
   end: number
 }
 
-export function wrapText(text: string, maxWidth: number, font: string): string[] {
+export function wrapText(
+  text: string,
+  maxWidth: number,
+  font: string
+): string[] {
   return wrapTextWithOffsets(text, maxWidth, font).map((line) => line.text)
 }
 
-export function wrapTextWithOffsets(text: string, maxWidth: number, font: string): WrappedTextLine[] {
+export function wrapTextWithOffsets(
+  text: string,
+  maxWidth: number,
+  font: string
+): WrappedTextLine[] {
   if (!text) {
     return [{ text: "", start: 0, end: 0 }]
   }
@@ -94,7 +109,8 @@ export function estimateWrappedTextHeight(
   font: string,
   lineHeight?: number
 ): number {
-  const safeLineHeight = lineHeight ?? Math.max(extractFontSize(font) * 1.45, 18)
+  const safeLineHeight =
+    lineHeight ?? Math.max(extractFontSize(font) * 1.45, 18)
   return wrapText(text, width, font).length * safeLineHeight
 }
 
@@ -106,7 +122,10 @@ function getTextMeasurementContext():
     return textMeasurementContext
   }
 
-  if (typeof document !== "undefined" && typeof document.createElement === "function") {
+  if (
+    typeof document !== "undefined" &&
+    typeof document.createElement === "function"
+  ) {
     const canvas = document.createElement("canvas")
     textMeasurementContext = canvas.getContext("2d")
     return textMeasurementContext

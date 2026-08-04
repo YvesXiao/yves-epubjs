@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest"
 import { LayoutEngine } from "../src/layout/layout-engine"
 import { DisplayListBuilder } from "../src/renderer/display-list-builder"
-import type { ImageDrawOp, RectDrawOp, TextRunDrawOp } from "../src/renderer/draw-ops"
+import type {
+  ImageDrawOp,
+  RectDrawOp,
+  TextRunDrawOp
+} from "../src/renderer/draw-ops"
 import type { SectionDocument } from "../src/model/types"
 
 const typography = {
@@ -84,7 +88,9 @@ describe("structured native block layout", () => {
 
     const markerOps = displayList.ops.filter(
       (op): op is TextRunDrawOp =>
-        op.kind === "text" && op.blockId === "list-1" && (op.text === "3." || op.text === "\u2022")
+        op.kind === "text" &&
+        op.blockId === "list-1" &&
+        (op.text === "3." || op.text === "\u2022")
     )
 
     expect(markerOps).toHaveLength(2)
@@ -144,7 +150,8 @@ describe("structured native block layout", () => {
     })
 
     const imageOp = displayList.ops.find(
-      (op): op is ImageDrawOp => op.kind === "image" && op.blockId === "figure-1"
+      (op): op is ImageDrawOp =>
+        op.kind === "image" && op.blockId === "figure-1"
     )
     const captionOp = displayList.ops.find(
       (op): op is TextRunDrawOp =>
@@ -182,12 +189,24 @@ describe("structured native block layout", () => {
                 {
                   id: "cell-1",
                   header: true,
-                  blocks: [{ id: "cell-text-1", kind: "text", inlines: [{ kind: "text", text: "Name" }] }]
+                  blocks: [
+                    {
+                      id: "cell-text-1",
+                      kind: "text",
+                      inlines: [{ kind: "text", text: "Name" }]
+                    }
+                  ]
                 },
                 {
                   id: "cell-2",
                   header: true,
-                  blocks: [{ id: "cell-text-2", kind: "text", inlines: [{ kind: "text", text: "Score" }] }]
+                  blocks: [
+                    {
+                      id: "cell-text-2",
+                      kind: "text",
+                      inlines: [{ kind: "text", text: "Score" }]
+                    }
+                  ]
                 }
               ]
             },
@@ -196,11 +215,23 @@ describe("structured native block layout", () => {
               cells: [
                 {
                   id: "cell-3",
-                  blocks: [{ id: "cell-text-3", kind: "text", inlines: [{ kind: "text", text: "Alice" }] }]
+                  blocks: [
+                    {
+                      id: "cell-text-3",
+                      kind: "text",
+                      inlines: [{ kind: "text", text: "Alice" }]
+                    }
+                  ]
                 },
                 {
                   id: "cell-4",
-                  blocks: [{ id: "cell-text-4", kind: "text", inlines: [{ kind: "text", text: "98" }] }]
+                  blocks: [
+                    {
+                      id: "cell-text-4",
+                      kind: "text",
+                      inlines: [{ kind: "text", text: "98" }]
+                    }
+                  ]
                 }
               ]
             }
@@ -233,7 +264,9 @@ describe("structured native block layout", () => {
 
     const cellRects = displayList.ops.filter(
       (op): op is RectDrawOp =>
-        op.kind === "rect" && op.blockId === "table-1" && op.strokeColor === "rgba(148, 163, 184, 0.35)"
+        op.kind === "rect" &&
+        op.blockId === "table-1" &&
+        op.strokeColor === "rgba(148, 163, 184, 0.35)"
     )
 
     expect(layout.blocks[0]?.estimatedHeight).toBeGreaterThan(100)
@@ -284,11 +317,15 @@ describe("structured native block layout", () => {
 
     const asidePanel = displayList.ops.find(
       (op): op is RectDrawOp =>
-        op.kind === "rect" && op.blockId === "aside-1" && op.color === "rgba(59, 123, 163, 0.08)"
+        op.kind === "rect" &&
+        op.blockId === "aside-1" &&
+        op.color === "rgba(59, 123, 163, 0.08)"
     )
     const asideText = displayList.ops.find(
       (op): op is TextRunDrawOp =>
-        op.kind === "text" && op.blockId === "aside-1" && op.text.includes("Important note content")
+        op.kind === "text" &&
+        op.blockId === "aside-1" &&
+        op.text.includes("Important note content")
     )
 
     expect(asidePanel).toBeTruthy()
@@ -349,11 +386,15 @@ describe("structured native block layout", () => {
 
     const background = displayList.ops.find(
       (op): op is RectDrawOp =>
-        op.kind === "rect" && op.blockId === "quote-1" && op.color === "rgba(102, 51, 0, 0.08)"
+        op.kind === "rect" &&
+        op.blockId === "quote-1" &&
+        op.color === "rgba(102, 51, 0, 0.08)"
     )
     const quoteText = displayList.ops.find(
       (op): op is TextRunDrawOp =>
-        op.kind === "text" && op.blockId === "quote-1" && op.text.includes("Centered quote fallback")
+        op.kind === "text" &&
+        op.blockId === "quote-1" &&
+        op.text.includes("Centered quote fallback")
     )
 
     expect(background).toBeTruthy()

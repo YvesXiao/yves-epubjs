@@ -45,7 +45,9 @@ export class DecorationManager {
   }
 
   getForSpineIndex(spineIndex: number): Decoration[] {
-    return this.getAll().filter((decoration) => decoration.locator.spineIndex === spineIndex)
+    return this.getAll().filter(
+      (decoration) => decoration.locator.spineIndex === spineIndex
+    )
   }
 
   getBlockIdsForStyles(styles: DecorationStyle[]): Set<string> {
@@ -59,22 +61,30 @@ export class DecorationManager {
   }
 
   getFirstLocatorForStyle(style: DecorationStyle): Locator | undefined {
-    return this.getAll().find((decoration) => decoration.style === style)?.locator
+    return this.getAll().find((decoration) => decoration.style === style)
+      ?.locator
   }
 }
 
-function normalizeDecorations(group: string, decorations: Decoration[]): Decoration[] {
+function normalizeDecorations(
+  group: string,
+  decorations: Decoration[]
+): Decoration[] {
   return decorations.map((decoration, index) => ({
     id: decoration.id.trim() || `${group}:${index + 1}`,
     group,
     locator: normalizeLocator(decoration.locator),
     style: decoration.style,
     ...(decoration.color?.trim() ? { color: decoration.color.trim() } : {}),
-    ...(decoration.extras ? { extras: normalizeDecorationExtras(decoration.extras) } : {})
+    ...(decoration.extras
+      ? { extras: normalizeDecorationExtras(decoration.extras) }
+      : {})
   }))
 }
 
-function normalizeDecorationExtras(extras: NonNullable<Decoration["extras"]>): NonNullable<Decoration["extras"]> {
+function normalizeDecorationExtras(
+  extras: NonNullable<Decoration["extras"]>
+): NonNullable<Decoration["extras"]> {
   return {
     ...(extras.renderHint ? { renderHint: extras.renderHint } : {}),
     ...(extras.label?.trim() ? { label: extras.label.trim() } : {}),
@@ -83,11 +93,17 @@ function normalizeDecorationExtras(extras: NonNullable<Decoration["extras"]>): N
           textRange: {
             start: {
               blockId: extras.textRange.start.blockId.trim(),
-              inlineOffset: Math.max(0, Math.trunc(extras.textRange.start.inlineOffset))
+              inlineOffset: Math.max(
+                0,
+                Math.trunc(extras.textRange.start.inlineOffset)
+              )
             },
             end: {
               blockId: extras.textRange.end.blockId.trim(),
-              inlineOffset: Math.max(0, Math.trunc(extras.textRange.end.inlineOffset))
+              inlineOffset: Math.max(
+                0,
+                Math.trunc(extras.textRange.end.inlineOffset)
+              )
             }
           }
         }

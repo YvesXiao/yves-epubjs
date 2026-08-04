@@ -19,26 +19,26 @@ const MIME_BY_EXTENSION: Record<string, string> = {
   woff2: "font/woff2",
   xhtml: "application/xhtml+xml",
   xml: "application/xml"
-};
+}
 
 export function getExtension(path: string): string | null {
-  const cleanPath = path.split("?")[0]?.split("#")[0] ?? "";
-  const fileName = cleanPath.split("/").pop() ?? "";
-  const extension = fileName.split(".").pop();
+  const cleanPath = path.split("?")[0]?.split("#")[0] ?? ""
+  const fileName = cleanPath.split("/").pop() ?? ""
+  const extension = fileName.split(".").pop()
 
   if (!extension || extension === fileName) {
-    return null;
+    return null
   }
 
-  return extension.toLowerCase();
+  return extension.toLowerCase()
 }
 
 export function getMimeTypeFromPath(path: string): string | null {
-  const extension = getExtension(path);
+  const extension = getExtension(path)
 
   if (!extension) {
-    return null;
+    return null
   }
 
-  return MIME_BY_EXTENSION[extension] ?? null;
+  return MIME_BY_EXTENSION[extension] ?? null
 }

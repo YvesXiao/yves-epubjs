@@ -57,11 +57,11 @@
 
 ### 4.1 可选路线
 
-| 路线 | 描述 | 优点 | 成本与风险 |
-| --- | --- | --- | --- |
-| A. 纯 Canvas | 所有正文块都绘制到 canvas，交互完全依赖命中测试 | 渲染模型最统一，后续扩展空间最大 | 首期实现成本最高，表格、选区、可访问性压力最大 |
-| B. Canvas First + 有界兼容层 | 主路径全部走 canvas；个别复杂块在首期走受控 fallback；fallback 结果参与统一定位模型 | 能在保持方向正确的前提下压缩首期复杂度 | 需要定义 fallback 边界，避免重新回到 DOM 主导 |
-| C. 继续 DOM，仅增加 pretext 占比 | 维持当前模式，继续把更多块交给 DOM 渲染 | 短期改动最小 | 最终渲染仍被浏览器控制，无法解决核心目标 |
+| 路线                             | 描述                                                                                | 优点                                   | 成本与风险                                     |
+| -------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------- | ---------------------------------------------- |
+| A. 纯 Canvas                     | 所有正文块都绘制到 canvas，交互完全依赖命中测试                                     | 渲染模型最统一，后续扩展空间最大       | 首期实现成本最高，表格、选区、可访问性压力最大 |
+| B. Canvas First + 有界兼容层     | 主路径全部走 canvas；个别复杂块在首期走受控 fallback；fallback 结果参与统一定位模型 | 能在保持方向正确的前提下压缩首期复杂度 | 需要定义 fallback 边界，避免重新回到 DOM 主导  |
+| C. 继续 DOM，仅增加 pretext 占比 | 维持当前模式，继续把更多块交给 DOM 渲染                                             | 短期改动最小                           | 最终渲染仍被浏览器控制，无法解决核心目标       |
 
 ### 4.2 推荐路线
 
@@ -154,16 +154,16 @@ V1 采用以下收敛策略：
 
 不同 block 的 V1 绘制要求如下：
 
-| Block 类型 | V1 要求 |
-| --- | --- |
-| heading | 使用 `pretext` 行布局，支持字号倍率、对齐和基础高亮 |
-| text | 使用 `pretext` 行布局，支持链接、代码片段、搜索高亮 |
-| list | 支持有序、无序列表，项目自行绘制 marker 与缩进 |
-| quote | 支持引用边线、内边距和内部 block 递归绘制 |
-| code | 支持等宽字体、背景色、滚动内收敛策略 |
-| image | 支持占位、异步替换、尺寸约束和局部重绘 |
-| table | 支持基础网格、单元格 padding、header 样式；复杂 CSS 收敛 |
-| thematic-break | 支持单线或渐变线绘制 |
+| Block 类型     | V1 要求                                                  |
+| -------------- | -------------------------------------------------------- |
+| heading        | 使用 `pretext` 行布局，支持字号倍率、对齐和基础高亮      |
+| text           | 使用 `pretext` 行布局，支持链接、代码片段、搜索高亮      |
+| list           | 支持有序、无序列表，项目自行绘制 marker 与缩进           |
+| quote          | 支持引用边线、内边距和内部 block 递归绘制                |
+| code           | 支持等宽字体、背景色、滚动内收敛策略                     |
+| image          | 支持占位、异步替换、尺寸约束和局部重绘                   |
+| table          | 支持基础网格、单元格 padding、header 样式；复杂 CSS 收敛 |
+| thematic-break | 支持单线或渐变线绘制                                     |
 
 ### 7.4 交互与命中测试
 
@@ -223,19 +223,19 @@ scroll 模式要求：
 
 ## 8. 状态 × 操作 → 结果矩阵
 
-| 状态 | 用户操作 / 系统事件 | 结果 | 约束 |
-| --- | --- | --- | --- |
-| `idle` | `open(file)` | 进入 `opening` | 清空旧缓存和旧命中图 |
-| `opening` | EPUB 解析完成 | 进入 `layout-pending` | 暂不提交正文画面 |
-| `layout-pending` | 字体与基础资源 ready | 进入 `paint-ready` | 生成 display list 和 interaction map |
-| `paint-ready` | `render()` | 首次画面提交 | 当前 locator 初始化 |
-| `paint-ready` | `next/prev/goToPage/goToLocation` | 进入 `relocating` | 复用已有 layout，优先避免全量重排 |
-| `relocating` | 目标页或目标 section 准备完成 | 回到 `paint-ready` | 位置高亮、进度、TOC 同步刷新 |
-| `paint-ready` | `setTypography/setTheme/resize` | 进入 `relayout-pending` | 旧画面继续显示 |
-| `relayout-pending` | 新 layout ready | 回到 `paint-ready` | 原子替换 display list |
-| `paint-ready` | 图片异步到达 | 进入 `partial-refresh-pending` | 仅更新受影响区域 |
-| `partial-refresh-pending` | 局部 draw ops ready | 回到 `paint-ready` | 当前阅读位置保持稳定 |
-| 任意状态 | `destroy()` | 进入 `destroyed` | 释放图片、字体引用与缓存 |
+| 状态                      | 用户操作 / 系统事件               | 结果                           | 约束                                 |
+| ------------------------- | --------------------------------- | ------------------------------ | ------------------------------------ |
+| `idle`                    | `open(file)`                      | 进入 `opening`                 | 清空旧缓存和旧命中图                 |
+| `opening`                 | EPUB 解析完成                     | 进入 `layout-pending`          | 暂不提交正文画面                     |
+| `layout-pending`          | 字体与基础资源 ready              | 进入 `paint-ready`             | 生成 display list 和 interaction map |
+| `paint-ready`             | `render()`                        | 首次画面提交                   | 当前 locator 初始化                  |
+| `paint-ready`             | `next/prev/goToPage/goToLocation` | 进入 `relocating`              | 复用已有 layout，优先避免全量重排    |
+| `relocating`              | 目标页或目标 section 准备完成     | 回到 `paint-ready`             | 位置高亮、进度、TOC 同步刷新         |
+| `paint-ready`             | `setTypography/setTheme/resize`   | 进入 `relayout-pending`        | 旧画面继续显示                       |
+| `relayout-pending`        | 新 layout ready                   | 回到 `paint-ready`             | 原子替换 display list                |
+| `paint-ready`             | 图片异步到达                      | 进入 `partial-refresh-pending` | 仅更新受影响区域                     |
+| `partial-refresh-pending` | 局部 draw ops ready               | 回到 `paint-ready`             | 当前阅读位置保持稳定                 |
+| 任意状态                  | `destroy()`                       | 进入 `destroyed`               | 释放图片、字体引用与缓存             |
 
 ## 9. 接口与模块变化
 

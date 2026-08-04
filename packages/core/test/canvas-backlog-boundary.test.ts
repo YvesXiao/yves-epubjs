@@ -11,7 +11,9 @@ import {
   HIGH_RISK_DOM_TAGS
 } from "../src/runtime/canvas-backlog-boundary"
 
-function createAnalysisInput(overrides: Partial<ChapterAnalysisInput> = {}): ChapterAnalysisInput {
+function createAnalysisInput(
+  overrides: Partial<ChapterAnalysisInput> = {}
+): ChapterAnalysisInput {
   return {
     href: "OPS/test.xhtml",
     rootTagName: "body",
@@ -34,17 +36,9 @@ describe("canvas backlog boundary", () => {
   it("keeps analyzer freeze signals aligned with the single source of truth", () => {
     expect(HIGH_RISK_TAGS).toEqual(HIGH_RISK_DOM_TAGS)
     expect(COMPLEX_STYLE_PROPERTIES).toEqual(COMPLEX_DOM_STYLE_PROPERTIES)
-    expect(CANVAS_BACKLOG_FREEZE_SIGNALS.map((signal) => signal.renderer)).toEqual([
-      "dom",
-      "dom",
-      "dom",
-      "dom",
-      "dom",
-      "dom",
-      "dom",
-      "dom",
-      "dom"
-    ])
+    expect(
+      CANVAS_BACKLOG_FREEZE_SIGNALS.map((signal) => signal.renderer)
+    ).toEqual(["dom", "dom", "dom", "dom", "dom", "dom", "dom", "dom", "dom"])
   })
 
   it("routes every frozen high-risk tag to dom by default", () => {

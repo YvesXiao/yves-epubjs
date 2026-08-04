@@ -1,13 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest"
 import type {
   BlockNode,
   InlineNode,
   SectionDocument,
   TableBlock
-} from "../src/model/types";
+} from "../src/model/types"
 
 function serializeSection(section: SectionDocument): string {
-  return JSON.stringify(section, null, 2);
+  return JSON.stringify(section, null, 2)
 }
 
 describe("content model", () => {
@@ -17,7 +17,7 @@ describe("content model", () => {
       kind: "heading",
       level: 1,
       inlines: [{ kind: "text", text: "Chapter 1" }]
-    };
+    }
 
     const paragraph: BlockNode = {
       id: "paragraph-1",
@@ -31,7 +31,7 @@ describe("content model", () => {
         { kind: "strong", children: [{ kind: "text", text: "opened" }] },
         { kind: "text", text: " the door." }
       ]
-    };
+    }
 
     const section: SectionDocument = {
       id: "section-1",
@@ -42,13 +42,13 @@ describe("content model", () => {
       anchors: {
         intro: "heading-1"
       }
-    };
+    }
 
-    expect(section.blocks).toHaveLength(2);
-    expect(section.anchors.intro).toBe("heading-1");
-    expect(serializeSection(section)).toContain("\"kind\": \"heading\"");
-    expect(serializeSection(section)).toContain("\"kind\": \"text\"");
-  });
+    expect(section.blocks).toHaveLength(2)
+    expect(section.anchors.intro).toBe("heading-1")
+    expect(serializeSection(section)).toContain('"kind": "heading"')
+    expect(serializeSection(section)).toContain('"kind": "text"')
+  })
 
   it("supports nested inline structures for links, emphasis, and images", () => {
     const paragraph: BlockNode = {
@@ -66,9 +66,9 @@ describe("content model", () => {
         { kind: "text", text: " or inspect " },
         { kind: "image", src: "OPS/images/cover.png", alt: "Cover" }
       ]
-    };
+    }
 
-    const inlines = paragraph.inlines as InlineNode[];
+    const inlines = paragraph.inlines as InlineNode[]
 
     expect(inlines[1]).toEqual({
       kind: "link",
@@ -79,13 +79,13 @@ describe("content model", () => {
           children: [{ kind: "text", text: "note 1" }]
         }
       ]
-    });
+    })
     expect(inlines[3]).toEqual({
       kind: "image",
       src: "OPS/images/cover.png",
       alt: "Cover"
-    });
-  });
+    })
+  })
 
   it("supports expanded semantic nodes for future reflowable compatibility work", () => {
     const paragraph: BlockNode = {
@@ -108,7 +108,7 @@ describe("content model", () => {
           children: [{ kind: "text", text: "1" }]
         }
       ]
-    };
+    }
 
     const figure: BlockNode = {
       id: "figure-1",
@@ -129,7 +129,7 @@ describe("content model", () => {
           inlines: [{ kind: "text", text: "Figure caption" }]
         }
       ]
-    };
+    }
 
     const definitionList: BlockNode = {
       id: "dl-1",
@@ -155,7 +155,7 @@ describe("content model", () => {
           ]
         }
       ]
-    };
+    }
 
     const section: SectionDocument = {
       id: "section-expanded",
@@ -176,16 +176,16 @@ describe("content model", () => {
         }
       ],
       anchors: {}
-    };
+    }
 
-    expect(section.blocks[0]?.kind).toBe("text");
-    expect(section.blocks[1]?.kind).toBe("figure");
-    expect(section.blocks[2]?.kind).toBe("definition-list");
-    expect(section.blocks[3]?.kind).toBe("aside");
-    expect(section.blocks[4]?.kind).toBe("nav");
-    expect(serializeSection(section)).toContain("\"kind\": \"mark\"");
-    expect(serializeSection(section)).toContain("\"kind\": \"sup\"");
-  });
+    expect(section.blocks[0]?.kind).toBe("text")
+    expect(section.blocks[1]?.kind).toBe("figure")
+    expect(section.blocks[2]?.kind).toBe("definition-list")
+    expect(section.blocks[3]?.kind).toBe("aside")
+    expect(section.blocks[4]?.kind).toBe("nav")
+    expect(serializeSection(section)).toContain('"kind": "mark"')
+    expect(serializeSection(section)).toContain('"kind": "sup"')
+  })
 
   it("supports complex blocks like lists, quotes, code, tables, and thematic breaks", () => {
     const table: TableBlock = {
@@ -209,7 +209,7 @@ describe("content model", () => {
           ]
         }
       ]
-    };
+    }
 
     const section: SectionDocument = {
       id: "section-complex",
@@ -258,13 +258,13 @@ describe("content model", () => {
         }
       ],
       anchors: {}
-    };
+    }
 
-    expect(section.blocks[0]?.kind).toBe("list");
-    expect(section.blocks[1]?.kind).toBe("quote");
-    expect(section.blocks[2]?.kind).toBe("code");
-    expect(section.blocks[3]?.kind).toBe("table");
-    expect(section.blocks[4]?.kind).toBe("thematic-break");
-    expect(table.rows[0]?.cells[0]?.blocks[0]?.kind).toBe("text");
-  });
-});
+    expect(section.blocks[0]?.kind).toBe("list")
+    expect(section.blocks[1]?.kind).toBe("quote")
+    expect(section.blocks[2]?.kind).toBe("code")
+    expect(section.blocks[3]?.kind).toBe("table")
+    expect(section.blocks[4]?.kind).toBe("thematic-break")
+    expect(table.rows[0]?.cells[0]?.blocks[0]?.kind).toBe("text")
+  })
+})

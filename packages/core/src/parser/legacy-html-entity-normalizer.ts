@@ -1,4 +1,4 @@
-const XML_BUILTIN_ENTITIES = new Set(["amp", "lt", "gt", "quot", "apos"]);
+const XML_BUILTIN_ENTITIES = new Set(["amp", "lt", "gt", "quot", "apos"])
 
 const LEGACY_HTML_ENTITY_MAP: Record<string, string> = {
   nbsp: "\u00A0",
@@ -60,31 +60,31 @@ const LEGACY_HTML_ENTITY_MAP: Record<string, string> = {
   frac14: "\u00BC",
   frac12: "\u00BD",
   frac34: "\u00BE"
-};
+}
 
 const ENTITY_NAME_PATTERN = Object.keys(LEGACY_HTML_ENTITY_MAP)
   .sort((left, right) => right.length - left.length)
-  .join("|");
+  .join("|")
 
 const LEGACY_HTML_ENTITY_PATTERN = new RegExp(
   `&(${ENTITY_NAME_PATTERN}|amp|lt|gt|quot|apos)(;|(?=[^0-9A-Za-z]))`,
   "g"
-);
+)
 
 export function normalizeLegacyHtmlEntities(xml: string): string {
   return xml.replace(
     LEGACY_HTML_ENTITY_PATTERN,
     (match, entityName: string) => {
       if (XML_BUILTIN_ENTITIES.has(entityName)) {
-        return match;
+        return match
       }
 
-      const decoded = LEGACY_HTML_ENTITY_MAP[entityName];
+      const decoded = LEGACY_HTML_ENTITY_MAP[entityName]
       if (!decoded) {
-        return match;
+        return match
       }
 
-      return decoded;
+      return decoded
     }
-  );
+  )
 }

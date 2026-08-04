@@ -26,15 +26,15 @@
 
 ## 3. Bug / Gap 列表
 
-| ID | 类型 | 优先级 | 状态 | 问题 |
-| --- | --- | --- | --- | --- |
-| B1 | Bug | P0 | Closed | `canvas` 书在真实搜索跳转后，search/annotation overlay 不稳定缺失 |
-| B2 | Bug | P1 | Closed | Demo 缺少 locator/restore diagnostics 展示，定位问题成本高 |
-| B3 | Bug | P1 | Closed | `reader.ts` 多处 `section.id -> index` 线性查找，热路径重复开销偏高 |
-| G1 | Gap | P1 | Closed | `CFI` 仍停留在字段保留，没有恢复与定位闭环 |
-| G2 | Gap | P1 | Closed | `DecorationStyle` 缺少 `underline`、margin marker / note icon 扩展口 |
-| G3 | Gap | P1 | Closed | `Preferences` 缺少 `fontFamily / wordSpacing / letterSpacing`，也没有双持久化策略 |
-| G4 | Gap | P2 | Closed | Demo 未展示 locator diagnostics，与需求文档验收标准不一致 |
+| ID  | 类型 | 优先级 | 状态   | 问题                                                                              |
+| --- | ---- | ------ | ------ | --------------------------------------------------------------------------------- |
+| B1  | Bug  | P0     | Closed | `canvas` 书在真实搜索跳转后，search/annotation overlay 不稳定缺失                 |
+| B2  | Bug  | P1     | Closed | Demo 缺少 locator/restore diagnostics 展示，定位问题成本高                        |
+| B3  | Bug  | P1     | Closed | `reader.ts` 多处 `section.id -> index` 线性查找，热路径重复开销偏高               |
+| G1  | Gap  | P1     | Closed | `CFI` 仍停留在字段保留，没有恢复与定位闭环                                        |
+| G2  | Gap  | P1     | Closed | `DecorationStyle` 缺少 `underline`、margin marker / note icon 扩展口              |
+| G3  | Gap  | P1     | Closed | `Preferences` 缺少 `fontFamily / wordSpacing / letterSpacing`，也没有双持久化策略 |
+| G4  | Gap  | P2     | Closed | Demo 未展示 locator diagnostics，与需求文档验收标准不一致                         |
 
 ## 4. 详细说明
 

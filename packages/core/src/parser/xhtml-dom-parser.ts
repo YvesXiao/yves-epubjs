@@ -30,16 +30,17 @@ export function parseXhtmlDomDocument(xml: string): XhtmlDomDocument {
   const headElement = findHtmlElementsByTagName(document, "head")[0] ?? null
   const bodyElement = findHtmlElementsByTagName(document, "body")[0] ?? null
   const titleElement = headElement
-    ? findHtmlElementsByTagName(headElement, "title")[0] ?? null
+    ? (findHtmlElementsByTagName(headElement, "title")[0] ?? null)
     : null
 
   const title = titleElement
-    ? getHtmlNodeTextContent(titleElement).replace(/\s+/g, " ").trim() || undefined
+    ? getHtmlNodeTextContent(titleElement).replace(/\s+/g, " ").trim() ||
+      undefined
     : undefined
   const viewport = headElement ? parseViewportMeta(headElement) : undefined
   const lang = htmlElement
-    ? getHtmlElementAttribute(htmlElement, "xml:lang") ??
-      getHtmlElementAttribute(htmlElement, "lang")
+    ? (getHtmlElementAttribute(htmlElement, "xml:lang") ??
+      getHtmlElementAttribute(htmlElement, "lang"))
     : undefined
   const dir = htmlElement
     ? normalizeDirection(getHtmlElementAttribute(htmlElement, "dir"))
@@ -57,7 +58,9 @@ export function parseXhtmlDomDocument(xml: string): XhtmlDomDocument {
   }
 }
 
-function normalizeDirection(value: string | undefined): "ltr" | "rtl" | undefined {
+function normalizeDirection(
+  value: string | undefined
+): "ltr" | "rtl" | undefined {
   return value === "ltr" || value === "rtl" ? value : undefined
 }
 
@@ -66,7 +69,9 @@ function parseViewportMeta(
 ): { width: number; height: number } | undefined {
   const metaElements = findHtmlElementsByTagName(headElement, "meta")
   for (const metaElement of metaElements) {
-    const name = getHtmlElementAttribute(metaElement, "name")?.trim().toLowerCase()
+    const name = getHtmlElementAttribute(metaElement, "name")
+      ?.trim()
+      .toLowerCase()
     if (name !== "viewport") {
       continue
     }
@@ -89,7 +94,12 @@ function parseViewportContent(
   const width = widthMatch ? Number(widthMatch[1]) : NaN
   const height = heightMatch ? Number(heightMatch[1]) : NaN
 
-  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
     return undefined
   }
 

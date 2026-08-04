@@ -12,7 +12,10 @@ describe("text wrap measurement", () => {
     }))
     const originalCreateElement = document.createElement.bind(document)
 
-    vi.spyOn(document, "createElement").mockImplementation(((tagName: string, options?: ElementCreationOptions) => {
+    vi.spyOn(document, "createElement").mockImplementation(((
+      tagName: string,
+      options?: ElementCreationOptions
+    ) => {
       if (tagName === "canvas") {
         return {
           getContext: () => ({
@@ -27,7 +30,12 @@ describe("text wrap measurement", () => {
 
     const { approximateTextWidth } = await import("../src/utils/text-wrap")
 
-    expect(approximateTextWidth("在C#中，StringBuilder", '400 18px "Iowan Old Style", serif')).toBe(200)
+    expect(
+      approximateTextWidth(
+        "在C#中，StringBuilder",
+        '400 18px "Iowan Old Style", serif'
+      )
+    ).toBe(200)
     expect(measureText).toHaveBeenCalledWith("在C#中，StringBuilder")
   })
 })

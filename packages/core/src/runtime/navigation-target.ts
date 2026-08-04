@@ -1,4 +1,10 @@
-import type { Book, Locator, SectionDocument, TocTarget, TocItem } from "../model/types"
+import type {
+  Book,
+  Locator,
+  SectionDocument,
+  TocTarget,
+  TocItem
+} from "../model/types"
 import {
   estimateSectionProgressForBlock,
   findBlockIdForAnchor,
@@ -15,7 +21,10 @@ export function createBlockLocator(input: {
   return normalizeLocator({
     spineIndex: input.spineIndex,
     blockId: input.blockId,
-    progressInSection: estimateSectionProgressForBlock(input.section, input.blockId),
+    progressInSection: estimateSectionProgressForBlock(
+      input.section,
+      input.blockId
+    ),
     ...(input.anchorId ? { anchorId: input.anchorId } : {})
   })
 }
@@ -39,7 +48,9 @@ export function resolveBookHrefLocator(input: {
     return null
   }
 
-  const blockId = targetAnchor ? findBlockIdForAnchor(section, targetAnchor) : undefined
+  const blockId = targetAnchor
+    ? findBlockIdForAnchor(section, targetAnchor)
+    : undefined
   if (blockId) {
     return createBlockLocator({
       section,

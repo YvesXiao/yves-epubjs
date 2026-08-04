@@ -4,7 +4,10 @@ export function openExternalLink(href: string): void {
   }
 }
 
-export function readViewportOffset(container: HTMLElement): { x: number; y: number } {
+export function readViewportOffset(container: HTMLElement): {
+  x: number
+  y: number
+} {
   return {
     x: container.scrollLeft,
     y: container.scrollTop

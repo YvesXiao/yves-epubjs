@@ -1,34 +1,34 @@
-import { describe, expect, it } from "vitest";
-import type { Book, SectionDocument } from "../src/model/types";
-import { ReaderDocumentSession } from "../src/runtime/reader-document-session";
-import { createReaderSessionState } from "../src/runtime/reader-session-state";
+import { describe, expect, it } from "vitest"
+import type { Book, SectionDocument } from "../src/model/types"
+import { ReaderDocumentSession } from "../src/runtime/reader-document-session"
+import { createReaderSessionState } from "../src/runtime/reader-session-state"
 
 describe("ReaderDocumentSession", () => {
   it("resets opened document state and indexes sections", () => {
-    const state = createTestState();
-    const session = new ReaderDocumentSession(state.document);
-    const book = createBook(["section-a", "section-b"]);
+    const state = createTestState()
+    const session = new ReaderDocumentSession(state.document)
+    const book = createBook(["section-a", "section-b"])
     const resources = {
       readBinary: async () => new Uint8Array([1]),
       exists: () => true
-    };
+    }
 
     session.resetForOpen({
       book,
       sourceName: "book.epub",
       resources,
       chapterRenderInputs: []
-    });
+    })
 
-    expect(session.book).toBe(book);
-    expect(session.sourceName).toBe("book.epub");
-    expect(session.resources).toBe(resources);
-    expect(session.resolveSectionIndexById("section-b")).toBe(1);
-  });
+    expect(session.book).toBe(book)
+    expect(session.sourceName).toBe("book.epub")
+    expect(session.resources).toBe(resources)
+    expect(session.resolveSectionIndexById("section-b")).toBe(1)
+  })
 
   it("clears document state on destroy", () => {
-    const state = createTestState();
-    const session = new ReaderDocumentSession(state.document);
+    const state = createTestState()
+    const session = new ReaderDocumentSession(state.document)
     session.resetForOpen({
       book: createBook(["section-a"]),
       sourceName: null,
@@ -37,16 +37,16 @@ describe("ReaderDocumentSession", () => {
         exists: () => true
       },
       chapterRenderInputs: []
-    });
+    })
 
-    session.resetForDestroy();
+    session.resetForDestroy()
 
-    expect(session.book).toBeNull();
-    expect(session.resources).toBeNull();
-    expect(session.chapterRenderInputs).toEqual([]);
-    expect(session.resolveSectionIndexById("section-a")).toBe(-1);
-  });
-});
+    expect(session.book).toBeNull()
+    expect(session.resources).toBeNull()
+    expect(session.chapterRenderInputs).toEqual([])
+    expect(session.resolveSectionIndexById("section-a")).toBe(-1)
+  })
+})
 
 function createTestState() {
   return createReaderSessionState({
@@ -58,7 +58,7 @@ function createTestState() {
     spreadMode: "auto",
     theme: { background: "#fff", color: "#000" },
     typography: { fontSize: 16, lineHeight: 1.5, paragraphSpacing: 1 }
-  });
+  })
 }
 
 function createBook(sectionIds: string[]): Book {
@@ -72,7 +72,7 @@ function createBook(sectionIds: string[]): Book {
     })),
     sections: sectionIds.map((id) => createSection(id)),
     toc: []
-  };
+  }
 }
 
 function createSection(id: string): SectionDocument {
@@ -82,5 +82,5 @@ function createSection(id: string): SectionDocument {
     title: id,
     blocks: [],
     anchors: {}
-  };
+  }
 }

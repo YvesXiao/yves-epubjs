@@ -23,7 +23,9 @@ export function resolveReadingSpreadContext(input: {
 }): ReadingSpreadContext {
   const renditionLayout = input.section.renditionLayout ?? "reflowable"
   const renditionSpread =
-    input.section.renditionSpread ?? input.book.metadata.renditionSpread ?? "auto"
+    input.section.renditionSpread ??
+    input.book.metadata.renditionSpread ??
+    "auto"
   const pageSpreadPlacement =
     input.section.pageSpreadPlacement ??
     inferSyntheticPagePlacement({
@@ -79,7 +81,9 @@ export function resolveSyntheticSpreadViewportPartition(input: {
   return {
     width: Math.max(
       120,
-      Math.floor((Math.max(120, input.containerWidth) - SYNTHETIC_SPREAD_GAP_PX) / 2)
+      Math.floor(
+        (Math.max(120, input.containerWidth) - SYNTHETIC_SPREAD_GAP_PX) / 2
+      )
     ),
     height: availableHeight,
     gap: SYNTHETIC_SPREAD_GAP_PX

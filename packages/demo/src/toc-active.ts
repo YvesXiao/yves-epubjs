@@ -13,12 +13,17 @@ export function findActiveTocId(
   const flatItems = flattenTocItems(items)
   if (previousActiveId) {
     const previousItem = flatItems.find((item) => item.id === previousActiveId)
-    if (previousItem && normalizeHrefBase(previousItem.href) === normalizedHref) {
+    if (
+      previousItem &&
+      normalizeHrefBase(previousItem.href) === normalizedHref
+    ) {
       return previousItem.id
     }
   }
 
-  const exactMatch = flatItems.find((item) => normalizeHrefBase(item.href) === normalizedHref)
+  const exactMatch = flatItems.find(
+    (item) => normalizeHrefBase(item.href) === normalizedHref
+  )
   return exactMatch?.id ?? null
 }
 

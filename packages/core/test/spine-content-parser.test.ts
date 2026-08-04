@@ -24,7 +24,10 @@ describe("spine content parser", () => {
     })
 
     expect(section.title).toBe("Chapter 1")
-    expect(section.blocks.map((block) => block.kind)).toEqual(["heading", "text"])
+    expect(section.blocks.map((block) => block.kind)).toEqual([
+      "heading",
+      "text"
+    ])
   })
 
   it("throws for non-content media types", () => {

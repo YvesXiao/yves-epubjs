@@ -1,10 +1,6 @@
 import type { InlineNode, SectionDocument } from "../model/types"
 
-export type ImageRenderCategory =
-  | "inline"
-  | "block"
-  | "presentation"
-  | "fxl"
+export type ImageRenderCategory = "inline" | "block" | "presentation" | "fxl"
 
 export type ImageSemanticAttributes = {
   tagName?: string | undefined
@@ -158,15 +154,9 @@ function getClassTokens(value: string | undefined): string[] {
 }
 
 function isBlockBoundary(element: Element): boolean {
-  return [
-    "p",
-    "div",
-    "section",
-    "article",
-    "main",
-    "figure",
-    "body"
-  ].includes(element.tagName.toLowerCase())
+  return ["p", "div", "section", "article", "main", "figure", "body"].includes(
+    element.tagName.toLowerCase()
+  )
 }
 
 function isPotentialStandaloneImageParent(element: Element): boolean {

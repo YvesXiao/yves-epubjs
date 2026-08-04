@@ -1,21 +1,21 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest"
 import {
   applyDomDecorations,
   clearDomDecorations
-} from "../src/runtime/dom-decoration";
+} from "../src/runtime/dom-decoration"
 
 describe("dom decorations", () => {
   it("applies highlight classes to anchor and block targets", () => {
-    const container = document.createElement("div");
+    const container = document.createElement("div")
     container.innerHTML = `
       <div class="epub-dom-section" data-section-id="section-1">
         <h2 id="details">Details</h2>
         <p id="text-2">Body</p>
       </div>
-    `;
+    `
     const sectionElement =
-      container.querySelector<HTMLElement>(".epub-dom-section");
-    expect(sectionElement).toBeTruthy();
+      container.querySelector<HTMLElement>(".epub-dom-section")
+    expect(sectionElement).toBeTruthy()
 
     applyDomDecorations({
       container,
@@ -42,38 +42,38 @@ describe("dom decorations", () => {
           style: "search-hit"
         }
       ]
-    });
+    })
 
     expect(
       container.querySelector("style[data-epub-dom-decorations='true']")
-    ).toBeTruthy();
+    ).toBeTruthy()
     expect(
       container
         .querySelector("#details")
         ?.classList.contains("epub-dom-decoration-highlight")
-    ).toBe(true);
+    ).toBe(true)
     expect(
       container
         .querySelector("#text-2")
         ?.classList.contains("epub-dom-decoration-search-hit")
-    ).toBe(true);
+    ).toBe(true)
 
-    clearDomDecorations(container);
+    clearDomDecorations(container)
 
     expect(
       container
         .querySelector("#details")
         ?.classList.contains("epub-dom-decoration-highlight")
-    ).toBe(false);
+    ).toBe(false)
     expect(
       container
         .querySelector("#text-2")
         ?.classList.contains("epub-dom-decoration-search-hit")
-    ).toBe(false);
-  });
+    ).toBe(false)
+  })
 
   it("preserves decorations across multiple spread sections", () => {
-    const container = document.createElement("div");
+    const container = document.createElement("div")
     container.innerHTML = `
       <div class="epub-dom-spread">
         <div class="epub-dom-spread-slot" data-spread-slot="left">
@@ -87,15 +87,15 @@ describe("dom decorations", () => {
           </div>
         </div>
       </div>
-    `;
+    `
     const leftSection = container.querySelector<HTMLElement>(
       '.epub-dom-section[data-section-id="section-1"]'
-    );
+    )
     const rightSection = container.querySelector<HTMLElement>(
       '.epub-dom-section[data-section-id="section-2"]'
-    );
-    expect(leftSection).toBeTruthy();
-    expect(rightSection).toBeTruthy();
+    )
+    expect(leftSection).toBeTruthy()
+    expect(rightSection).toBeTruthy()
 
     applyDomDecorations({
       container,
@@ -112,7 +112,7 @@ describe("dom decorations", () => {
           style: "search-hit"
         }
       ]
-    });
+    })
     applyDomDecorations({
       container,
       sectionElement: rightSection!,
@@ -128,30 +128,30 @@ describe("dom decorations", () => {
           style: "highlight"
         }
       ]
-    });
+    })
 
     expect(
       container
         .querySelector("#left-target")
         ?.classList.contains("epub-dom-decoration-search-hit")
-    ).toBe(true);
+    ).toBe(true)
     expect(
       container
         .querySelector("#right-target")
         ?.classList.contains("epub-dom-decoration-highlight")
-    ).toBe(true);
-  });
+    ).toBe(true)
+  })
 
   it("applies underline decorations and reserved hint classes", () => {
-    const container = document.createElement("div");
+    const container = document.createElement("div")
     container.innerHTML = `
       <div class="epub-dom-section" data-section-id="section-1">
         <p id="annotated-target">Annotated text</p>
       </div>
-    `;
+    `
     const sectionElement =
-      container.querySelector<HTMLElement>(".epub-dom-section");
-    expect(sectionElement).toBeTruthy();
+      container.querySelector<HTMLElement>(".epub-dom-section")
+    expect(sectionElement).toBeTruthy()
 
     applyDomDecorations({
       container,
@@ -173,54 +173,54 @@ describe("dom decorations", () => {
           }
         }
       ]
-    });
+    })
 
-    const target = container.querySelector<HTMLElement>("#annotated-target");
+    const target = container.querySelector<HTMLElement>("#annotated-target")
     expect(target?.classList.contains("epub-dom-decoration-underline")).toBe(
       true
-    );
+    )
     expect(target?.style.getPropertyValue("--epub-decoration-color")).toBe(
       "#2563eb"
-    );
+    )
     expect(
       target?.classList.contains("epub-dom-decoration-hint-note-icon")
-    ).toBe(true);
-    expect(target?.dataset.epubDecorationLabel).toBe("Inline note");
+    ).toBe(true)
+    expect(target?.dataset.epubDecorationLabel).toBe("Inline note")
 
-    clearDomDecorations(container);
+    clearDomDecorations(container)
 
     expect(target?.classList.contains("epub-dom-decoration-underline")).toBe(
       false
-    );
-    expect(target?.style.getPropertyValue("--epub-decoration-color")).toBe("");
+    )
+    expect(target?.style.getPropertyValue("--epub-decoration-color")).toBe("")
     expect(
       target?.classList.contains("epub-dom-decoration-hint-note-icon")
-    ).toBe(false);
-    expect(target?.dataset.epubDecorationLabel).toBeUndefined();
-  });
+    ).toBe(false)
+    expect(target?.dataset.epubDecorationLabel).toBeUndefined()
+  })
 
   it("renders precise text-range underline overlays with custom color", () => {
-    const container = document.createElement("div");
+    const container = document.createElement("div")
     container.innerHTML = `
       <div class="epub-dom-section" data-section-id="section-1">
         <p id="text-1">Precise underline target</p>
       </div>
-    `;
+    `
     const sectionElement =
-      container.querySelector<HTMLElement>(".epub-dom-section");
-    expect(sectionElement).toBeTruthy();
+      container.querySelector<HTMLElement>(".epub-dom-section")
+    expect(sectionElement).toBeTruthy()
 
     Object.defineProperty(sectionElement, "getBoundingClientRect", {
       configurable: true,
       value: () => new DOMRect(0, 0, 480, 120)
-    });
+    })
 
-    const originalCreateRange = document.createRange.bind(document);
+    const originalCreateRange = document.createRange.bind(document)
     document.createRange = (() => ({
       setStart: () => undefined,
       setEnd: () => undefined,
       getClientRects: () => [new DOMRect(24, 32, 140, 28)]
-    })) as unknown as typeof document.createRange;
+    })) as unknown as typeof document.createRange
 
     applyDomDecorations({
       container,
@@ -250,40 +250,40 @@ describe("dom decorations", () => {
           }
         }
       ]
-    });
+    })
 
     const overlay = container.querySelector<HTMLElement>(
       ".epub-dom-decoration-overlay-rect.is-underline"
-    );
-    expect(overlay).toBeTruthy();
-    expect(overlay?.style.background).toBe("rgb(239, 68, 68)");
-    expect(overlay?.style.height).toBe("2px");
-    expect(overlay?.dataset.epubDecorationId).toBe("annotation-range-1");
-    expect(overlay?.dataset.epubDecorationGroup).toBe("annotations");
-    expect(overlay?.dataset.epubDecorationStyle).toBe("underline");
+    )
+    expect(overlay).toBeTruthy()
+    expect(overlay?.style.background).toBe("rgb(239, 68, 68)")
+    expect(overlay?.style.height).toBe("2px")
+    expect(overlay?.dataset.epubDecorationId).toBe("annotation-range-1")
+    expect(overlay?.dataset.epubDecorationGroup).toBe("annotations")
+    expect(overlay?.dataset.epubDecorationStyle).toBe("underline")
 
-    document.createRange = originalCreateRange;
-  });
+    document.createRange = originalCreateRange
+  })
 
   it("renders precise overlay rects for text-range highlights instead of whole-block classes", () => {
-    const container = document.createElement("div");
+    const container = document.createElement("div")
     container.innerHTML = `
       <div class="epub-dom-section" data-section-id="section-1">
         <p id="text-1">Precise decoration target</p>
       </div>
-    `;
+    `
     const sectionElement =
-      container.querySelector<HTMLElement>(".epub-dom-section");
-    const textTarget = container.querySelector<HTMLElement>("#text-1");
-    expect(sectionElement).toBeTruthy();
-    expect(textTarget).toBeTruthy();
+      container.querySelector<HTMLElement>(".epub-dom-section")
+    const textTarget = container.querySelector<HTMLElement>("#text-1")
+    expect(sectionElement).toBeTruthy()
+    expect(textTarget).toBeTruthy()
 
     Object.defineProperty(sectionElement, "getBoundingClientRect", {
       configurable: true,
       value: () => new DOMRect(0, 0, 480, 120)
-    });
+    })
 
-    const originalCreateRange = document.createRange.bind(document);
+    const originalCreateRange = document.createRange.bind(document)
     document.createRange = (() => ({
       setStart: () => undefined,
       setEnd: () => undefined,
@@ -291,7 +291,7 @@ describe("dom decorations", () => {
         new DOMRect(24, 32, 140, 28),
         new DOMRect(24, 64, 88, 28)
       ]
-    })) as unknown as typeof document.createRange;
+    })) as unknown as typeof document.createRange
 
     applyDomDecorations({
       container,
@@ -320,58 +320,58 @@ describe("dom decorations", () => {
           }
         }
       ]
-    });
+    })
 
     const overlayRects = container.querySelectorAll(
       ".epub-dom-decoration-overlay-rect"
-    );
-    expect(overlayRects).toHaveLength(2);
+    )
+    expect(overlayRects).toHaveLength(2)
     expect(
       textTarget?.classList.contains("epub-dom-decoration-highlight")
-    ).toBe(false);
+    ).toBe(false)
 
-    clearDomDecorations(container, sectionElement!);
+    clearDomDecorations(container, sectionElement!)
     expect(
       container.querySelectorAll(".epub-dom-decoration-overlay-rect")
-    ).toHaveLength(0);
+    ).toHaveLength(0)
 
-    document.createRange = originalCreateRange;
-  });
+    document.createRange = originalCreateRange
+  })
 
   it("positions precise text-range overlays correctly in scroll mode", () => {
-    const container = document.createElement("div");
+    const container = document.createElement("div")
     Object.defineProperty(container, "scrollTop", {
       configurable: true,
       value: 90
-    });
+    })
     Object.defineProperty(container, "scrollLeft", {
       configurable: true,
       value: 0
-    });
+    })
     Object.defineProperty(container, "getBoundingClientRect", {
       configurable: true,
       value: () => new DOMRect(0, 0, 480, 240)
-    });
+    })
     container.innerHTML = `
       <div class="epub-dom-section" data-section-id="section-1">
         <p id="text-1">Precise decoration target</p>
       </div>
-    `;
+    `
 
     const sectionElement =
-      container.querySelector<HTMLElement>(".epub-dom-section");
-    expect(sectionElement).toBeTruthy();
+      container.querySelector<HTMLElement>(".epub-dom-section")
+    expect(sectionElement).toBeTruthy()
     Object.defineProperty(sectionElement, "getBoundingClientRect", {
       configurable: true,
       value: () => new DOMRect(0, 40, 480, 120)
-    });
+    })
 
-    const originalCreateRange = document.createRange.bind(document);
+    const originalCreateRange = document.createRange.bind(document)
     document.createRange = (() => ({
       setStart: () => undefined,
       setEnd: () => undefined,
       getClientRects: () => [new DOMRect(24, 70, 140, 28)]
-    })) as unknown as typeof document.createRange;
+    })) as unknown as typeof document.createRange
 
     applyDomDecorations({
       container,
@@ -401,31 +401,31 @@ describe("dom decorations", () => {
           }
         }
       ]
-    });
+    })
 
     const overlayRect = container.querySelector<HTMLElement>(
       ".epub-dom-decoration-overlay-rect"
-    );
-    expect(overlayRect).toBeTruthy();
-    expect(overlayRect?.style.top).toBe("30px");
+    )
+    expect(overlayRect).toBeTruthy()
+    expect(overlayRect?.style.top).toBe("30px")
 
-    document.createRange = originalCreateRange;
-  });
+    document.createRange = originalCreateRange
+  })
 
   it("resolves highlight targets from synthetic data-reader-block-id markers", () => {
-    const container = document.createElement("div");
+    const container = document.createElement("div")
     container.innerHTML = `
       <div class="epub-dom-section" data-section-id="section-1">
         <p data-reader-block-id="text-1">Synthetic target</p>
       </div>
-    `;
+    `
     const sectionElement =
-      container.querySelector<HTMLElement>(".epub-dom-section");
+      container.querySelector<HTMLElement>(".epub-dom-section")
     const textTarget = container.querySelector<HTMLElement>(
       "[data-reader-block-id='text-1']"
-    );
-    expect(sectionElement).toBeTruthy();
-    expect(textTarget).toBeTruthy();
+    )
+    expect(sectionElement).toBeTruthy()
+    expect(textTarget).toBeTruthy()
 
     applyDomDecorations({
       container,
@@ -442,10 +442,10 @@ describe("dom decorations", () => {
           style: "highlight"
         }
       ]
-    });
+    })
 
     expect(
       textTarget?.classList.contains("epub-dom-decoration-highlight")
-    ).toBe(true);
-  });
-});
+    ).toBe(true)
+  })
+})

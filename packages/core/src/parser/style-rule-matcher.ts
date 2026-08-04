@@ -1,12 +1,13 @@
 import type { CssAstRule, CssAstStyleSheet } from "./css-ast-adapter"
-import {
-  getCssTopLevelRules,
-  serializeCssNode
-} from "./css-ast-adapter"
+import { getCssTopLevelRules, serializeCssNode } from "./css-ast-adapter"
 import type { HtmlDomElement } from "./html-dom-adapter"
 import { matchesHtmlSelector } from "./selector-matcher"
 
-export type CssSelectorSpecificity = readonly [idCount: number, classCount: number, elementCount: number]
+export type CssSelectorSpecificity = readonly [
+  idCount: number,
+  classCount: number,
+  elementCount: number
+]
 
 export type MatchedCssRule = {
   selector: string
@@ -15,19 +16,26 @@ export type MatchedCssRule = {
   rule: CssAstRule
 }
 
-export function computeSelectorSpecificity(selector: string): CssSelectorSpecificity {
+export function computeSelectorSpecificity(
+  selector: string
+): CssSelectorSpecificity {
   const normalizedSelector = selector.trim()
   if (!normalizedSelector) {
     return [0, 0, 0]
   }
 
   const idCount = (normalizedSelector.match(/#[A-Za-z0-9_-]+/g) ?? []).length
-  const classCount = (normalizedSelector.match(/\.[A-Za-z0-9_-]+/g) ?? []).length
+  const classCount = (normalizedSelector.match(/\.[A-Za-z0-9_-]+/g) ?? [])
+    .length
   const elementCount = normalizedSelector
     .split(/\s+/)
     .filter(Boolean)
-    .flatMap((part) => part.split(/(?=[#.])/)[0] ? [part.split(/(?=[#.])/)[0] as string] : [])
-    .filter((part) => part !== "*" && /^[A-Za-z][A-Za-z0-9_-]*$/.test(part)).length
+    .flatMap((part) =>
+      part.split(/(?=[#.])/)[0] ? [part.split(/(?=[#.])/)[0] as string] : []
+    )
+    .filter(
+      (part) => part !== "*" && /^[A-Za-z][A-Za-z0-9_-]*$/.test(part)
+    ).length
 
   return [idCount, classCount, elementCount]
 }
@@ -80,18 +88,21 @@ export function collectMatchedCssRules(
         continue
       }
 
-      const mostSpecificSelector = matchingSelectors.reduce((currentBest, nextSelector) => {
-        if (!currentBest) {
-          return nextSelector
-        }
+      const mostSpecificSelector = matchingSelectors.reduce(
+        (currentBest, nextSelector) => {
+          if (!currentBest) {
+            return nextSelector
+          }
 
-        return compareSelectorSpecificity(
-          computeSelectorSpecificity(nextSelector),
-          computeSelectorSpecificity(currentBest)
-        ) > 0
-          ? nextSelector
-          : currentBest
-      }, "" as string)
+          return compareSelectorSpecificity(
+            computeSelectorSpecificity(nextSelector),
+            computeSelectorSpecificity(currentBest)
+          ) > 0
+            ? nextSelector
+            : currentBest
+        },
+        "" as string
+      )
 
       matches.push({
         selector: mostSpecificSelector,

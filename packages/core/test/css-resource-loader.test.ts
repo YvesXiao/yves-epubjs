@@ -22,10 +22,7 @@ describe("CSS resource loader", () => {
       "OPS/text/chapter-1.xhtml"
     )
 
-    expect(hrefs).toEqual([
-      "OPS/styles/base.css",
-      "OPS/styles/ignored.css"
-    ])
+    expect(hrefs).toEqual(["OPS/styles/base.css", "OPS/styles/ignored.css"])
   })
 
   it("resolves linked stylesheet hrefs against manifest items", () => {

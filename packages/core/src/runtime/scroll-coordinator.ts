@@ -12,7 +12,8 @@ export class ScrollCoordinator {
   private isProgrammaticScroll = false
   private scrollSyncFrame: number | null = null
   private scrollRefreshTimer: ReturnType<typeof setTimeout> | null = null
-  private resourceRenderRefreshTimer: ReturnType<typeof setTimeout> | null = null
+  private resourceRenderRefreshTimer: ReturnType<typeof setTimeout> | null =
+    null
   private anchorRealignTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor(private readonly options: ScrollCoordinatorOptions) {}

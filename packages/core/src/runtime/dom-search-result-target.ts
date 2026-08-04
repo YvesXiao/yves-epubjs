@@ -5,17 +5,20 @@ export function findRenderedSearchResultTarget(input: {
   sectionElement: HTMLElement
   result: SearchResult
 }): HTMLElement | null {
-  const sectionRoot =
-    input.sectionElement.matches(".epub-dom-section")
-      ? input.sectionElement
-      : input.sectionElement.querySelector<HTMLElement>(".epub-dom-section")
+  const sectionRoot = input.sectionElement.matches(".epub-dom-section")
+    ? input.sectionElement
+    : input.sectionElement.querySelector<HTMLElement>(".epub-dom-section")
   if (!sectionRoot) {
     return null
   }
 
   const matchText = normalizeSearchText(input.result.matchText ?? "")
-  const excerptText = normalizeSearchText(stripSearchEllipsis(input.result.excerpt))
-  const targetProgress = clampProgress(input.result.locator.progressInSection ?? 0)
+  const excerptText = normalizeSearchText(
+    stripSearchEllipsis(input.result.excerpt)
+  )
+  const targetProgress = clampProgress(
+    input.result.locator.progressInSection ?? 0
+  )
   const sectionRect = sectionRoot.getBoundingClientRect()
   const sectionHeight = Math.max(
     sectionRoot.scrollHeight || 0,
@@ -26,13 +29,15 @@ export function findRenderedSearchResultTarget(input: {
 
   const primaryMatches = collectMatchingElements(sectionRoot, matchText)
   const fallbackMatches =
-    primaryMatches.length > 0 ? primaryMatches : collectMatchingElements(sectionRoot, excerptText)
+    primaryMatches.length > 0
+      ? primaryMatches
+      : collectMatchingElements(sectionRoot, excerptText)
   if (fallbackMatches.length === 0) {
     return null
   }
 
-  return fallbackMatches
-    .sort((left, right) =>
+  return (
+    fallbackMatches.sort((left, right) =>
       compareSearchTargetCandidates({
         left,
         right,
@@ -41,20 +46,26 @@ export function findRenderedSearchResultTarget(input: {
         targetProgress
       })
     )[0] ?? null
+  )
 }
 
-function collectMatchingElements(sectionRoot: HTMLElement, needle: string): HTMLElement[] {
+function collectMatchingElements(
+  sectionRoot: HTMLElement,
+  needle: string
+): HTMLElement[] {
   if (!needle) {
     return []
   }
 
-  return Array.from(sectionRoot.querySelectorAll<HTMLElement>("*")).filter((element) => {
-    if (element.tagName === "STYLE" || element.tagName === "SCRIPT") {
-      return false
-    }
+  return Array.from(sectionRoot.querySelectorAll<HTMLElement>("*")).filter(
+    (element) => {
+      if (element.tagName === "STYLE" || element.tagName === "SCRIPT") {
+        return false
+      }
 
-    return normalizeSearchText(element.textContent ?? "").includes(needle)
-  })
+      return normalizeSearchText(element.textContent ?? "").includes(needle)
+    }
+  )
 }
 
 function compareSearchTargetCandidates(input: {
@@ -65,19 +76,29 @@ function compareSearchTargetCandidates(input: {
   targetProgress: number
 }): number {
   const leftProgressDistance = Math.abs(
-    estimateElementProgress(input.left, input.sectionRectTop, input.sectionHeight) -
-      input.targetProgress
+    estimateElementProgress(
+      input.left,
+      input.sectionRectTop,
+      input.sectionHeight
+    ) - input.targetProgress
   )
   const rightProgressDistance = Math.abs(
-    estimateElementProgress(input.right, input.sectionRectTop, input.sectionHeight) -
-      input.targetProgress
+    estimateElementProgress(
+      input.right,
+      input.sectionRectTop,
+      input.sectionHeight
+    ) - input.targetProgress
   )
   if (leftProgressDistance !== rightProgressDistance) {
     return leftProgressDistance - rightProgressDistance
   }
 
-  const leftTextLength = normalizeSearchText(input.left.textContent ?? "").length
-  const rightTextLength = normalizeSearchText(input.right.textContent ?? "").length
+  const leftTextLength = normalizeSearchText(
+    input.left.textContent ?? ""
+  ).length
+  const rightTextLength = normalizeSearchText(
+    input.right.textContent ?? ""
+  ).length
   if (leftTextLength !== rightTextLength) {
     return leftTextLength - rightTextLength
   }

@@ -7,7 +7,7 @@ Local demo build under test:
 - App URL: `http://127.0.0.1:4174/`
 - Book directory: `/Users/xyf/Downloads/books`
 - Date: `2026-04-18`
-- Primary artifact: `tmp/qa-real-books-final/summary.json`
+- Primary artifact: `docs/qa/assets/summary.json`
 
 EPUB samples covered:
 
@@ -83,8 +83,8 @@ Exact captured sequence:
 
 Evidence:
 
-- Summary entry: `tmp/qa-real-books-final/summary.json`
-- Failure screenshot: `tmp/qa-real-books-final/剑指offer-名企面试官精讲典型编程题-何海涛-2011-电子工业出版社-214aa1542d6778be54e208760805863d-anna-s-ar/paginated-navigation-bookmark.png`
+- Summary entry: `docs/qa/assets/summary.json`
+- Failure screenshot: `docs/qa/assets/paginated-navigation-bookmark.png`
 
 Scope:
 

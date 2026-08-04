@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { preprocessChapterDocument, type PreprocessedChapter } from "../src";
+import { describe, expect, it } from "vitest"
+import { preprocessChapterDocument, type PreprocessedChapter } from "../src"
 
 describe("chapter preprocess", () => {
   it("filters whitespace-only text nodes while preserving meaningful text", () => {
@@ -15,7 +15,7 @@ describe("chapter preprocess", () => {
             </div>
           </body>
         </html>`
-    });
+    })
 
     expect(chapter.nodes).toEqual([
       {
@@ -31,8 +31,8 @@ describe("chapter preprocess", () => {
           }
         ]
       }
-    ]);
-  });
+    ])
+  })
 
   it("normalizes common chapter structure, metadata, and attributes", () => {
     const chapter = preprocessChapterDocument({
@@ -50,7 +50,7 @@ describe("chapter preprocess", () => {
             </section>
           </body>
         </html>`
-    });
+    })
 
     expect(chapter).toEqual({
       href: "OPS/chapter-1.xhtml",
@@ -92,8 +92,8 @@ describe("chapter preprocess", () => {
           ]
         }
       ]
-    } satisfies PreprocessedChapter);
-  });
+    } satisfies PreprocessedChapter)
+  })
 
   it("preserves safe html and body root attributes for dom rendering", () => {
     const chapter = preprocessChapterDocument({
@@ -104,18 +104,18 @@ describe("chapter preprocess", () => {
             <main>Content</main>
           </body>
         </html>`
-    });
+    })
 
     expect(chapter.htmlAttributes).toEqual({
       class: "book-root",
       style: "background: #fff;"
-    });
+    })
     expect(chapter.bodyAttributes).toEqual({
       id: "page-body",
       class: "background-img-center custom-theme",
       style: "background-image: url('../images/bg.png'); padding: 20px;"
-    });
-  });
+    })
+  })
 
   it("drops script nodes and inline event handler attributes from DOM preprocessing", () => {
     const chapter = preprocessChapterDocument({
@@ -129,7 +129,7 @@ describe("chapter preprocess", () => {
             </section>
           </body>
         </html>`
-    });
+    })
 
     expect(chapter.nodes).toEqual([
       {
@@ -147,8 +147,8 @@ describe("chapter preprocess", () => {
           }
         ]
       }
-    ] satisfies PreprocessedChapter["nodes"]);
-  });
+    ] satisfies PreprocessedChapter["nodes"])
+  })
 
   it("keeps allowlisted content while dropping active content and unsafe URL attributes", () => {
     const chapter = preprocessChapterDocument({
@@ -172,7 +172,7 @@ describe("chapter preprocess", () => {
             </section>
           </body>
         </html>`
-    });
+    })
 
     expect(chapter.nodes).toEqual([
       {
@@ -212,8 +212,8 @@ describe("chapter preprocess", () => {
           }
         ]
       }
-    ] satisfies PreprocessedChapter["nodes"]);
-  });
+    ] satisfies PreprocessedChapter["nodes"])
+  })
 
   it("preserves a minimal non-interactive SVG subset without external links", () => {
     const chapter = preprocessChapterDocument({
@@ -234,7 +234,7 @@ describe("chapter preprocess", () => {
             </figure>
           </body>
         </html>`
-    });
+    })
 
     expect(chapter.nodes).toEqual([
       {
@@ -286,6 +286,6 @@ describe("chapter preprocess", () => {
           }
         ]
       }
-    ] satisfies PreprocessedChapter["nodes"]);
-  });
-});
+    ] satisfies PreprocessedChapter["nodes"])
+  })
+})

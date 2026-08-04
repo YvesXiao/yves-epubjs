@@ -25,9 +25,9 @@ describe("findActiveTocId", () => {
       }
     ]
 
-    expect(
-      findActiveTocId(toc, "EPUB/index_split_000.html", "chapter-1")
-    ).toBe("chapter-1")
+    expect(findActiveTocId(toc, "EPUB/index_split_000.html", "chapter-1")).toBe(
+      "chapter-1"
+    )
   })
 
   it("falls back to a base href match when there is no previous selection", () => {

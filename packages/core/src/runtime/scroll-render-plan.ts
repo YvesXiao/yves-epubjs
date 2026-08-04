@@ -42,8 +42,14 @@ export function buildScrollRenderPlan(options: {
   lastMeasuredWidth: number
   getSectionHeight: (sectionId: string) => number
   resolveChapterRenderDecision: (sectionIndex: number) => ChapterRenderDecision
-  buildDomMarkup: (section: SectionDocument, sectionIndex: number) => string | undefined
-  buildCanvasSection: (section: SectionDocument, sectionIndex: number) => CanvasSectionPlan
+  buildDomMarkup: (
+    section: SectionDocument,
+    sectionIndex: number
+  ) => string | undefined
+  buildCanvasSection: (
+    section: SectionDocument,
+    sectionIndex: number
+  ) => CanvasSectionPlan
 }): ScrollRenderPlan {
   const sectionsToRender: ScrollRenderableSection[] = []
   const measuredSectionHeights: number[] = []
@@ -143,7 +149,10 @@ function assignScrollRenderWindows(input: {
     if (entry.displayList) {
       // Render the visible slice plus adjacent slices. This reduces blank flashes
       // during fast scroll without forcing a full-section canvas redraw.
-      const currentRenderTop = Math.max(0, input.viewportTop - overscan - runningTop)
+      const currentRenderTop = Math.max(
+        0,
+        input.viewportTop - overscan - runningTop
+      )
       const currentRenderBottom = Math.min(
         height,
         viewportBottom + overscan - runningTop
@@ -153,9 +162,15 @@ function assignScrollRenderWindows(input: {
           top: currentRenderTop,
           height: currentRenderBottom - currentRenderTop
         }
-        const previousTop = Math.max(0, currentWindow.top - currentWindow.height)
+        const previousTop = Math.max(
+          0,
+          currentWindow.top - currentWindow.height
+        )
         const previousHeight = Math.max(0, currentWindow.top - previousTop)
-        const nextTop = Math.min(height, currentWindow.top + currentWindow.height)
+        const nextTop = Math.min(
+          height,
+          currentWindow.top + currentWindow.height
+        )
         const nextHeight = Math.max(
           0,
           Math.min(currentWindow.height, height - nextTop)

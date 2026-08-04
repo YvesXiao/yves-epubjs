@@ -1,14 +1,14 @@
-import { describe, expect, it } from "vitest";
-import type { SectionDocument } from "../src/model/types";
-import { LayoutEngine } from "../src/layout/layout-engine";
-import { DisplayListBuilder } from "../src/renderer/display-list-builder";
-import { buildReadingStyleProfile } from "../src/renderer/reading-style-profile";
+import { describe, expect, it } from "vitest"
+import type { SectionDocument } from "../src/model/types"
+import { LayoutEngine } from "../src/layout/layout-engine"
+import { DisplayListBuilder } from "../src/renderer/display-list-builder"
+import { buildReadingStyleProfile } from "../src/renderer/reading-style-profile"
 
 const typography = {
   fontSize: 18,
   lineHeight: 1.6,
   paragraphSpacing: 12
-} as const;
+} as const
 
 describe("canvas/dom style alignment", () => {
   it("does not inject a synthetic section title and keeps shared bottom padding", () => {
@@ -24,7 +24,7 @@ describe("canvas/dom style alignment", () => {
           inlines: [{ kind: "text", text: "Aligned paragraph." }]
         }
       ]
-    };
+    }
 
     const layout = new LayoutEngine().layout(
       {
@@ -36,7 +36,7 @@ describe("canvas/dom style alignment", () => {
         fontFamily: "serif"
       },
       "scroll"
-    );
+    )
 
     const displayList = new DisplayListBuilder().buildSection({
       section,
@@ -49,11 +49,16 @@ describe("canvas/dom style alignment", () => {
       },
       typography,
       activeBlockId: undefined
-    });
+    })
 
-    expect(displayList.ops.some((op) => op.blockId === "section-1::title")).toBe(false);
-    expect(displayList.height).toBeCloseTo(layout.blocks[0]!.estimatedHeight + 24, 5);
-  });
+    expect(
+      displayList.ops.some((op) => op.blockId === "section-1::title")
+    ).toBe(false)
+    expect(displayList.height).toBeCloseTo(
+      layout.blocks[0]!.estimatedHeight + 24,
+      5
+    )
+  })
 
   it("uses paragraph and heading spacing from the shared profile in layout estimation", () => {
     const section: SectionDocument = {
@@ -74,7 +79,7 @@ describe("canvas/dom style alignment", () => {
           inlines: [{ kind: "text", text: "Paragraph" }]
         }
       ]
-    };
+    }
 
     const layout = new LayoutEngine().layout(
       {
@@ -86,10 +91,10 @@ describe("canvas/dom style alignment", () => {
         fontFamily: "serif"
       },
       "scroll"
-    );
+    )
 
-    const headingBlock = layout.blocks[0];
-    const textBlock = layout.blocks[1];
+    const headingBlock = layout.blocks[0]
+    const textBlock = layout.blocks[1]
     const styleProfile = buildReadingStyleProfile({
       theme: {
         color: "#1f2328",
@@ -98,19 +103,24 @@ describe("canvas/dom style alignment", () => {
       typography
     })
 
-    expect(headingBlock?.type).toBe("pretext");
-    expect(textBlock?.type).toBe("pretext");
-    expect(headingBlock?.type === "pretext" ? headingBlock.estimatedHeight : 0).toBeCloseTo(
-      (headingBlock?.type === "pretext" ? headingBlock.lines[0]?.height ?? 0 : 0) +
-        styleProfile.heading.marginBottom,
+    expect(headingBlock?.type).toBe("pretext")
+    expect(textBlock?.type).toBe("pretext")
+    expect(
+      headingBlock?.type === "pretext" ? headingBlock.estimatedHeight : 0
+    ).toBeCloseTo(
+      (headingBlock?.type === "pretext"
+        ? (headingBlock.lines[0]?.height ?? 0)
+        : 0) + styleProfile.heading.marginBottom,
       1
-    );
-    expect(textBlock?.type === "pretext" ? textBlock.estimatedHeight : 0).toBeCloseTo(
-      (textBlock?.type === "pretext" ? textBlock.lines[0]?.height ?? 0 : 0) +
+    )
+    expect(
+      textBlock?.type === "pretext" ? textBlock.estimatedHeight : 0
+    ).toBeCloseTo(
+      (textBlock?.type === "pretext" ? (textBlock.lines[0]?.height ?? 0) : 0) +
         styleProfile.text.marginBottom,
       1
-    );
-  });
+    )
+  })
 
   it("uses shared code and table tokens while building draw ops", () => {
     const section: SectionDocument = {
@@ -147,7 +157,7 @@ describe("canvas/dom style alignment", () => {
           ]
         }
       ]
-    };
+    }
 
     const layout = new LayoutEngine().layout(
       {
@@ -159,7 +169,7 @@ describe("canvas/dom style alignment", () => {
         fontFamily: "serif"
       },
       "scroll"
-    );
+    )
 
     const displayList = new DisplayListBuilder().buildSection({
       section,
@@ -172,18 +182,20 @@ describe("canvas/dom style alignment", () => {
       },
       typography,
       activeBlockId: undefined
-    });
+    })
 
     const codeBackground = displayList.ops.find(
       (op) => op.kind === "rect" && op.blockId === "code-1"
-    );
+    )
     const tableCell = displayList.ops.find(
       (op) => op.kind === "rect" && op.blockId === "table-1"
-    );
+    )
 
-    expect(codeBackground && "color" in codeBackground ? codeBackground.color : "").toBe("#f4f4f5");
-    expect(tableCell && "strokeColor" in tableCell ? tableCell.strokeColor : "").toBe(
-      "rgba(148, 163, 184, 0.35)"
-    );
-  });
-});
+    expect(
+      codeBackground && "color" in codeBackground ? codeBackground.color : ""
+    ).toBe("#f4f4f5")
+    expect(
+      tableCell && "strokeColor" in tableCell ? tableCell.strokeColor : ""
+    ).toBe("rgba(148, 163, 184, 0.35)")
+  })
+})

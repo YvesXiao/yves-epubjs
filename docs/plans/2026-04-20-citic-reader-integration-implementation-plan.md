@@ -42,6 +42,7 @@ pnpm --filter @yves-epub/demo build
 ## Task 1: 补公共类型与 Reader 对外 contract
 
 **Files:**
+
 - Modify: `packages/core/src/model/types.ts`
 - Modify: `packages/core/src/runtime/reader.ts`
 - Test: `packages/core/test/reader-compat.test.ts`
@@ -146,6 +147,7 @@ pnpm --filter @yves-epub/core test -- reader-compat.test.ts
 ## Task 2: 实现阅读进度 API
 
 **Files:**
+
 - Modify: `packages/core/src/runtime/reader.ts`
 - Modify: `packages/core/src/model/types.ts`
 - Test: `packages/core/test/reader-hybrid-progress.test.ts`
@@ -185,14 +187,14 @@ pnpm --filter @yves-epub/core test -- reader-compat.test.ts
 
 **状态 × 操作 → 结果**
 
-| 状态 | 操作 | 结果 |
-| --- | --- | --- |
-| 未打开 | `getReadingProgress()` | `null` |
+| 状态         | 操作                   | 结果                |
+| ------------ | ---------------------- | ------------------- |
+| 未打开       | `getReadingProgress()` | `null`              |
 | 已打开未渲染 | `getReadingProgress()` | `null` 或首章稳定值 |
-| 已渲染 | `getReadingProgress()` | 返回快照 |
-| 已渲染 | `goToProgress(0)` | 书开头 |
-| 已渲染 | `goToProgress(1)` | 书末尾 |
-| 跳转中 | 再次 `goToProgress(y)` | 后一次覆盖前一次 |
+| 已渲染       | `getReadingProgress()` | 返回快照            |
+| 已渲染       | `goToProgress(0)`      | 书开头              |
+| 已渲染       | `goToProgress(1)`      | 书末尾              |
+| 跳转中       | 再次 `goToProgress(y)` | 后一次覆盖前一次    |
 
 **Step 1: 先写失败测试**
 
@@ -230,6 +232,7 @@ pnpm --filter @yves-epub/core test -- reader-runtime-navigation.test.ts
 ## Task 3: 实现 href 导航和 TOC 目标暴露
 
 **Files:**
+
 - Modify: `packages/core/src/runtime/reader.ts`
 - Modify: `packages/core/src/runtime/navigation-target.ts`
 - Modify: `packages/core/src/model/types.ts`
@@ -269,13 +272,13 @@ flattenTocTargets(book: Book): TocTarget[]
 
 **状态 × 操作 → 结果**
 
-| 状态 | 操作 | 结果 |
-| --- | --- | --- |
-| 已打开 | `goToHref("chapter.xhtml")` | 跳到章节开头 |
-| 已打开 | `goToHref("chapter.xhtml#a")` | 跳到锚点 |
-| 已打开 | `goToHref("#a")` | 当前书内解析 |
-| 已打开 | `goToHref("missing.xhtml")` | `null` 或 no-op |
-| 已打开 | `getTocTargets()` | 返回扁平 TOC |
+| 状态   | 操作                          | 结果            |
+| ------ | ----------------------------- | --------------- |
+| 已打开 | `goToHref("chapter.xhtml")`   | 跳到章节开头    |
+| 已打开 | `goToHref("chapter.xhtml#a")` | 跳到锚点        |
+| 已打开 | `goToHref("#a")`              | 当前书内解析    |
+| 已打开 | `goToHref("missing.xhtml")`   | `null` 或 no-op |
+| 已打开 | `getTocTargets()`             | 返回扁平 TOC    |
 
 **Step 1: 先写失败测试**
 
@@ -315,6 +318,7 @@ pnpm --filter @yves-epub/core test -- reader-hybrid-navigation.test.ts
 ## Task 4: 实现章节生命周期 hook
 
 **Files:**
+
 - Modify: `packages/core/src/model/types.ts`
 - Modify: `packages/core/src/runtime/reader.ts`
 - Optional Modify: `packages/core/src/renderer/dom-chapter-renderer.ts`
@@ -350,12 +354,12 @@ pnpm --filter @yves-epub/core test -- reader-hybrid-navigation.test.ts
 
 **状态 × 操作 → 结果**
 
-| 状态 | 操作 | 结果 |
-| --- | --- | --- |
-| DOM 章节完成渲染 | `onSectionRendered` | 提供 DOM 引用 |
-| Canvas 章节完成渲染 | `onSectionRendered` | 提供 metadata |
-| 章节重定位 | `onSectionRelocated` | 提供当前 locator |
-| hook 抛错 | 阅读器继续运行 | 错误被隔离 |
+| 状态                | 操作                 | 结果             |
+| ------------------- | -------------------- | ---------------- |
+| DOM 章节完成渲染    | `onSectionRendered`  | 提供 DOM 引用    |
+| Canvas 章节完成渲染 | `onSectionRendered`  | 提供 metadata    |
+| 章节重定位          | `onSectionRelocated` | 提供当前 locator |
+| hook 抛错           | 阅读器继续运行       | 错误被隔离       |
 
 **Step 1: 先写失败测试**
 
@@ -392,6 +396,7 @@ pnpm --filter @yves-epub/core test -- dom-chapter-renderer.test.ts
 ## Task 5: citic 宿主适配改造
 
 **Files:**
+
 - Modify: `C:\xyfProject\citicpub-enterprise-rn\src\components\Web\EbookReader\index.tsx`
 - Modify: `C:\xyfProject\citicpub-enterprise-rn\src\components\Web\EbookReader\components\ProgressPanel.tsx`
 - Modify: `C:\xyfProject\citicpub-enterprise-rn\src\components\Web\EbookReader\components\TableOfContents.tsx`
@@ -456,6 +461,7 @@ pnpm --filter @yves-epub/core test -- dom-chapter-renderer.test.ts
 ## Task 6: 文档与发布说明
 
 **Files:**
+
 - Modify: `docs/plans/2026-04-20-citic-reader-integration-requirements.md`
 - Modify: `docs/project-architecture.md`
 - Optional Modify: `packages/demo/src/*`

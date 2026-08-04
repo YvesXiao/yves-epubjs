@@ -85,31 +85,31 @@
 
 ### 6.1 必须继续留在 Canvas 的能力
 
-| 能力 | 原因 |
-| --- | --- |
-| 稳定分页 | 当前页片模型已经成熟，且 DOM 侧没有等价实现 |
-| 几何级 hit test | 现有交互区域模型建立在 display list 和 interaction map 上 |
-| locator 与 viewport 双向映射 | 当前 API 主要依赖 canvas interaction regions |
-| 长章节 scroll slice 虚拟化 | 当前 scroll 性能策略建立在 canvas 切片与复用上 |
-| simple / pretext 内容的确定性布局 | 当前这类内容在 canvas 上收益最高、风险最低 |
+| 能力                              | 原因                                                      |
+| --------------------------------- | --------------------------------------------------------- |
+| 稳定分页                          | 当前页片模型已经成熟，且 DOM 侧没有等价实现               |
+| 几何级 hit test                   | 现有交互区域模型建立在 display list 和 interaction map 上 |
+| locator 与 viewport 双向映射      | 当前 API 主要依赖 canvas interaction regions              |
+| 长章节 scroll slice 虚拟化        | 当前 scroll 性能策略建立在 canvas 切片与复用上            |
+| simple / pretext 内容的确定性布局 | 当前这类内容在 canvas 上收益最高、风险最低                |
 
 ### 6.2 应优先落到 DOM 的能力
 
-| 能力 | 原因 |
-| --- | --- |
-| 复杂出版社 CSS fidelity | 浏览器原生排版收益更高 |
-| table / svg / math / iframe 高保真显示 | 不值得继续扩 canvas 兼容面 |
+| 能力                                                  | 原因                                        |
+| ----------------------------------------------------- | ------------------------------------------- |
+| 复杂出版社 CSS fidelity                               | 浏览器原生排版收益更高                      |
+| table / svg / math / iframe 高保真显示                | 不值得继续扩 canvas 兼容面                  |
 | float / text-indent / flex / grid / position 复杂布局 | 当前 analyzer 已经把它们视为高风险 DOM 路径 |
-| 复杂图文混排的原生结构保真 | DOM 更自然，也更容易和真实 EPUB 行为对齐 |
+| 复杂图文混排的原生结构保真                            | DOM 更自然，也更容易和真实 EPUB 行为对齐    |
 
 ### 6.3 暂时保留 Hybrid，但不建议继续扩张的灰区
 
-| 能力 | 当前状态 |
-| --- | --- |
-| DOM 章节精确 viewport mapping | 有基础能力，但不够显式和统一 |
-| DOM 章节搜索结果精确定位 | 目前更多依赖 locator/progress 回退 |
-| DOM 章节 richer hit test | 目前主要是 link + progress 兜底 |
-| 用 canvas 继续补复杂 CSS | 明确不建议继续扩张 |
+| 能力                          | 当前状态                           |
+| ----------------------------- | ---------------------------------- |
+| DOM 章节精确 viewport mapping | 有基础能力，但不够显式和统一       |
+| DOM 章节搜索结果精确定位      | 目前更多依赖 locator/progress 回退 |
+| DOM 章节 richer hit test      | 目前主要是 link + progress 兜底    |
+| 用 canvas 继续补复杂 CSS      | 明确不建议继续扩张                 |
 
 ## 7. 需求范围
 

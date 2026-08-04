@@ -14,7 +14,9 @@ function createStructuredSection(): SectionDocument {
       {
         id: "text-1",
         kind: "text",
-        inlines: [{ kind: "text", text: "Intro paragraph for locator stability." }]
+        inlines: [
+          { kind: "text", text: "Intro paragraph for locator stability." }
+        ]
       },
       {
         id: "list-1",
@@ -26,7 +28,12 @@ function createStructuredSection(): SectionDocument {
             {
               id: `item-text-${index + 1}`,
               kind: "text",
-              inlines: [{ kind: "text", text: `List item ${index + 1} with enough text to wrap.` }]
+              inlines: [
+                {
+                  kind: "text",
+                  text: `List item ${index + 1} with enough text to wrap.`
+                }
+              ]
             }
           ]
         }))
@@ -48,7 +55,9 @@ function createStructuredSection(): SectionDocument {
           {
             id: "figure-caption-1",
             kind: "text",
-            inlines: [{ kind: "text", text: "Figure caption for locator testing." }]
+            inlines: [
+              { kind: "text", text: "Figure caption for locator testing." }
+            ]
           }
         ]
       },
@@ -69,12 +78,24 @@ function createStructuredSection(): SectionDocument {
               {
                 id: "cell-1",
                 header: true,
-                blocks: [{ id: "cell-text-1", kind: "text", inlines: [{ kind: "text", text: "Name" }] }]
+                blocks: [
+                  {
+                    id: "cell-text-1",
+                    kind: "text",
+                    inlines: [{ kind: "text", text: "Name" }]
+                  }
+                ]
               },
               {
                 id: "cell-2",
                 header: true,
-                blocks: [{ id: "cell-text-2", kind: "text", inlines: [{ kind: "text", text: "Value" }] }]
+                blocks: [
+                  {
+                    id: "cell-text-2",
+                    kind: "text",
+                    inlines: [{ kind: "text", text: "Value" }]
+                  }
+                ]
               }
             ]
           },
@@ -87,7 +108,9 @@ function createStructuredSection(): SectionDocument {
                   {
                     id: `cell-name-text-${index + 1}`,
                     kind: "text" as const,
-                    inlines: [{ kind: "text" as const, text: `Entry ${index + 1}` }]
+                    inlines: [
+                      { kind: "text" as const, text: `Entry ${index + 1}` }
+                    ]
                   }
                 ]
               },
@@ -97,7 +120,9 @@ function createStructuredSection(): SectionDocument {
                   {
                     id: `cell-value-text-${index + 1}`,
                     kind: "text" as const,
-                    inlines: [{ kind: "text" as const, text: `Value ${index + 1}` }]
+                    inlines: [
+                      { kind: "text" as const, text: `Value ${index + 1}` }
+                    ]
                   }
                 ]
               }

@@ -1,9 +1,6 @@
 import type { ManifestItem } from "../model/types"
 import { resolveResourcePath } from "../container/resource-path"
-import {
-  getHtmlElementAttribute,
-  isHtmlElementNode
-} from "./html-dom-adapter"
+import { getHtmlElementAttribute, isHtmlElementNode } from "./html-dom-adapter"
 import { parseCssStyleSheet, type CssAstStyleSheet } from "./css-ast-adapter"
 import { parseXhtmlDomDocument } from "./xhtml-dom-parser"
 
@@ -82,8 +79,14 @@ export async function loadChapterStyleSheets(input: {
   readText: (href: string) => Promise<string>
   cache?: CssAstCache
 }): Promise<ParsedStyleSheetResource[]> {
-  const linkedHrefs = extractLinkedStyleSheetHrefs(input.sectionXml, input.sectionHref)
-  const manifestItems = resolveChapterStyleSheetManifestItems(input.manifest, linkedHrefs)
+  const linkedHrefs = extractLinkedStyleSheetHrefs(
+    input.sectionXml,
+    input.sectionHref
+  )
+  const manifestItems = resolveChapterStyleSheetManifestItems(
+    input.manifest,
+    linkedHrefs
+  )
   const cache = input.cache ?? new CssAstCache()
 
   return Promise.all(

@@ -80,10 +80,13 @@ describe("EpubReader publisher styles", () => {
     await reader.render()
 
     expect(
-      container.querySelector("style[data-epub-dom-source='OPS/styles/publisher.css']")
-        ?.textContent
+      container.querySelector(
+        "style[data-epub-dom-source='OPS/styles/publisher.css']"
+      )?.textContent
     ).toContain(".epub-dom-section .callout")
-    expect(container.querySelector("img")?.getAttribute("style")).toContain("background-image")
+    expect(container.querySelector("img")?.getAttribute("style")).toContain(
+      "background-image"
+    )
     expect(reader.getRenderDiagnostics()?.publisherStyles).toBe("enabled")
   })
 

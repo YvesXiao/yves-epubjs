@@ -99,9 +99,17 @@ describe("reading spread helpers", () => {
   })
 
   it("uses page progression when inferring synthetic spread placement", () => {
-    expect(inferSyntheticPagePlacement({ spineIndex: 0, pageProgression: "ltr" })).toBe("right")
-    expect(inferSyntheticPagePlacement({ spineIndex: 1, pageProgression: "ltr" })).toBe("left")
-    expect(inferSyntheticPagePlacement({ spineIndex: 0, pageProgression: "rtl" })).toBe("left")
-    expect(inferSyntheticPagePlacement({ spineIndex: 1, pageProgression: "rtl" })).toBe("right")
+    expect(
+      inferSyntheticPagePlacement({ spineIndex: 0, pageProgression: "ltr" })
+    ).toBe("right")
+    expect(
+      inferSyntheticPagePlacement({ spineIndex: 1, pageProgression: "ltr" })
+    ).toBe("left")
+    expect(
+      inferSyntheticPagePlacement({ spineIndex: 0, pageProgression: "rtl" })
+    ).toBe("left")
+    expect(
+      inferSyntheticPagePlacement({ spineIndex: 1, pageProgression: "rtl" })
+    ).toBe("right")
   })
 })

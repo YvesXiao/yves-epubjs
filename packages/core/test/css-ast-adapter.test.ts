@@ -16,7 +16,9 @@ describe("CSS AST adapter", () => {
 
     const rules = getCssTopLevelRules(stylesheet)
     expect(rules).toHaveLength(2)
-    expect(rules[0]?.prelude && serializeCssNode(rules[0].prelude)).toBe("p.note")
+    expect(rules[0]?.prelude && serializeCssNode(rules[0].prelude)).toBe(
+      "p.note"
+    )
     expect(rules[1]?.prelude && serializeCssNode(rules[1].prelude)).toBe("a")
   })
 

@@ -152,16 +152,16 @@ EPUB 是用户输入。同步全量解压会阻塞主线程，zip bomb 或超大
 
 ## 状态与副作用矩阵
 
-| 状态 | 操作 | 当前结果 | 风险判断 |
-| --- | --- | --- | --- |
-| 未打开 | `open(input)` | normalize input，parse EPUB，重置 reader 状态，不自动 render | 主路径清晰 |
-| 已打开 | `render()` | 等待 `document.fonts.ready`，再 `renderCurrentSection()` | fonts ready 没有超时，低优先级风险 |
-| renderVersion 已过期 | DOM/canvas render callback | callback 返回，不写 DOM/canvas | 屏障有效 |
-| DOM 普通图片，远程 URL，默认配置 | create DOM render input | `sanitizeEmbeddedResourceUrl` 替换为 `data:,` | 已覆盖 |
-| canvas 图片，远程 URL，默认配置 | display list resolve image URL | 资源不存在时 `RenderableResourceManager` 返回原 URL | 高风险 |
-| cover/image-page presentation image，远程 URL，默认配置 | create DOM render input | 直接 `resolveDomResourceUrl`，可能返回原 URL | 高风险 |
-| DOM 章节含 `iframe`/`object` | preprocess + render | `script` 被移除，其他高风险标签可能保留并注入 | 高风险 |
-| destroy 后 | 已注册事件、timer、object URL | 大部分资源清理完整 | 正向机制 |
+| 状态                                                    | 操作                           | 当前结果                                                     | 风险判断                           |
+| ------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------ | ---------------------------------- |
+| 未打开                                                  | `open(input)`                  | normalize input，parse EPUB，重置 reader 状态，不自动 render | 主路径清晰                         |
+| 已打开                                                  | `render()`                     | 等待 `document.fonts.ready`，再 `renderCurrentSection()`     | fonts ready 没有超时，低优先级风险 |
+| renderVersion 已过期                                    | DOM/canvas render callback     | callback 返回，不写 DOM/canvas                               | 屏障有效                           |
+| DOM 普通图片，远程 URL，默认配置                        | create DOM render input        | `sanitizeEmbeddedResourceUrl` 替换为 `data:,`                | 已覆盖                             |
+| canvas 图片，远程 URL，默认配置                         | display list resolve image URL | 资源不存在时 `RenderableResourceManager` 返回原 URL          | 高风险                             |
+| cover/image-page presentation image，远程 URL，默认配置 | create DOM render input        | 直接 `resolveDomResourceUrl`，可能返回原 URL                 | 高风险                             |
+| DOM 章节含 `iframe`/`object`                            | preprocess + render            | `script` 被移除，其他高风险标签可能保留并注入                | 高风险                             |
+| destroy 后                                              | 已注册事件、timer、object URL  | 大部分资源清理完整                                           | 正向机制                           |
 
 ## 建议修整顺序
 

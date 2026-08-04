@@ -3,7 +3,7 @@ import {
   type PreparedRichInline,
   type RichInlineItem,
   type RichInlineLine
-} from "@chenglou/pretext/rich-inline";
+} from "@chenglou/pretext/rich-inline"
 import type {
   BlockNode,
   HeadingBlock,
@@ -14,132 +14,132 @@ import type {
   TextAlign,
   TextBlock,
   TypographyOptions
-} from "../model/types";
-import { normalizeLocator } from "../model/locator-domain";
-import { buildReadingStyleProfile } from "../renderer/reading-style-profile";
-import type { IntrinsicImageSize } from "../utils/image-intrinsic-size";
-import { extractFontSize } from "../utils/text-wrap";
-import { estimateNativeBlockHeight } from "./native-block-layout";
+} from "../model/types"
+import { normalizeLocator } from "../model/locator-domain"
+import { buildReadingStyleProfile } from "../renderer/reading-style-profile"
+import type { IntrinsicImageSize } from "../utils/image-intrinsic-size"
+import { extractFontSize } from "../utils/text-wrap"
+import { estimateNativeBlockHeight } from "./native-block-layout"
 import {
   layoutTextLikeBlock as layoutPretextTextBlock,
   type CompiledTextBlock
-} from "./text-block-layout";
+} from "./text-block-layout"
 
 export type LayoutInlineFragment = {
-  text: string;
-  font: string;
-  gapBefore: number;
-  width?: number;
-  color?: string;
-  backgroundColor?: string;
+  text: string
+  font: string
+  gapBefore: number
+  width?: number
+  color?: string
+  backgroundColor?: string
   image?: {
-    src: string;
-    alt?: string;
-    title?: string;
-    width: number;
-    height: number;
-    marginLeft: number;
-    marginRight: number;
-  };
-  href?: string;
-  title?: string;
-  code?: boolean;
-  mark?: boolean;
-  baselineShift?: number;
-};
+    src: string
+    alt?: string
+    title?: string
+    width: number
+    height: number
+    marginLeft: number
+    marginRight: number
+  }
+  href?: string
+  title?: string
+  code?: boolean
+  mark?: boolean
+  baselineShift?: number
+}
 
 export type LayoutTextLine = {
-  width: number;
-  height: number;
-  fragments: LayoutInlineFragment[];
-};
+  width: number
+  height: number
+  fragments: LayoutInlineFragment[]
+}
 
 export type LayoutPretextBlock = {
-  type: "pretext";
-  id: string;
-  kind: "text" | "heading";
-  level?: 1 | 2 | 3 | 4 | 5 | 6;
-  textOffsetBase?: number;
-  lineHeight: number;
-  textAlign: TextAlign;
-  color?: string;
-  backgroundColor?: string;
-  paddingTop: number;
-  paddingBottom: number;
-  paddingLeft: number;
-  paddingRight: number;
-  lines: LayoutTextLine[];
-  estimatedHeight: number;
-};
+  type: "pretext"
+  id: string
+  kind: "text" | "heading"
+  level?: 1 | 2 | 3 | 4 | 5 | 6
+  textOffsetBase?: number
+  lineHeight: number
+  textAlign: TextAlign
+  color?: string
+  backgroundColor?: string
+  paddingTop: number
+  paddingBottom: number
+  paddingLeft: number
+  paddingRight: number
+  lines: LayoutTextLine[]
+  estimatedHeight: number
+}
 
 export type LayoutNativeBlock = {
-  type: "native";
-  id: string;
-  block: BlockNode;
-  estimatedHeight: number;
-};
+  type: "native"
+  id: string
+  block: BlockNode
+  estimatedHeight: number
+}
 
-export type LayoutBlock = LayoutPretextBlock | LayoutNativeBlock;
+export type LayoutBlock = LayoutPretextBlock | LayoutNativeBlock
 
 export type LayoutResult = {
-  mode: ReadingMode;
-  width: number;
-  blocks: LayoutBlock[];
-  locatorMap: Map<string, Locator>;
-};
+  mode: ReadingMode
+  width: number
+  blocks: LayoutBlock[]
+  locatorMap: Map<string, Locator>
+}
 
 export type LayoutInput = {
-  section: SectionDocument;
-  spineIndex: number;
-  viewportWidth: number;
-  viewportHeight: number;
-  typography: TypographyOptions;
-  fontFamily: string;
+  section: SectionDocument
+  spineIndex: number
+  viewportWidth: number
+  viewportHeight: number
+  typography: TypographyOptions
+  fontFamily: string
   resolveImageIntrinsicSize?: (
     src: string
-  ) => IntrinsicImageSize | null | undefined;
-};
+  ) => IntrinsicImageSize | null | undefined
+}
 
 type InlineStyleState = {
-  fontFamily?: string;
-  fontStyle?: "normal" | "italic";
-  fontWeight?: string;
-  href?: string;
-  title?: string;
-  code?: boolean;
-  fontScale?: number;
-  mark?: boolean;
-  verticalAlign?: "sub" | "sup";
-  color?: string;
-  backgroundColor?: string;
-};
+  fontFamily?: string
+  fontStyle?: "normal" | "italic"
+  fontWeight?: string
+  href?: string
+  title?: string
+  code?: boolean
+  fontScale?: number
+  mark?: boolean
+  verticalAlign?: "sub" | "sup"
+  color?: string
+  backgroundColor?: string
+}
 
-type RichInlineSource = LayoutInlineFragment;
+type RichInlineSource = LayoutInlineFragment
 
 type CompiledSegment = {
-  prepared: PreparedRichInline;
-  sources: RichInlineSource[];
-};
+  prepared: PreparedRichInline
+  sources: RichInlineSource[]
+}
 
-type CompiledBlock = CompiledTextBlock;
+type CompiledBlock = CompiledTextBlock
 
-const DEFAULT_FONT_FAMILY = '"Iowan Old Style", "Palatino Linotype", serif';
+const DEFAULT_FONT_FAMILY = '"Iowan Old Style", "Palatino Linotype", serif'
 const DEFAULT_ALIGNMENT_THEME = {
   color: "#1f2328",
   background: "#fffdf7"
-} as const;
+} as const
 
 export class LayoutEngine {
-  private readonly compiledBlocks = new Map<string, CompiledBlock>();
+  private readonly compiledBlocks = new Map<string, CompiledBlock>()
 
   clearCache(): void {
     this.compiledBlocks.clear()
   }
 
   layout(input: LayoutInput, mode: ReadingMode): LayoutResult {
-    const width = Math.max(120, Math.floor(input.viewportWidth));
-    const blocks: LayoutBlock[] = [];
-    const locatorMap = new Map<string, Locator>();
+    const width = Math.max(120, Math.floor(input.viewportWidth))
+    const blocks: LayoutBlock[] = []
+    const locatorMap = new Map<string, Locator>()
 
     for (const block of input.section.blocks) {
       locatorMap.set(
@@ -149,12 +149,12 @@ export class LayoutEngine {
           blockId: block.id,
           progressInSection: 0
         })
-      );
+      )
 
-      const pretextBlock = this.layoutTextLikeBlock(block, input, width);
+      const pretextBlock = this.layoutTextLikeBlock(block, input, width)
       if (pretextBlock) {
-        blocks.push(pretextBlock);
-        continue;
+        blocks.push(pretextBlock)
+        continue
       }
 
       blocks.push({
@@ -162,7 +162,7 @@ export class LayoutEngine {
         id: block.id,
         block,
         estimatedHeight: estimateNativeBlockHeight(block, input)
-      });
+      })
     }
 
     return {
@@ -170,7 +170,7 @@ export class LayoutEngine {
       width,
       blocks,
       locatorMap
-    };
+    }
   }
 
   private layoutTextLikeBlock(
@@ -179,7 +179,7 @@ export class LayoutEngine {
     width: number
   ): LayoutPretextBlock | null {
     if (block.kind !== "text" && block.kind !== "heading") {
-      return null;
+      return null
     }
 
     return layoutPretextTextBlock(block, input, width, {
@@ -195,7 +195,7 @@ export class LayoutEngine {
         this.estimatePretextHeight(lines, marginBottom),
       getCoverImageInline: (candidate, section) =>
         this.getCoverImageInline(candidate, section)
-    });
+    })
   }
 
   private materializeLine(
@@ -204,19 +204,19 @@ export class LayoutEngine {
     defaultLineHeight: number
   ): LayoutTextLine {
     const height = line.fragments.reduce((maxHeight, fragment) => {
-      const options = sourceToFragmentOptions(sources[fragment.itemIndex]);
+      const options = sourceToFragmentOptions(sources[fragment.itemIndex])
       if (options.image) {
-        return Math.max(maxHeight, options.image.height);
+        return Math.max(maxHeight, options.image.height)
       }
 
-      return Math.max(maxHeight, extractFontSize(options.font) * 1.45);
-    }, defaultLineHeight);
+      return Math.max(maxHeight, extractFontSize(options.font) * 1.45)
+    }, defaultLineHeight)
 
     return {
       width: line.width,
       height,
       fragments: line.fragments.map((fragment) => {
-        const options = sourceToFragmentOptions(sources[fragment.itemIndex]);
+        const options = sourceToFragmentOptions(sources[fragment.itemIndex])
         return this.createSourceFragment(
           options.image ? "" : fragment.text,
           options.image
@@ -226,9 +226,9 @@ export class LayoutEngine {
                 width: Math.max(0, fragment.occupiedWidth)
               },
           fragment.gapBefore
-        );
+        )
       })
-    };
+    }
   }
 
   private getCompiledBlock(
@@ -236,29 +236,29 @@ export class LayoutEngine {
     input: LayoutInput
   ): CompiledBlock | null {
     if (this.containsUnsupportedInline(block.inlines)) {
-      return null;
+      return null
     }
 
-    const key = this.getBlockCacheKey(block, input);
-    const cached = this.compiledBlocks.get(key);
+    const key = this.getBlockCacheKey(block, input)
+    const cached = this.compiledBlocks.get(key)
     if (cached) {
-      return cached;
+      return cached
     }
 
     const styleProfile = buildReadingStyleProfile({
       theme: DEFAULT_ALIGNMENT_THEME,
       typography: input.typography
-    });
+    })
     const baseFontSize =
       block.kind === "heading"
         ? (block.style?.fontSize ??
           input.typography.fontSize * styleProfile.heading.scale[block.level])
-        : (block.style?.fontSize ?? input.typography.fontSize);
+        : (block.style?.fontSize ?? input.typography.fontSize)
     const lineHeight =
       block.style?.lineHeight ??
       (block.kind === "heading"
         ? Math.max(baseFontSize * 1.25, styleProfile.text.lineHeight)
-        : styleProfile.text.lineHeight);
+        : styleProfile.text.lineHeight)
 
     const segments = this.compileInlineSegments(
       block.inlines,
@@ -280,32 +280,32 @@ export class LayoutEngine {
           : {})
       },
       input.resolveImageIntrinsicSize
-    );
+    )
 
     const compiled = {
       segments,
       lineHeight,
       textAlign: block.style?.textAlign ?? "start"
-    } satisfies CompiledBlock;
+    } satisfies CompiledBlock
 
-    this.compiledBlocks.set(key, compiled);
-    return compiled;
+    this.compiledBlocks.set(key, compiled)
+    return compiled
   }
 
   private compileInlineSegments(
     inlines: InlineNode[],
     typography: {
-      fontFamily: string;
-      fontSize: number;
+      fontFamily: string
+      fontSize: number
     },
     state: InlineStyleState,
     resolveResourceIntrinsicSize?: (
       src: string
     ) => IntrinsicImageSize | null | undefined
   ): CompiledSegment[] {
-    const segments: CompiledSegment[] = [];
-    const items: RichInlineItem[] = [];
-    const sources: RichInlineSource[] = [];
+    const segments: CompiledSegment[] = []
+    const items: RichInlineItem[] = []
+    const sources: RichInlineSource[] = []
 
     const flushSegment = (): void => {
       if (items.length === 0) {
@@ -333,17 +333,17 @@ export class LayoutEngine {
               0
             )
           ]
-        });
+        })
       } else {
         segments.push({
           prepared: prepareRichInline([...items]),
           sources: [...sources]
-        });
+        })
       }
 
-      items.length = 0;
-      sources.length = 0;
-    };
+      items.length = 0
+      sources.length = 0
+    }
 
     this.collectRichInlineItems(
       inlines,
@@ -353,25 +353,25 @@ export class LayoutEngine {
       items,
       sources,
       flushSegment
-    );
+    )
 
     if (segments.length === 0 || items.length > 0 || sources.length > 0) {
-      flushSegment();
+      flushSegment()
     }
 
-    return segments;
+    return segments
   }
 
   private collectRichInlineItems(
     inlines: InlineNode[],
     typography: {
-      fontFamily: string;
-      fontSize: number;
+      fontFamily: string
+      fontSize: number
     },
     state: InlineStyleState,
-    resolveResourceIntrinsicSize: ((
-      src: string
-    ) => IntrinsicImageSize | null | undefined) | undefined,
+    resolveResourceIntrinsicSize:
+      | ((src: string) => IntrinsicImageSize | null | undefined)
+      | undefined,
     items: RichInlineItem[],
     sources: RichInlineSource[],
     breakLine: () => void
@@ -380,20 +380,19 @@ export class LayoutEngine {
       switch (inline.kind) {
         case "text": {
           if (!inline.text) {
-            continue;
+            continue
           }
 
-          const effectiveFontSize =
-            typography.fontSize * (state.fontScale ?? 1);
+          const effectiveFontSize = typography.fontSize * (state.fontScale ?? 1)
           const font = this.buildFont(
             typography.fontFamily,
             effectiveFontSize,
             state
-          );
+          )
           items.push({
             text: inline.text,
             font
-          });
+          })
           sources.push(
             this.createSourceFragment(
               inline.text,
@@ -417,8 +416,8 @@ export class LayoutEngine {
               },
               0
             )
-          );
-          break;
+          )
+          break
         }
         case "emphasis":
         case "span":
@@ -466,8 +465,8 @@ export class LayoutEngine {
             items,
             sources,
             breakLine
-          );
-          break;
+          )
+          break
         case "strong":
           this.collectRichInlineItems(
             inline.children,
@@ -487,8 +486,8 @@ export class LayoutEngine {
             items,
             sources,
             breakLine
-          );
-          break;
+          )
+          break
         case "link":
           this.collectRichInlineItems(
             inline.children,
@@ -502,8 +501,8 @@ export class LayoutEngine {
             items,
             sources,
             breakLine
-          );
-          break;
+          )
+          break
         case "code": {
           const font = this.buildFont(
             '"SFMono-Regular", "SF Mono", Consolas, monospace',
@@ -512,12 +511,12 @@ export class LayoutEngine {
               ...state,
               code: true
             }
-          );
+          )
           items.push({
             text: inline.text,
             font,
             break: "never"
-          });
+          })
           sources.push(
             this.createSourceFragment(
               inline.text,
@@ -539,26 +538,26 @@ export class LayoutEngine {
               },
               0
             )
-          );
-          break;
+          )
+          break
         }
         case "line-break":
-          breakLine();
-          break;
+          breakLine()
+          break
         case "image":
           {
             const effectiveFontSize =
-              typography.fontSize * (state.fontScale ?? 1);
+              typography.fontSize * (state.fontScale ?? 1)
             const imageMetrics = resolveInlineImageMetrics(
               inline,
               Math.max(14, effectiveFontSize * 1.05),
               resolveResourceIntrinsicSize
-            );
+            )
             const font = this.buildFont(
               typography.fontFamily,
               effectiveFontSize,
               state
-            );
+            )
             items.push({
               text: "\uFFFC",
               font,
@@ -570,7 +569,7 @@ export class LayoutEngine {
                   imageMetrics.marginRight -
                   effectiveFontSize * 0.56
               )
-            });
+            })
             sources.push(
               this.createSourceFragment(
                 "",
@@ -594,11 +593,11 @@ export class LayoutEngine {
                 },
                 0
               )
-            );
+            )
           }
-          break;
+          break
         default:
-          break;
+          break
       }
     }
   }
@@ -608,16 +607,16 @@ export class LayoutEngine {
     fontSize: number,
     state: InlineStyleState
   ): string {
-    const style = state.fontStyle ?? "normal";
-    const weight = state.fontWeight ?? "400";
-    return `${style} ${weight} ${fontSize}px ${state.fontFamily ?? fontFamily}`;
+    const style = state.fontStyle ?? "normal"
+    const weight = state.fontWeight ?? "400"
+    return `${style} ${weight} ${fontSize}px ${state.fontFamily ?? fontFamily}`
   }
 
   private getBlockCacheKey(
     block: TextBlock | HeadingBlock,
     input: LayoutInput
   ): string {
-    const kindSuffix = block.kind === "heading" ? `:h${block.level}` : ":p";
+    const kindSuffix = block.kind === "heading" ? `:h${block.level}` : ":p"
     return [
       input.section.href,
       input.section.id,
@@ -642,7 +641,7 @@ export class LayoutEngine {
         block.inlines,
         input.resolveImageIntrinsicSize
       )
-    ].join("|");
+    ].join("|")
   }
 
   private buildInlineImageCacheSignature(
@@ -662,9 +661,9 @@ export class LayoutEngine {
 
   private collectInlineImageCacheSignatures(
     inlines: InlineNode[],
-    resolveResourceIntrinsicSize: ((
-      src: string
-    ) => IntrinsicImageSize | null | undefined) | undefined,
+    resolveResourceIntrinsicSize:
+      | ((src: string) => IntrinsicImageSize | null | undefined)
+      | undefined,
     signatures: string[]
   ): void {
     for (const inline of inlines) {
@@ -711,9 +710,9 @@ export class LayoutEngine {
     for (const inline of inlines) {
       switch (inline.kind) {
         case "image":
-          break;
+          break
         case "line-break":
-          break;
+          break
         case "emphasis":
         case "span":
         case "sub":
@@ -725,51 +724,51 @@ export class LayoutEngine {
         case "strong":
         case "link":
           if (this.containsUnsupportedInline(inline.children)) {
-            return true;
+            return true
           }
-          break;
+          break
         default:
-          break;
+          break
       }
     }
 
-    return false;
+    return false
   }
 
   private estimatePretextHeight(
     lines: LayoutTextLine[],
     marginBottom: number
   ): number {
-    const contentHeight = lines.reduce((total, line) => total + line.height, 0);
+    const contentHeight = lines.reduce((total, line) => total + line.height, 0)
     const minimumHeight = lines.reduce(
       (maxHeight, line) => Math.max(maxHeight, line.height),
       0
-    );
+    )
 
-    return Math.max(minimumHeight, contentHeight + marginBottom);
+    return Math.max(minimumHeight, contentHeight + marginBottom)
   }
 
   private createSourceFragment(
     text: string,
     options: {
-      font: string;
-      width?: number;
-      color?: string;
-      backgroundColor?: string;
-      href?: string;
-      title?: string;
+      font: string
+      width?: number
+      color?: string
+      backgroundColor?: string
+      href?: string
+      title?: string
       image?: {
-        src: string;
-        alt?: string;
-        title?: string;
-        width: number;
-        height: number;
-        marginLeft: number;
-        marginRight: number;
-      };
-      code?: boolean;
-      mark?: boolean;
-      baselineShift?: number;
+        src: string
+        alt?: string
+        title?: string
+        width: number
+        height: number
+        marginLeft: number
+        marginRight: number
+      }
+      code?: boolean
+      mark?: boolean
+      baselineShift?: number
     },
     gapBefore: number
   ): LayoutInlineFragment {
@@ -790,7 +789,7 @@ export class LayoutEngine {
       ...(typeof options.baselineShift === "number"
         ? { baselineShift: options.baselineShift }
         : {})
-    };
+    }
   }
 
   private getCoverImageInline(
@@ -798,43 +797,42 @@ export class LayoutEngine {
     section: SectionDocument
   ): Extract<InlineNode, { kind: "image" }> | undefined {
     if (section.presentationRole !== "cover" || section.blocks.length !== 1) {
-      return undefined;
+      return undefined
     }
 
     if (block.inlines.length !== 1) {
-      return undefined;
+      return undefined
     }
 
-    const [inline] = block.inlines;
-    return inline?.kind === "image" ? inline : undefined;
+    const [inline] = block.inlines
+    return inline?.kind === "image" ? inline : undefined
   }
-
 }
 
 function sourceToFragmentOptions(source: RichInlineSource | undefined): {
-  font: string;
-  width?: number;
-  color?: string;
-  backgroundColor?: string;
-  href?: string;
-  title?: string;
+  font: string
+  width?: number
+  color?: string
+  backgroundColor?: string
+  href?: string
+  title?: string
   image?: {
-    src: string;
-    alt?: string;
-    title?: string;
-    width: number;
-    height: number;
-    marginLeft: number;
-    marginRight: number;
-  };
-  code?: boolean;
-  mark?: boolean;
-  baselineShift?: number;
+    src: string
+    alt?: string
+    title?: string
+    width: number
+    height: number
+    marginLeft: number
+    marginRight: number
+  }
+  code?: boolean
+  mark?: boolean
+  baselineShift?: number
 } {
   if (!source) {
     return {
       font: `400 16px ${DEFAULT_FONT_FAMILY}`
-    };
+    }
   }
 
   return {
@@ -852,7 +850,7 @@ function sourceToFragmentOptions(source: RichInlineSource | undefined): {
     ...(typeof source.baselineShift === "number"
       ? { baselineShift: source.baselineShift }
       : {})
-  };
+  }
 }
 
 function resolveInlineImageMetrics(
@@ -862,10 +860,10 @@ function resolveInlineImageMetrics(
     src: string
   ) => IntrinsicImageSize | null | undefined
 ): {
-  width: number;
-  height: number;
-  marginLeft: number;
-  marginRight: number;
+  width: number
+  height: number
+  marginLeft: number
+  marginRight: number
 } {
   const resolvedSize =
     inline.src && resolveResourceIntrinsicSize
@@ -873,29 +871,29 @@ function resolveInlineImageMetrics(
       : undefined
   const intrinsicWidth = inline.width ?? resolvedSize?.width
   const intrinsicHeight = inline.height ?? resolvedSize?.height
-  const styledWidth = inline.style?.width;
-  const styledHeight = inline.style?.height;
+  const styledWidth = inline.style?.width
+  const styledHeight = inline.style?.height
   const width = resolveInlineImageDimension({
     styledPrimary: styledWidth,
     styledSecondary: styledHeight,
     intrinsicPrimary: intrinsicWidth,
     intrinsicSecondary: intrinsicHeight,
     fallback: fallbackHeight
-  });
+  })
   const height = resolveInlineImageDimension({
     styledPrimary: styledHeight,
     styledSecondary: styledWidth,
     intrinsicPrimary: intrinsicHeight,
     intrinsicSecondary: intrinsicWidth,
     fallback: fallbackHeight
-  });
+  })
 
   return {
     width,
     height,
     marginLeft: Math.max(0, inline.style?.marginLeft ?? 0),
     marginRight: Math.max(0, inline.style?.marginRight ?? 0)
-  };
+  }
 }
 
 function resolveInlineImageBaselineShift(
@@ -912,14 +910,14 @@ function resolveInlineImageBaselineShift(
 }
 
 function resolveInlineImageDimension(input: {
-  styledPrimary: number | undefined;
-  styledSecondary: number | undefined;
-  intrinsicPrimary: number | undefined;
-  intrinsicSecondary: number | undefined;
-  fallback: number;
+  styledPrimary: number | undefined
+  styledSecondary: number | undefined
+  intrinsicPrimary: number | undefined
+  intrinsicSecondary: number | undefined
+  fallback: number
 }): number {
   if (typeof input.styledPrimary === "number" && input.styledPrimary > 0) {
-    return input.styledPrimary;
+    return input.styledPrimary
   }
 
   if (
@@ -933,45 +931,49 @@ function resolveInlineImageDimension(input: {
     return (
       (input.styledSecondary * input.intrinsicPrimary) /
       input.intrinsicSecondary
-    );
+    )
   }
 
   if (
     typeof input.intrinsicPrimary === "number" &&
     input.intrinsicPrimary > 0
   ) {
-    return input.intrinsicPrimary;
+    return input.intrinsicPrimary
   }
 
-  return input.fallback;
+  return input.fallback
 }
 
 function resolveImageIntrinsicSize(
   image: {
-    width?: number;
-    height?: number;
+    width?: number
+    height?: number
     style?: {
-      width?: number;
-      height?: number;
-    };
-    src?: string;
+      width?: number
+      height?: number
+    }
+    src?: string
   },
   resolveResourceIntrinsicSize?: (
     src: string
   ) => IntrinsicImageSize | null | undefined
 ): {
-  intrinsicWidth?: number;
-  intrinsicHeight?: number;
+  intrinsicWidth?: number
+  intrinsicHeight?: number
 } {
   const resolvedSize =
     image.src && resolveResourceIntrinsicSize
       ? resolveResourceIntrinsicSize(image.src)
       : undefined
-  const width = image.style?.width ?? image.width ?? resolvedSize?.width;
-  const height = image.style?.height ?? image.height ?? resolvedSize?.height;
+  const width = image.style?.width ?? image.width ?? resolvedSize?.width
+  const height = image.style?.height ?? image.height ?? resolvedSize?.height
 
   return {
-    ...(typeof width === "number" && width > 0 ? { intrinsicWidth: width } : {}),
-    ...(typeof height === "number" && height > 0 ? { intrinsicHeight: height } : {})
-  };
+    ...(typeof width === "number" && width > 0
+      ? { intrinsicWidth: width }
+      : {}),
+    ...(typeof height === "number" && height > 0
+      ? { intrinsicHeight: height }
+      : {})
+  }
 }

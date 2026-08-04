@@ -720,7 +720,8 @@ describe("EpubReader runtime navigation", () => {
         '.epub-dom-section[data-section-id="section-1"]'
       )
       const targetBlock = Array.from(
-        domSection?.querySelectorAll<HTMLElement>("[data-reader-block-id]") ?? []
+        domSection?.querySelectorAll<HTMLElement>("[data-reader-block-id]") ??
+          []
       ).find((element) =>
         element.textContent?.includes(DOM_SCROLL_TARGET_MARKER)
       )
@@ -769,19 +770,21 @@ describe("EpubReader runtime navigation", () => {
             }
           }
 
-          return originalGetBoundingClientRect?.value?.call(this) ?? {
-            x: 0,
-            y: 0,
-            top: 0,
-            left: 0,
-            bottom: 0,
-            right: 0,
-            width: 0,
-            height: 0,
-            toJSON() {
-              return this
+          return (
+            originalGetBoundingClientRect?.value?.call(this) ?? {
+              x: 0,
+              y: 0,
+              top: 0,
+              left: 0,
+              bottom: 0,
+              right: 0,
+              width: 0,
+              height: 0,
+              toJSON() {
+                return this
+              }
             }
-          }
+          )
         }
       })
 
@@ -875,7 +878,8 @@ describe("EpubReader runtime navigation", () => {
         '.epub-dom-section[data-section-id="section-1"]'
       )
       const targetBlock = Array.from(
-        domSection?.querySelectorAll<HTMLElement>("[data-reader-block-id]") ?? []
+        domSection?.querySelectorAll<HTMLElement>("[data-reader-block-id]") ??
+          []
       ).find((element) =>
         element.textContent?.includes(DOM_SCROLL_TARGET_MARKER)
       )

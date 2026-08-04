@@ -1,72 +1,72 @@
-import { sanitizeEmbeddedResourceUrl } from "../utils/url-boundary";
+import { sanitizeEmbeddedResourceUrl } from "../utils/url-boundary"
 
 export type DomSanitizerAttributeInput = {
-  tagName?: string;
-  attributes: Record<string, string>;
-};
+  tagName?: string
+  attributes: Record<string, string>
+}
 
-export type DomSanitizerNamespace = "html" | "svg";
+export type DomSanitizerNamespace = "html" | "svg"
 
 export class DomSanitizer {
   sanitizeElementTagName(
     tagName: string,
     options: {
-      namespace?: DomSanitizerNamespace;
+      namespace?: DomSanitizerNamespace
     } = {}
   ): string | null {
-    const normalizedTagName = normalizeName(tagName);
+    const normalizedTagName = normalizeName(tagName)
     if (!normalizedTagName) {
-      return null;
+      return null
     }
 
     return isAllowedElementTag(normalizedTagName, options.namespace ?? "html")
       ? normalizedTagName
-      : null;
+      : null
   }
 
   sanitizeAttributes(
     input: DomSanitizerAttributeInput
   ): Record<string, string> {
-    const tagName = input.tagName ? normalizeName(input.tagName) : undefined;
-    const context = tagName && SVG_ELEMENT_TAGS.has(tagName) ? "svg" : "html";
-    const normalized: Record<string, string> = {};
+    const tagName = input.tagName ? normalizeName(input.tagName) : undefined
+    const context = tagName && SVG_ELEMENT_TAGS.has(tagName) ? "svg" : "html"
+    const normalized: Record<string, string> = {}
 
     for (const [name, value] of Object.entries(input.attributes)) {
-      const normalizedName = normalizeName(name);
-      const trimmedValue = value.trim();
+      const normalizedName = normalizeName(name)
+      const trimmedValue = value.trim()
       if (!normalizedName || !trimmedValue) {
-        continue;
+        continue
       }
 
       if (!isAllowedAttributeName(normalizedName, tagName, context)) {
-        continue;
+        continue
       }
 
       if (
         !isAllowedAttributeValue(normalizedName, trimmedValue, tagName, context)
       ) {
-        continue;
+        continue
       }
 
-      normalized[normalizedName] = trimmedValue;
+      normalized[normalizedName] = trimmedValue
     }
 
-    return normalized;
+    return normalized
   }
 
   sanitizeRootAttributes(
     attributes: Record<string, string>
   ): Record<string, string> {
-    const normalized = this.sanitizeAttributes({ attributes });
-    const safeRootAttributes: Record<string, string> = {};
+    const normalized = this.sanitizeAttributes({ attributes })
+    const safeRootAttributes: Record<string, string> = {}
 
     for (const [name, value] of Object.entries(normalized)) {
       if (ROOT_ATTRIBUTE_NAMES.has(name)) {
-        safeRootAttributes[name] = value;
+        safeRootAttributes[name] = value
       }
     }
 
-    return safeRootAttributes;
+    return safeRootAttributes
   }
 }
 
@@ -141,7 +141,7 @@ const HTML_ELEMENT_TAGS = new Set([
   "ul",
   "var",
   "wbr"
-]);
+])
 
 const SVG_ELEMENT_TAGS = new Set([
   "circle",
@@ -165,7 +165,7 @@ const SVG_ELEMENT_TAGS = new Set([
   "title",
   "tspan",
   "use"
-]);
+])
 
 const ROOT_ATTRIBUTE_NAMES = new Set([
   "id",
@@ -174,7 +174,7 @@ const ROOT_ATTRIBUTE_NAMES = new Set([
   "lang",
   "xml:lang",
   "dir"
-]);
+])
 
 const GLOBAL_HTML_ATTRIBUTE_NAMES = new Set([
   "id",
@@ -186,7 +186,7 @@ const GLOBAL_HTML_ATTRIBUTE_NAMES = new Set([
   "dir",
   "role",
   "epub:type"
-]);
+])
 
 const TAG_ATTRIBUTE_NAMES = new Map<string, Set<string>>([
   ["a", new Set(["href", "name", "target", "rel"])],
@@ -231,7 +231,7 @@ const TAG_ATTRIBUTE_NAMES = new Map<string, Set<string>>([
   ],
   ["time", new Set(["datetime"])],
   ["tr", new Set(["align", "valign"])]
-]);
+])
 
 const SVG_ATTRIBUTE_NAMES = new Set([
   "aria-hidden",
@@ -284,19 +284,19 @@ const SVG_ATTRIBUTE_NAMES = new Set([
   "y",
   "y1",
   "y2"
-]);
+])
 
-const SAFE_NAVIGATION_SCHEMES = new Set(["http", "https", "mailto", "tel"]);
+const SAFE_NAVIGATION_SCHEMES = new Set(["http", "https", "mailto", "tel"])
 
 function isAllowedElementTag(
   tagName: string,
   namespace: DomSanitizerNamespace
 ): boolean {
   if (namespace === "svg") {
-    return SVG_ELEMENT_TAGS.has(tagName);
+    return SVG_ELEMENT_TAGS.has(tagName)
   }
 
-  return HTML_ELEMENT_TAGS.has(tagName) || SVG_ELEMENT_TAGS.has(tagName);
+  return HTML_ELEMENT_TAGS.has(tagName) || SVG_ELEMENT_TAGS.has(tagName)
 }
 
 function isAllowedAttributeName(
@@ -309,24 +309,24 @@ function isAllowedAttributeName(
     attributeName === "srcdoc" ||
     attributeName === "srcset"
   ) {
-    return false;
+    return false
   }
 
   if (attributeName.startsWith("aria-")) {
-    return true;
+    return true
   }
 
   if (context === "svg") {
-    return SVG_ATTRIBUTE_NAMES.has(attributeName);
+    return SVG_ATTRIBUTE_NAMES.has(attributeName)
   }
 
   if (GLOBAL_HTML_ATTRIBUTE_NAMES.has(attributeName)) {
-    return true;
+    return true
   }
 
   return Boolean(
     tagName && TAG_ATTRIBUTE_NAMES.get(tagName)?.has(attributeName)
-  );
+  )
 }
 
 function isAllowedAttributeValue(
@@ -336,11 +336,11 @@ function isAllowedAttributeValue(
   context: DomSanitizerNamespace
 ): boolean {
   if (attributeName === "style") {
-    return !isUnsafeStyleAttributeValue(value);
+    return !isUnsafeStyleAttributeValue(value)
   }
 
   if (context === "svg") {
-    return isAllowedSvgAttributeValue(attributeName, value, tagName);
+    return isAllowedSvgAttributeValue(attributeName, value, tagName)
   }
 
   if (attributeName === "src" && tagName === "img") {
@@ -348,11 +348,11 @@ function isAllowedAttributeValue(
       sanitizeEmbeddedResourceUrl(value, {
         allowExternalEmbeddedResources: true
       }) === value.trim()
-    );
+    )
   }
 
   if (attributeName === "href" && tagName === "a") {
-    return isSafeNavigationUrl(value);
+    return isSafeNavigationUrl(value)
   }
 
   if (
@@ -362,10 +362,10 @@ function isAllowedAttributeValue(
       tagName === "ins" ||
       tagName === "q")
   ) {
-    return isSafeNavigationUrl(value);
+    return isSafeNavigationUrl(value)
   }
 
-  return true;
+  return true
 }
 
 function isAllowedSvgAttributeValue(
@@ -374,56 +374,56 @@ function isAllowedSvgAttributeValue(
   tagName: string | undefined
 ): boolean {
   if (attributeName !== "href" && attributeName !== "xlink:href") {
-    return true;
+    return true
   }
 
   if (tagName === "use") {
-    return value.trim().startsWith("#");
+    return value.trim().startsWith("#")
   }
 
   if (tagName === "image") {
-    return sanitizeEmbeddedResourceUrl(value) === value.trim();
+    return sanitizeEmbeddedResourceUrl(value) === value.trim()
   }
 
-  return value.trim().startsWith("#");
+  return value.trim().startsWith("#")
 }
 
 function isSafeNavigationUrl(value: string): boolean {
-  const normalized = stripUrlControlAndWhitespace(value.trim());
+  const normalized = stripUrlControlAndWhitespace(value.trim())
   if (!normalized) {
-    return false;
+    return false
   }
 
   if (normalized.startsWith("#") || normalized.startsWith("//")) {
-    return true;
+    return true
   }
 
-  const schemeMatch = normalized.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/);
+  const schemeMatch = normalized.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/)
   if (!schemeMatch) {
-    return true;
+    return true
   }
 
-  return SAFE_NAVIGATION_SCHEMES.has(schemeMatch[1]!.toLowerCase());
+  return SAFE_NAVIGATION_SCHEMES.has(schemeMatch[1]!.toLowerCase())
 }
 
 function isUnsafeStyleAttributeValue(value: string): boolean {
   return /(?:@import\b|expression\s*\(|javascript\s*:|vbscript\s*:|-moz-binding)/i.test(
     value
-  );
+  )
 }
 
 function normalizeName(value: string): string {
-  return value.trim().toLowerCase();
+  return value.trim().toLowerCase()
 }
 
 function stripUrlControlAndWhitespace(value: string): string {
-  let normalized = "";
+  let normalized = ""
   for (const char of value) {
-    const code = char.charCodeAt(0);
+    const code = char.charCodeAt(0)
     if (code <= 0x20 || code === 0x7f) {
-      continue;
+      continue
     }
-    normalized += char;
+    normalized += char
   }
-  return normalized;
+  return normalized
 }

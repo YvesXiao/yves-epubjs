@@ -1,26 +1,28 @@
-import { describe, expect, it } from "vitest";
-import { parseCssStyleSheet } from "../src/parser/css-ast-adapter";
-import { parseXhtmlDocument } from "../src/parser/xhtml-parser";
+import { describe, expect, it } from "vitest"
+import { parseCssStyleSheet } from "../src/parser/css-ast-adapter"
+import { parseXhtmlDocument } from "../src/parser/xhtml-parser"
 
 function stripIds(value: unknown): unknown {
   if (Array.isArray(value)) {
-    return value.map(stripIds);
+    return value.map(stripIds)
   }
 
   if (value && typeof value === "object") {
-    const next: Record<string, unknown> = {};
+    const next: Record<string, unknown> = {}
 
-    for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    for (const [key, child] of Object.entries(
+      value as Record<string, unknown>
+    )) {
       if (key === "id") {
-        continue;
+        continue
       }
-      next[key] = stripIds(child);
+      next[key] = stripIds(child)
     }
 
-    return next;
+    return next
   }
 
-  return value;
+  return value
 }
 
 describe("parseXhtmlDocument", () => {
@@ -45,18 +47,18 @@ describe("parseXhtmlDocument", () => {
             <li><p>Second item</p></li>
           </ul>
         </body>
-      </html>`;
+      </html>`
 
-    const section = parseXhtmlDocument(xml, "OPS/text/chapter-1.xhtml");
+    const section = parseXhtmlDocument(xml, "OPS/text/chapter-1.xhtml")
 
-    expect(section.title).toBe("Chapter 1");
-    expect(section.lang).toBe("en");
-    expect(section.dir).toBe("rtl");
+    expect(section.title).toBe("Chapter 1")
+    expect(section.lang).toBe("en")
+    expect(section.dir).toBe("rtl")
     expect(section.renditionViewport).toEqual({
       width: 1024,
       height: 768
     })
-    expect(section.anchors.intro).toBe("heading-1");
+    expect(section.anchors.intro).toBe("heading-1")
     expect(section.blocks.map((block) => block.kind)).toEqual([
       "heading",
       "text",
@@ -65,17 +67,17 @@ describe("parseXhtmlDocument", () => {
       "image",
       "thematic-break",
       "list"
-    ]);
+    ])
 
-    const imageBlock = section.blocks[4];
+    const imageBlock = section.blocks[4]
     expect(imageBlock).toMatchObject({
       kind: "image",
       src: "OPS/images/cover.png",
       alt: "Cover",
       width: 320,
       height: 480
-    });
-  });
+    })
+  })
 
   it("preserves preformatted code indentation while trimming only wrapper newlines", () => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -86,15 +88,15 @@ describe("parseXhtmlDocument", () => {
     return answer
           </code></pre>
         </body>
-      </html>`;
+      </html>`
 
-    const section = parseXhtmlDocument(xml, "OPS/code.xhtml");
+    const section = parseXhtmlDocument(xml, "OPS/code.xhtml")
 
     expect(section.blocks[0]).toMatchObject({
       kind: "code",
       text: "  const answer = 42\n    return answer"
-    });
-  });
+    })
+  })
 
   it("parses ordered lists and tables into structured blocks", () => {
     const xml = `<?xml version="1.0"?>
@@ -111,18 +113,18 @@ describe("parseXhtmlDocument", () => {
             </tr>
           </table>
         </body>
-      </html>`;
+      </html>`
 
-    const section = parseXhtmlDocument(xml, "OPS/chapter.xhtml");
+    const section = parseXhtmlDocument(xml, "OPS/chapter.xhtml")
 
     expect(section.blocks[0]).toMatchObject({
       kind: "list",
       ordered: true,
       start: 3
-    });
+    })
     expect(section.blocks[1]).toMatchObject({
       kind: "table"
-    });
+    })
     expect(stripIds(section)).toEqual({
       href: "OPS/chapter.xhtml",
       blocks: [
@@ -182,8 +184,8 @@ describe("parseXhtmlDocument", () => {
         }
       ],
       anchors: {}
-    });
-  });
+    })
+  })
 
   it("preserves legacy paragraph alignment and font tag styling for old epub markup", () => {
     const xml = `<?xml version="1.0"?>
@@ -244,17 +246,17 @@ describe("parseXhtmlDocument", () => {
             </div>
           </section>
         </body>
-      </html>`;
+      </html>`
 
-    const section = parseXhtmlDocument(xml, "OPS/wrapped.xhtml");
+    const section = parseXhtmlDocument(xml, "OPS/wrapped.xhtml")
 
-    expect(section.blocks).toHaveLength(3);
-    expect(section.blocks[0]).toMatchObject({ kind: "heading", level: 2 });
-    expect(section.blocks[1]).toMatchObject({ kind: "aside" });
-    expect(section.blocks[2]).toMatchObject({ kind: "text" });
-    expect(section.anchors["chapter-2"]).toBe("heading-1");
-    expect(section.anchors["heading-anchor"]).toBe("heading-1");
-  });
+    expect(section.blocks).toHaveLength(3)
+    expect(section.blocks[0]).toMatchObject({ kind: "heading", level: 2 })
+    expect(section.blocks[1]).toMatchObject({ kind: "aside" })
+    expect(section.blocks[2]).toMatchObject({ kind: "text" })
+    expect(section.anchors["chapter-2"]).toBe("heading-1")
+    expect(section.anchors["heading-anchor"]).toBe("heading-1")
+  })
 
   it("binds standalone anchor markers to the next rendered block", () => {
     const xml = `<?xml version="1.0"?>
@@ -266,16 +268,16 @@ describe("parseXhtmlDocument", () => {
           <h2>Chapter 4</h2>
           <p>Later paragraph</p>
         </body>
-      </html>`;
+      </html>`
 
-    const section = parseXhtmlDocument(xml, "OPS/combined.xhtml");
+    const section = parseXhtmlDocument(xml, "OPS/combined.xhtml")
 
-    expect(section.blocks).toHaveLength(2);
-    expect(section.blocks[0]).toMatchObject({ kind: "heading", level: 2 });
-    expect(section.anchors["chapter-4"]).toBe("heading-1");
-    expect(section.anchors["chapter-4-name"]).toBe("heading-1");
-    expect(section.anchors["chapter-4-span"]).toBe("heading-1");
-  });
+    expect(section.blocks).toHaveLength(2)
+    expect(section.blocks[0]).toMatchObject({ kind: "heading", level: 2 })
+    expect(section.anchors["chapter-4"]).toBe("heading-1")
+    expect(section.anchors["chapter-4-name"]).toBe("heading-1")
+    expect(section.anchors["chapter-4-span"]).toBe("heading-1")
+  })
 
   it("maps figure, aside, nav, definition lists, and table captions into structured blocks", () => {
     const xml = `<?xml version="1.0"?>
@@ -296,9 +298,9 @@ describe("parseXhtmlDocument", () => {
             <tr><td>Value</td></tr>
           </table>
         </body>
-      </html>`;
+      </html>`
 
-    const section = parseXhtmlDocument(xml, "OPS/semantic.xhtml");
+    const section = parseXhtmlDocument(xml, "OPS/semantic.xhtml")
 
     expect(section.blocks.map((block) => block.kind)).toEqual([
       "figure",
@@ -306,20 +308,22 @@ describe("parseXhtmlDocument", () => {
       "nav",
       "definition-list",
       "table"
-    ]);
+    ])
     expect(section.blocks[0]).toMatchObject({
       kind: "figure",
       blocks: [{ kind: "image" }],
-      caption: [{ kind: "text", inlines: [{ kind: "text", text: "Figure caption" }] }]
-    });
+      caption: [
+        { kind: "text", inlines: [{ kind: "text", text: "Figure caption" }] }
+      ]
+    })
     expect(section.blocks[1]).toMatchObject({
       kind: "aside",
       blocks: [{ kind: "text" }]
-    });
+    })
     expect(section.blocks[2]).toMatchObject({
       kind: "nav",
       blocks: [{ kind: "text" }]
-    });
+    })
     expect(section.blocks[3]).toMatchObject({
       kind: "definition-list",
       items: [
@@ -328,12 +332,14 @@ describe("parseXhtmlDocument", () => {
           descriptions: [[{ kind: "text" }]]
         }
       ]
-    });
+    })
     expect(section.blocks[4]).toMatchObject({
       kind: "table",
-      caption: [{ kind: "text", inlines: [{ kind: "text", text: "Table caption" }] }]
-    });
-  });
+      caption: [
+        { kind: "text", inlines: [{ kind: "text", text: "Table caption" }] }
+      ]
+    })
+  })
 
   it("keeps footnote-style links and anchors resolvable within the same section", () => {
     const xml = `<?xml version="1.0"?>
@@ -344,9 +350,9 @@ describe("parseXhtmlDocument", () => {
             <p>Footnote body</p>
           </aside>
         </body>
-      </html>`;
+      </html>`
 
-    const section = parseXhtmlDocument(xml, "OPS/text/chapter.xhtml");
+    const section = parseXhtmlDocument(xml, "OPS/text/chapter.xhtml")
 
     expect(section.blocks[0]).toMatchObject({
       kind: "text",
@@ -358,10 +364,10 @@ describe("parseXhtmlDocument", () => {
           children: [{ kind: "text", text: "1" }]
         }
       ]
-    });
-    expect(section.blocks[1]).toMatchObject({ kind: "aside" });
-    expect(section.anchors["fn-1"]).toBe("aside-2");
-  });
+    })
+    expect(section.blocks[1]).toMatchObject({ kind: "aside" })
+    expect(section.anchors["fn-1"]).toBe("aside-2")
+  })
 
   it("preserves external anchor hrefs instead of rewriting them as book-relative paths", () => {
     const xml = `<?xml version="1.0"?>
@@ -419,11 +425,11 @@ describe("parseXhtmlDocument", () => {
           </custom-block>
           <script>window.__ignored = true;</script>
         </body>
-      </html>`;
+      </html>`
 
-    const section = parseXhtmlDocument(xml, "OPS/fallback.xhtml");
+    const section = parseXhtmlDocument(xml, "OPS/fallback.xhtml")
 
-    expect(section.blocks).toHaveLength(1);
+    expect(section.blocks).toHaveLength(1)
     expect(section.blocks[0]).toMatchObject({
       kind: "text",
       tagName: "unknown-inline",
@@ -432,12 +438,10 @@ describe("parseXhtmlDocument", () => {
         color: "#333",
         textAlign: "center"
       },
-      inlines: [
-        { kind: "text", text: "Lead text" }
-      ]
-    });
-    expect(section.anchors["custom-1"]).toBe("text-1");
-  });
+      inlines: [{ kind: "text", text: "Lead text" }]
+    })
+    expect(section.anchors["custom-1"]).toBe("text-1")
+  })
 
   it("applies linked stylesheet rules to inline image metadata without changing structure", () => {
     const xml = `<?xml version="1.0"?>
@@ -445,7 +449,7 @@ describe("parseXhtmlDocument", () => {
         <body>
           <p>Alpha<img class="h-pic" src="images/badge.png" width="20" height="20" alt="Badge" />Omega</p>
         </body>
-      </html>`;
+      </html>`
     const stylesheet = parseCssStyleSheet(`
       .h-pic {
         height: 1.1em;
@@ -453,9 +457,9 @@ describe("parseXhtmlDocument", () => {
         margin-right: 0.3em;
         vertical-align: middle;
       }
-    `);
+    `)
 
-    const section = parseXhtmlDocument(xml, "OPS/chapter.xhtml", [stylesheet]);
+    const section = parseXhtmlDocument(xml, "OPS/chapter.xhtml", [stylesheet])
 
     expect(section.blocks[0]).toMatchObject({
       kind: "text",
@@ -477,8 +481,8 @@ describe("parseXhtmlDocument", () => {
         },
         { kind: "text", text: "Omega" }
       ]
-    });
-  });
+    })
+  })
 
   it("ignores unsupported stylesheet selectors without aborting chapter parsing", () => {
     const xml = `<?xml version="1.0"?>
@@ -486,13 +490,13 @@ describe("parseXhtmlDocument", () => {
         <body>
           <p class="lead">Hello</p>
         </body>
-      </html>`;
+      </html>`
     const stylesheet = parseCssStyleSheet(`
       :lang(ja) { font-family: serif; }
       p.lead { color: #333; }
-    `);
+    `)
 
-    const section = parseXhtmlDocument(xml, "OPS/chapter.xhtml", [stylesheet]);
+    const section = parseXhtmlDocument(xml, "OPS/chapter.xhtml", [stylesheet])
 
     expect(section.blocks[0]).toMatchObject({
       kind: "text",
@@ -500,8 +504,8 @@ describe("parseXhtmlDocument", () => {
         color: "#333"
       },
       inlines: [{ kind: "text", text: "Hello" }]
-    });
-  });
+    })
+  })
 
   it("converts common legacy HTML named entities into readable text in XHTML content", () => {
     const xml = `<?xml version="1.0"?>
@@ -523,4 +527,4 @@ describe("parseXhtmlDocument", () => {
       ]
     })
   })
-});
+})

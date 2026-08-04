@@ -106,10 +106,12 @@ describe("navigation target helpers", () => {
       </div>
     `
 
-    expect(findRenderedAnchorTarget(container, "chapter-1")?.id).toBe("chapter-1")
-    expect(findRenderedAnchorTarget(container, "legacy-anchor")?.getAttribute("name")).toBe(
-      "legacy-anchor"
+    expect(findRenderedAnchorTarget(container, "chapter-1")?.id).toBe(
+      "chapter-1"
     )
+    expect(
+      findRenderedAnchorTarget(container, "legacy-anchor")?.getAttribute("name")
+    ).toBe("legacy-anchor")
   })
 
   it("flattens nested toc items into href-resolved targets", () => {

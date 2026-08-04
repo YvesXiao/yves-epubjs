@@ -9,8 +9,8 @@ import type {
   TextAlign,
   Theme,
   TypographyOptions
-} from "../model/types";
-import type { LayoutBlock } from "../layout/layout-engine";
+} from "../model/types"
+import type { LayoutBlock } from "../layout/layout-engine"
 import type {
   DrawOp,
   ImageDrawOp,
@@ -19,70 +19,70 @@ import type {
   RectDrawOp,
   SectionDisplayList,
   TextRunDrawOp
-} from "./draw-ops";
+} from "./draw-ops"
 import {
   buildReadingStyleProfile,
   type ReadingStyleProfile
-} from "./reading-style-profile";
-import { resolveImageLayout } from "../utils/image-layout";
-import type { IntrinsicImageSize } from "../utils/image-intrinsic-size";
-import { wrapPreformattedTextWithOffsets } from "../utils/preformatted-text";
-import { extractBlockText } from "../utils/block-text";
+} from "./reading-style-profile"
+import { resolveImageLayout } from "../utils/image-layout"
+import type { IntrinsicImageSize } from "../utils/image-intrinsic-size"
+import { wrapPreformattedTextWithOffsets } from "../utils/preformatted-text"
+import { extractBlockText } from "../utils/block-text"
 import {
   approximateTextWidth,
   extractFontSize,
   wrapText,
   wrapTextWithOffsets
-} from "../utils/text-wrap";
+} from "../utils/text-wrap"
 import {
   buildPretextBlockDisplay,
   type BlockHighlightRange,
   type BlockUnderlineRange
-} from "./display-list-text";
+} from "./display-list-text"
 import {
   insetNativeBlockRect,
   isCoverImageBlock,
   resolveNativeBlockRenderStyle
-} from "./display-list-native-blocks";
+} from "./display-list-native-blocks"
 
 type BuilderOptions = {
-  section: SectionDocument;
-  width: number;
-  viewportHeight: number;
-  blocks: LayoutBlock[];
-  theme: Theme;
-  typography: TypographyOptions;
-  publisherColorOverride?: PublisherColorOverride;
-  locatorMap?: Map<string, Locator>;
-  resolveImageLoaded?: (src: string) => boolean;
-  resolveImageUrl?: (src: string) => string;
+  section: SectionDocument
+  width: number
+  viewportHeight: number
+  blocks: LayoutBlock[]
+  theme: Theme
+  typography: TypographyOptions
+  publisherColorOverride?: PublisherColorOverride
+  locatorMap?: Map<string, Locator>
+  resolveImageLoaded?: (src: string) => boolean
+  resolveImageUrl?: (src: string) => string
   resolveImageIntrinsicSize?: (
     src: string
-  ) => IntrinsicImageSize | null | undefined;
-  highlightedBlockIds?: Set<string>;
-  highlightRangesByBlock?: Map<string, BlockHighlightRange[]>;
-  underlinedBlockIds?: Set<string>;
-  underlineColorsByBlock?: Map<string, string>;
-  underlineRangesByBlock?: Map<string, BlockUnderlineRange[]>;
-  activeBlockId: string | undefined;
-};
+  ) => IntrinsicImageSize | null | undefined
+  highlightedBlockIds?: Set<string>
+  highlightRangesByBlock?: Map<string, BlockHighlightRange[]>
+  underlinedBlockIds?: Set<string>
+  underlineColorsByBlock?: Map<string, string>
+  underlineRangesByBlock?: Map<string, BlockUnderlineRange[]>
+  activeBlockId: string | undefined
+}
 
 export class DisplayListBuilder {
   buildSection(options: BuilderOptions): SectionDisplayList {
     const styleProfile = buildReadingStyleProfile({
       theme: options.theme,
       typography: options.typography
-    });
-    let currentTop = 0;
-    const ops: DrawOp[] = [];
-    const interactions: InteractionRegion[] = [];
-    const contentWidth = Math.max(120, options.width);
-    const publisherColorOverride = options.publisherColorOverride ?? "none";
+    })
+    let currentTop = 0
+    const ops: DrawOp[] = []
+    const interactions: InteractionRegion[] = []
+    const contentWidth = Math.max(120, options.width)
+    const publisherColorOverride = options.publisherColorOverride ?? "none"
 
     for (const block of options.blocks) {
-      const underlineColor = options.underlineColorsByBlock?.get(block.id);
+      const underlineColor = options.underlineColorsByBlock?.get(block.id)
       const underlineRanges =
-        options.underlineRangesByBlock?.get(block.id) ?? [];
+        options.underlineRangesByBlock?.get(block.id) ?? []
       const built =
         block.type === "pretext"
           ? buildPretextBlockDisplay({
@@ -126,11 +126,11 @@ export class DisplayListBuilder {
               ...(underlineColor ? { underlineColor } : {}),
               underlineRanges,
               active: options.activeBlockId === block.id
-            });
+            })
 
-      ops.push(...built.ops);
-      interactions.push(...built.interactions);
-      currentTop += built.height;
+      ops.push(...built.ops)
+      interactions.push(...built.interactions)
+      currentTop += built.height
     }
 
     return {
@@ -143,53 +143,53 @@ export class DisplayListBuilder {
       ),
       ops,
       interactions
-    };
+    }
   }
 
   private buildNativeBlock(input: {
-    block: BlockNode;
-    estimatedHeight: number;
-    section: SectionDocument;
-    top: number;
-    width: number;
-    viewportHeight: number;
-    theme: Theme;
-    typography: TypographyOptions;
-    styleProfile: ReadingStyleProfile;
-    publisherColorOverride: PublisherColorOverride;
-    locator: Locator | undefined;
-    resolveImageLoaded: ((src: string) => boolean) | undefined;
-    resolveImageUrl: ((src: string) => string) | undefined;
+    block: BlockNode
+    estimatedHeight: number
+    section: SectionDocument
+    top: number
+    width: number
+    viewportHeight: number
+    theme: Theme
+    typography: TypographyOptions
+    styleProfile: ReadingStyleProfile
+    publisherColorOverride: PublisherColorOverride
+    locator: Locator | undefined
+    resolveImageLoaded: ((src: string) => boolean) | undefined
+    resolveImageUrl: ((src: string) => string) | undefined
     resolveImageIntrinsicSize:
       | ((src: string) => IntrinsicImageSize | null | undefined)
-      | undefined;
-    highlighted: boolean;
-    highlightRanges: BlockHighlightRange[];
-    underlined: boolean;
-    underlineColor?: string;
-    underlineRanges: BlockUnderlineRange[];
-    active: boolean;
+      | undefined
+    highlighted: boolean
+    highlightRanges: BlockHighlightRange[]
+    underlined: boolean
+    underlineColor?: string
+    underlineRanges: BlockUnderlineRange[]
+    active: boolean
   }): {
-    ops: DrawOp[];
-    interactions: InteractionRegion[];
-    height: number;
+    ops: DrawOp[]
+    interactions: InteractionRegion[]
+    height: number
   } {
-    const x = input.styleProfile.section.sidePadding;
-    const width = input.width - input.styleProfile.section.sidePadding * 2;
+    const x = input.styleProfile.section.sidePadding
+    const width = input.width - input.styleProfile.section.sidePadding * 2
     const rect = {
       x,
       y: input.top,
       width,
       height: input.estimatedHeight
-    };
+    }
     const blockStyle = resolveNativeBlockRenderStyle({
       block: input.block,
       theme: input.theme,
       styleProfile: input.styleProfile,
       publisherColorOverride: input.publisherColorOverride
-    });
-    const contentRect = insetNativeBlockRect(rect, blockStyle);
-    const ops: DrawOp[] = [];
+    })
+    const contentRect = insetNativeBlockRect(rect, blockStyle)
+    const ops: DrawOp[] = []
     const interactions: InteractionRegion[] = [
       {
         kind: "block",
@@ -199,7 +199,7 @@ export class DisplayListBuilder {
         locator: input.locator,
         text: extractBlockText(input.block)
       }
-    ];
+    ]
 
     if (blockStyle.backgroundColor) {
       ops.push({
@@ -211,7 +211,7 @@ export class DisplayListBuilder {
         rect,
         color: blockStyle.backgroundColor,
         radius: 12
-      } satisfies RectDrawOp);
+      } satisfies RectDrawOp)
     }
 
     if (input.highlighted || input.active) {
@@ -231,13 +231,13 @@ export class DisplayListBuilder {
           ? input.styleProfile.highlight.active
           : input.styleProfile.highlight.mark,
         radius: 12
-      } satisfies RectDrawOp);
+      } satisfies RectDrawOp)
     }
 
     switch (input.block.kind) {
       case "image": {
         const renderSrc =
-          input.resolveImageUrl?.(input.block.src) ?? input.block.src;
+          input.resolveImageUrl?.(input.block.src) ?? input.block.src
         const imageLayout = resolveImageLayout({
           availableWidth: width,
           viewportHeight: input.viewportHeight,
@@ -246,13 +246,13 @@ export class DisplayListBuilder {
             input.resolveImageIntrinsicSize
           ),
           fillWidth: isCoverImageBlock(input.section, input.block)
-        });
+        })
         const imageRect = {
           x: x + imageLayout.xOffset,
           y: input.top + imageLayout.yOffset,
           width: imageLayout.width,
           height: imageLayout.height
-        };
+        }
         ops.push({
           kind: "image",
           sectionId: input.section.id,
@@ -264,7 +264,7 @@ export class DisplayListBuilder {
           alt: input.block.alt,
           loaded: Boolean(input.resolveImageLoaded?.(input.block.src)),
           background: "transparent"
-        } satisfies ImageDrawOp);
+        } satisfies ImageDrawOp)
         interactions.push({
           kind: "image",
           rect: imageRect,
@@ -273,8 +273,8 @@ export class DisplayListBuilder {
           src: renderSrc,
           alt: input.block.alt,
           locator: input.locator
-        });
-        break;
+        })
+        break
       }
       case "thematic-break":
         ops.push({
@@ -290,8 +290,8 @@ export class DisplayListBuilder {
           y1: input.top + rect.height * 0.5,
           x2: x + width,
           y2: input.top + rect.height * 0.5
-        } satisfies LineDrawOp);
-        break;
+        } satisfies LineDrawOp)
+        break
       case "quote":
         ops.push({
           kind: "rect",
@@ -306,7 +306,7 @@ export class DisplayListBuilder {
             height: rect.height - 8
           },
           color: input.styleProfile.quote.accentColor
-        } satisfies RectDrawOp);
+        } satisfies RectDrawOp)
         ops.push(
           ...this.buildWrappedTextOps({
             text: extractBlockText(input.block),
@@ -333,8 +333,8 @@ export class DisplayListBuilder {
             active: input.active,
             styleProfile: input.styleProfile
           })
-        );
-        break;
+        )
+        break
       case "code":
         ops.push({
           kind: "rect",
@@ -347,7 +347,7 @@ export class DisplayListBuilder {
             blockStyle.backgroundColor ??
             input.styleProfile.code.blockBackground,
           radius: input.styleProfile.code.blockRadius
-        } satisfies RectDrawOp);
+        } satisfies RectDrawOp)
         ops.push(
           ...this.buildPreformattedTextOps({
             text: input.block.text,
@@ -377,8 +377,8 @@ export class DisplayListBuilder {
             active: input.active,
             styleProfile: input.styleProfile
           })
-        );
-        break;
+        )
+        break
       case "aside":
         ops.push({
           kind: "rect",
@@ -389,7 +389,7 @@ export class DisplayListBuilder {
           rect,
           color: blockStyle.backgroundColor ?? "rgba(59, 123, 163, 0.08)",
           radius: 12
-        } satisfies RectDrawOp);
+        } satisfies RectDrawOp)
         ops.push({
           kind: "rect",
           sectionId: input.section.id,
@@ -404,7 +404,7 @@ export class DisplayListBuilder {
           },
           color: input.styleProfile.aside.accentColor,
           radius: 4
-        } satisfies RectDrawOp);
+        } satisfies RectDrawOp)
         ops.push(
           ...this.buildWrappedTextOps({
             text: extractBlockText(input.block),
@@ -434,8 +434,8 @@ export class DisplayListBuilder {
             active: input.active,
             styleProfile: input.styleProfile
           })
-        );
-        break;
+        )
+        break
       case "list":
         ops.push(
           ...this.buildListBlockOps({
@@ -459,8 +459,8 @@ export class DisplayListBuilder {
             active: input.active,
             styleProfile: input.styleProfile
           })
-        );
-        break;
+        )
+        break
       case "figure":
         ops.push(
           ...this.buildFigureBlockOps({
@@ -488,8 +488,8 @@ export class DisplayListBuilder {
             active: input.active,
             styleProfile: input.styleProfile
           })
-        );
-        break;
+        )
+        break
       case "table":
         ops.push(
           ...this.buildTableBlockOps({
@@ -513,8 +513,8 @@ export class DisplayListBuilder {
             active: input.active,
             styleProfile: input.styleProfile
           })
-        );
-        break;
+        )
+        break
       case "heading":
       case "text":
       default:
@@ -541,63 +541,59 @@ export class DisplayListBuilder {
             active: input.active,
             styleProfile: input.styleProfile
           })
-        );
-        break;
+        )
+        break
     }
 
     return {
       ops,
       interactions,
       height: input.estimatedHeight
-    };
+    }
   }
 
   private buildWrappedTextOps(input: {
-    text: string;
-    section: SectionDocument;
-    blockId: string;
-    locator: Locator | undefined;
-    x: number;
-    top: number;
-    width: number;
-    height: number;
-    font: string;
-    color: string;
-    textAlign: TextAlign;
-    highlighted: boolean;
-    highlightRanges: BlockHighlightRange[];
-    underlined: boolean;
-    underlineColor?: string;
-    underlineRanges: BlockUnderlineRange[];
-    active: boolean;
-    styleProfile: ReadingStyleProfile;
-    publisherColorOverride?: PublisherColorOverride;
+    text: string
+    section: SectionDocument
+    blockId: string
+    locator: Locator | undefined
+    x: number
+    top: number
+    width: number
+    height: number
+    font: string
+    color: string
+    textAlign: TextAlign
+    highlighted: boolean
+    highlightRanges: BlockHighlightRange[]
+    underlined: boolean
+    underlineColor?: string
+    underlineRanges: BlockUnderlineRange[]
+    active: boolean
+    styleProfile: ReadingStyleProfile
+    publisherColorOverride?: PublisherColorOverride
   }): TextRunDrawOp[] {
-    const fontSize = extractFontSize(input.font);
-    const lineHeight = Math.max(fontSize * 1.45, 18);
-    const lines = wrapTextWithOffsets(
-      input.text || "",
-      input.width,
-      input.font
-    );
+    const fontSize = extractFontSize(input.font)
+    const lineHeight = Math.max(fontSize * 1.45, 18)
+    const lines = wrapTextWithOffsets(input.text || "", input.width, input.font)
     return lines.map((line, index) => {
-      const lineWidth = approximateTextWidth(line.text, input.font);
+      const lineWidth = approximateTextWidth(line.text, input.font)
       const lineX = this.resolveTextLineStartX(
         input.textAlign,
         input.x,
         input.width,
         lineWidth
-      );
+      )
       const highlightSegments = resolveLineHighlightSegments(
         input.highlightRanges,
         line.start,
         line.end
-      );
+      )
       const underlineSegments = resolveLineHighlightSegments(
         input.underlineRanges,
         line.start,
         line.end
-      );
+      )
       return {
         kind: "text",
         sectionId: input.section.id,
@@ -631,55 +627,55 @@ export class DisplayListBuilder {
           : {}),
         ...(underlineSegments.length ? { underlineSegments } : {}),
         href: undefined
-      };
-    });
+      }
+    })
   }
 
   private buildPreformattedTextOps(input: {
-    text: string;
-    section: SectionDocument;
-    blockId: string;
-    locator: Locator | undefined;
-    x: number;
-    top: number;
-    width: number;
-    height: number;
-    font: string;
-    color: string;
-    textAlign: TextAlign;
-    highlighted: boolean;
-    highlightRanges: BlockHighlightRange[];
-    underlined: boolean;
-    underlineColor?: string;
-    underlineRanges: BlockUnderlineRange[];
-    active: boolean;
-    styleProfile: ReadingStyleProfile;
+    text: string
+    section: SectionDocument
+    blockId: string
+    locator: Locator | undefined
+    x: number
+    top: number
+    width: number
+    height: number
+    font: string
+    color: string
+    textAlign: TextAlign
+    highlighted: boolean
+    highlightRanges: BlockHighlightRange[]
+    underlined: boolean
+    underlineColor?: string
+    underlineRanges: BlockUnderlineRange[]
+    active: boolean
+    styleProfile: ReadingStyleProfile
   }): TextRunDrawOp[] {
-    const fontSize = extractFontSize(input.font);
-    const lineHeight = Math.max(fontSize * 1.45, 18);
+    const fontSize = extractFontSize(input.font)
+    const lineHeight = Math.max(fontSize * 1.45, 18)
     const lines = wrapPreformattedTextWithOffsets(
       input.text || "",
       input.width,
       input.font
-    );
+    )
     return lines.map((line, index) => {
-      const lineWidth = approximateTextWidth(line.text, input.font);
+      const lineWidth = approximateTextWidth(line.text, input.font)
       const lineX = this.resolveTextLineStartX(
         input.textAlign,
         input.x,
         input.width,
         lineWidth
-      );
+      )
       const highlightSegments = resolveLineHighlightSegments(
         input.highlightRanges,
         line.start,
         line.end
-      );
+      )
       const underlineSegments = resolveLineHighlightSegments(
         input.underlineRanges,
         line.start,
         line.end
-      );
+      )
       return {
         kind: "text",
         sectionId: input.section.id,
@@ -713,48 +709,48 @@ export class DisplayListBuilder {
           : {}),
         ...(underlineSegments.length ? { underlineSegments } : {}),
         href: undefined
-      };
-    });
+      }
+    })
   }
 
   private buildListBlockOps(input: {
-    block: ListBlock;
-    section: SectionDocument;
-    locator: Locator | undefined;
-    x: number;
-    top: number;
-    width: number;
-    typography: TypographyOptions;
-    theme: Theme;
-    highlighted: boolean;
-    underlined: boolean;
-    underlineColor?: string;
-    underlineRanges: BlockUnderlineRange[];
-    active: boolean;
-    styleProfile: ReadingStyleProfile;
+    block: ListBlock
+    section: SectionDocument
+    locator: Locator | undefined
+    x: number
+    top: number
+    width: number
+    typography: TypographyOptions
+    theme: Theme
+    highlighted: boolean
+    underlined: boolean
+    underlineColor?: string
+    underlineRanges: BlockUnderlineRange[]
+    active: boolean
+    styleProfile: ReadingStyleProfile
   }): TextRunDrawOp[] {
-    const ops: TextRunDrawOp[] = [];
-    const font = `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`;
-    const lineHeight = Math.max(input.typography.fontSize * 1.45, 18);
+    const ops: TextRunDrawOp[] = []
+    const font = `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`
+    const lineHeight = Math.max(input.typography.fontSize * 1.45, 18)
     const renderList = (
       block: ListBlock,
       depth: number,
       top: number
     ): number => {
-      let currentTop = top;
+      let currentTop = top
       block.items.forEach((item, index) => {
         const marker = block.ordered
           ? `${(block.start ?? 1) + index}.`
-          : "\u2022";
-        const markerX = input.x + depth * input.styleProfile.list.indent;
-        const textX = markerX + input.styleProfile.list.markerGap;
-        const textWidth = Math.max(40, input.width - (textX - input.x));
-        const textBlocks = item.blocks.filter((child) => child.kind !== "list");
+          : "\u2022"
+        const markerX = input.x + depth * input.styleProfile.list.indent
+        const textX = markerX + input.styleProfile.list.markerGap
+        const textWidth = Math.max(40, input.width - (textX - input.x))
+        const textBlocks = item.blocks.filter((child) => child.kind !== "list")
         const itemText = textBlocks
           .map(extractBlockText)
           .filter(Boolean)
-          .join(" ");
-        const itemLines = wrapText(itemText || "", textWidth, font);
+          .join(" ")
+        const itemLines = wrapText(itemText || "", textWidth, font)
 
         ops.push({
           kind: "text",
@@ -785,7 +781,7 @@ export class DisplayListBuilder {
             ? { underlineColor: input.underlineColor }
             : {}),
           href: undefined
-        });
+        })
 
         itemLines.forEach((line, lineIndex) => {
           ops.push({
@@ -817,65 +813,65 @@ export class DisplayListBuilder {
               ? { underlineColor: input.underlineColor }
               : {}),
             href: undefined
-          });
-        });
+          })
+        })
 
         currentTop +=
           Math.max(lineHeight, itemLines.length * lineHeight) +
-          input.styleProfile.list.itemGap;
+          input.styleProfile.list.itemGap
         for (const child of item.blocks) {
           if (child.kind === "list") {
-            currentTop = renderList(child, depth + 1, currentTop);
+            currentTop = renderList(child, depth + 1, currentTop)
           }
         }
-      });
+      })
 
-      return currentTop;
-    };
+      return currentTop
+    }
 
-    renderList(input.block, 0, input.top);
-    return ops;
+    renderList(input.block, 0, input.top)
+    return ops
   }
 
   private buildFigureBlockOps(input: {
-    block: FigureBlock;
-    section: SectionDocument;
-    locator: Locator | undefined;
-    x: number;
-    top: number;
-    width: number;
-    viewportHeight: number;
-    typography: TypographyOptions;
-    theme: Theme;
-    resolveImageLoaded: ((src: string) => boolean) | undefined;
-    resolveImageUrl: ((src: string) => string) | undefined;
+    block: FigureBlock
+    section: SectionDocument
+    locator: Locator | undefined
+    x: number
+    top: number
+    width: number
+    viewportHeight: number
+    typography: TypographyOptions
+    theme: Theme
+    resolveImageLoaded: ((src: string) => boolean) | undefined
+    resolveImageUrl: ((src: string) => string) | undefined
     resolveImageIntrinsicSize:
       | ((src: string) => IntrinsicImageSize | null | undefined)
-      | undefined;
-    highlighted: boolean;
-    underlined: boolean;
-    underlineColor?: string;
-    underlineRanges: BlockUnderlineRange[];
-    active: boolean;
-    styleProfile: ReadingStyleProfile;
+      | undefined
+    highlighted: boolean
+    underlined: boolean
+    underlineColor?: string
+    underlineRanges: BlockUnderlineRange[]
+    active: boolean
+    styleProfile: ReadingStyleProfile
   }): DrawOp[] {
-    const ops: DrawOp[] = [];
-    let currentTop = input.top;
+    const ops: DrawOp[] = []
+    let currentTop = input.top
 
     for (const child of input.block.blocks) {
       if (child.kind === "image") {
-        const renderSrc = input.resolveImageUrl?.(child.src) ?? child.src;
+        const renderSrc = input.resolveImageUrl?.(child.src) ?? child.src
         const imageLayout = resolveImageLayout({
           availableWidth: input.width,
           viewportHeight: input.viewportHeight,
           ...resolveImageIntrinsicSize(child, input.resolveImageIntrinsicSize)
-        });
+        })
         const imageRect = {
           x: input.x + imageLayout.xOffset,
           y: currentTop,
           width: imageLayout.width,
           height: imageLayout.height
-        };
+        }
         ops.push({
           kind: "image",
           sectionId: input.section.id,
@@ -887,19 +883,18 @@ export class DisplayListBuilder {
           alt: child.alt,
           loaded: Boolean(input.resolveImageLoaded?.(child.src)),
           background: "transparent"
-        });
-        currentTop +=
-          imageLayout.height + input.styleProfile.media.blockSpacing;
-        continue;
+        })
+        currentTop += imageLayout.height + input.styleProfile.media.blockSpacing
+        continue
       }
 
-      const text = extractBlockText(child);
+      const text = extractBlockText(child)
       if (!text) {
-        continue;
+        continue
       }
-      const font = `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`;
-      const lineHeight = Math.max(input.typography.fontSize * 1.45, 18);
-      const lines = wrapText(text, input.width, font);
+      const font = `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`
+      const lineHeight = Math.max(input.typography.fontSize * 1.45, 18)
+      const lines = wrapText(text, input.width, font)
       lines.forEach((line, lineIndex) => {
         ops.push({
           kind: "text",
@@ -930,25 +925,25 @@ export class DisplayListBuilder {
             ? { underlineColor: input.underlineColor }
             : {}),
           href: undefined
-        });
-      });
+        })
+      })
       currentTop +=
-        lines.length * lineHeight + input.styleProfile.text.marginBottom;
+        lines.length * lineHeight + input.styleProfile.text.marginBottom
     }
 
     if (input.block.caption?.length) {
-      currentTop += input.styleProfile.caption.marginTop;
+      currentTop += input.styleProfile.caption.marginTop
       const captionText = input.block.caption
         .map(extractBlockText)
         .filter(Boolean)
-        .join(" ");
-      const captionFont = `italic 400 ${input.styleProfile.caption.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`;
-      const captionLineHeight = input.styleProfile.caption.lineHeight;
+        .join(" ")
+      const captionFont = `italic 400 ${input.styleProfile.caption.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`
+      const captionLineHeight = input.styleProfile.caption.lineHeight
       const captionLines = wrapText(
         captionText,
         Math.max(40, input.width - input.styleProfile.caption.insetX * 2),
         captionFont
-      );
+      )
       captionLines.forEach((line, lineIndex) => {
         ops.push({
           kind: "text",
@@ -979,44 +974,44 @@ export class DisplayListBuilder {
             ? { underlineColor: input.underlineColor }
             : {}),
           href: undefined
-        });
-      });
+        })
+      })
     }
 
-    return ops;
+    return ops
   }
 
   private buildTableBlockOps(input: {
-    block: TableBlock;
-    section: SectionDocument;
-    locator: Locator | undefined;
-    x: number;
-    top: number;
-    width: number;
-    typography: TypographyOptions;
-    theme: Theme;
-    highlighted: boolean;
-    underlined: boolean;
-    underlineColor?: string;
-    underlineRanges: BlockUnderlineRange[];
-    active: boolean;
-    styleProfile: ReadingStyleProfile;
+    block: TableBlock
+    section: SectionDocument
+    locator: Locator | undefined
+    x: number
+    top: number
+    width: number
+    typography: TypographyOptions
+    theme: Theme
+    highlighted: boolean
+    underlined: boolean
+    underlineColor?: string
+    underlineRanges: BlockUnderlineRange[]
+    active: boolean
+    styleProfile: ReadingStyleProfile
   }): DrawOp[] {
-    const ops: DrawOp[] = [];
-    const captionFont = `italic 400 ${input.styleProfile.caption.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`;
-    const cellFont = `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`;
-    const headerFont = `700 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`;
-    const lineHeight = Math.max(input.typography.fontSize * 1.45, 18);
-    const padding = input.styleProfile.table.cellPadding;
-    let currentTop = input.top;
+    const ops: DrawOp[] = []
+    const captionFont = `italic 400 ${input.styleProfile.caption.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`
+    const cellFont = `400 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`
+    const headerFont = `700 ${input.typography.fontSize}px "Iowan Old Style", "Palatino Linotype", serif`
+    const lineHeight = Math.max(input.typography.fontSize * 1.45, 18)
+    const padding = input.styleProfile.table.cellPadding
+    let currentTop = input.top
 
     if (input.block.caption?.length) {
       const captionText = input.block.caption
         .map(extractBlockText)
         .filter(Boolean)
-        .join(" ");
-      currentTop += input.styleProfile.caption.marginTop;
-      const captionLines = wrapText(captionText, input.width, captionFont);
+        .join(" ")
+      currentTop += input.styleProfile.caption.marginTop
+      const captionLines = wrapText(captionText, input.width, captionFont)
       captionLines.forEach((line, lineIndex) => {
         ops.push({
           kind: "text",
@@ -1047,11 +1042,11 @@ export class DisplayListBuilder {
             ? { underlineColor: input.underlineColor }
             : {}),
           href: undefined
-        });
-      });
+        })
+      })
       currentTop +=
         captionLines.length * input.styleProfile.caption.lineHeight +
-        input.styleProfile.text.marginBottom;
+        input.styleProfile.text.marginBottom
     }
 
     const columnCount = Math.max(
@@ -1059,39 +1054,33 @@ export class DisplayListBuilder {
       ...input.block.rows.map((row) =>
         row.cells.reduce((total, cell) => total + (cell.colSpan ?? 1), 0)
       )
-    );
-    const columnWidth = input.width / columnCount;
+    )
+    const columnWidth = input.width / columnCount
 
     for (const row of input.block.rows) {
       const cellHeights = row.cells.map((cell) => {
-        const span = Math.max(1, cell.colSpan ?? 1);
-        const cellWidth = Math.max(32, columnWidth * span - padding * 2);
-        const font = cell.header ? headerFont : cellFont;
-        const text = cell.blocks
-          .map(extractBlockText)
-          .filter(Boolean)
-          .join(" ");
+        const span = Math.max(1, cell.colSpan ?? 1)
+        const cellWidth = Math.max(32, columnWidth * span - padding * 2)
+        const font = cell.header ? headerFont : cellFont
+        const text = cell.blocks.map(extractBlockText).filter(Boolean).join(" ")
         return (
           wrapText(text || "", cellWidth, font).length * lineHeight +
           padding * 2
-        );
-      });
-      const rowHeight = Math.max(lineHeight + padding * 2, ...cellHeights);
-      let currentX = input.x;
+        )
+      })
+      const rowHeight = Math.max(lineHeight + padding * 2, ...cellHeights)
+      let currentX = input.x
 
       row.cells.forEach((cell) => {
-        const span = Math.max(1, cell.colSpan ?? 1);
-        const cellWidth = columnWidth * span;
-        const font = cell.header ? headerFont : cellFont;
-        const text = cell.blocks
-          .map(extractBlockText)
-          .filter(Boolean)
-          .join(" ");
+        const span = Math.max(1, cell.colSpan ?? 1)
+        const cellWidth = columnWidth * span
+        const font = cell.header ? headerFont : cellFont
+        const text = cell.blocks.map(extractBlockText).filter(Boolean).join(" ")
         const lines = wrapText(
           text || "",
           Math.max(32, cellWidth - padding * 2),
           font
-        );
+        )
 
         ops.push({
           kind: "rect",
@@ -1110,7 +1099,7 @@ export class DisplayListBuilder {
             : "rgba(255, 255, 255, 0.001)",
           strokeColor: input.styleProfile.table.borderColor,
           strokeWidth: input.styleProfile.table.borderWidth
-        });
+        })
 
         lines.forEach((line, lineIndex) => {
           ops.push({
@@ -1142,16 +1131,16 @@ export class DisplayListBuilder {
               ? { underlineColor: input.underlineColor }
               : {}),
             href: undefined
-          });
-        });
+          })
+        })
 
-        currentX += cellWidth;
-      });
+        currentX += cellWidth
+      })
 
-      currentTop += rowHeight;
+      currentTop += rowHeight
     }
 
-    return ops;
+    return ops
   }
 
   private resolveTextLineStartX(
@@ -1161,38 +1150,38 @@ export class DisplayListBuilder {
     lineWidth: number
   ): number {
     if (textAlign === "center") {
-      return left + Math.max(0, (width - lineWidth) * 0.5);
+      return left + Math.max(0, (width - lineWidth) * 0.5)
     }
     if (textAlign === "end") {
-      return left + Math.max(0, width - lineWidth);
+      return left + Math.max(0, width - lineWidth)
     }
-    return left;
+    return left
   }
 }
 
 function resolveImageIntrinsicSize(
   image: {
-    width?: number;
-    height?: number;
+    width?: number
+    height?: number
     style?: {
-      width?: number;
-      height?: number;
-    };
-    src?: string;
+      width?: number
+      height?: number
+    }
+    src?: string
   },
   resolveResourceIntrinsicSize?: (
     src: string
   ) => IntrinsicImageSize | null | undefined
 ): {
-  intrinsicWidth?: number;
-  intrinsicHeight?: number;
+  intrinsicWidth?: number
+  intrinsicHeight?: number
 } {
   const resolvedSize =
     image.src && resolveResourceIntrinsicSize
       ? resolveResourceIntrinsicSize(image.src)
-      : undefined;
-  const width = image.style?.width ?? image.width ?? resolvedSize?.width;
-  const height = image.style?.height ?? image.height ?? resolvedSize?.height;
+      : undefined
+  const width = image.style?.width ?? image.width ?? resolvedSize?.width
+  const height = image.style?.height ?? image.height ?? resolvedSize?.height
 
   return {
     ...(typeof width === "number" && width > 0
@@ -1201,7 +1190,7 @@ function resolveImageIntrinsicSize(
     ...(typeof height === "number" && height > 0
       ? { intrinsicHeight: height }
       : {})
-  };
+  }
 }
 
 function resolveLineHighlightSegments(
@@ -1210,7 +1199,7 @@ function resolveLineHighlightSegments(
   lineEnd: number
 ): BlockHighlightRange[] {
   if (!ranges.length || lineEnd < lineStart) {
-    return [];
+    return []
   }
 
   return ranges
@@ -1224,5 +1213,5 @@ function resolveLineHighlightSegments(
       start: range.start - lineStart,
       end: range.end - lineStart,
       color: range.color
-    }));
+    }))
 }

@@ -7,9 +7,9 @@ import {
 
 describe("preformatted text utilities", () => {
   it("preserves indentation while normalizing surrounding pre block newlines", () => {
-    expect(normalizePreformattedText("\n  const value = 1\n    return value\n")).toBe(
-      "  const value = 1\n    return value"
-    )
+    expect(
+      normalizePreformattedText("\n  const value = 1\n    return value\n")
+    ).toBe("  const value = 1\n    return value")
   })
 
   it("wraps long lines without collapsing spaces", () => {

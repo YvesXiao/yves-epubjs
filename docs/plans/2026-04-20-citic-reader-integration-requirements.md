@@ -162,32 +162,32 @@ citic 宿主层需要完成以下替换：
 
 ### 6.1 阅读进度
 
-| 状态 | 操作 | 结果 |
-| --- | --- | --- |
-| 未打开书籍 | `getReadingProgress()` | `null` |
-| 已渲染 | `getReadingProgress()` | 返回 `0~1` 进度快照 |
-| 已渲染 | `goToProgress(-0.2)` | 跳到开头 |
-| 已渲染 | `goToProgress(1.2)` | 跳到末尾 |
-| 正在跳转 | 再次 `goToProgress(y)` | 后一次请求生效 |
+| 状态       | 操作                   | 结果                |
+| ---------- | ---------------------- | ------------------- |
+| 未打开书籍 | `getReadingProgress()` | `null`              |
+| 已渲染     | `getReadingProgress()` | 返回 `0~1` 进度快照 |
+| 已渲染     | `goToProgress(-0.2)`   | 跳到开头            |
+| 已渲染     | `goToProgress(1.2)`    | 跳到末尾            |
+| 正在跳转   | 再次 `goToProgress(y)` | 后一次请求生效      |
 
 ### 6.2 href 导航
 
-| 状态 | 操作 | 结果 |
-| --- | --- | --- |
-| 已打开 | `goToHref("chapter.xhtml")` | 跳到章节开头 |
-| 已打开 | `goToHref("chapter.xhtml#anchor")` | 跳到锚点 |
-| 已打开 | `goToHref("#anchor")` | 在书内解析当前上下文锚点 |
-| 已打开 | `goToHref("missing.xhtml")` | `null` 或 `no-op` |
-| 未打开 | `getTocTargets()` | 空数组 |
+| 状态   | 操作                               | 结果                     |
+| ------ | ---------------------------------- | ------------------------ |
+| 已打开 | `goToHref("chapter.xhtml")`        | 跳到章节开头             |
+| 已打开 | `goToHref("chapter.xhtml#anchor")` | 跳到锚点                 |
+| 已打开 | `goToHref("#anchor")`              | 在书内解析当前上下文锚点 |
+| 已打开 | `goToHref("missing.xhtml")`        | `null` 或 `no-op`        |
+| 未打开 | `getTocTargets()`                  | 空数组                   |
 
 ### 6.3 生命周期 hook
 
-| 状态 | 操作 | 结果 |
-| --- | --- | --- |
-| DOM 章节完成渲染 | 触发 `onSectionRendered` | 提供元素引用与元数据 |
-| Canvas 章节完成渲染 | 触发 `onSectionRendered` | 提供元数据 |
-| 定位变化 | 触发 `onSectionRelocated` | 提供当前位置与章节信息 |
-| hook 内部异常 | 阅读器继续运行 | 主流程不崩溃 |
+| 状态                | 操作                      | 结果                   |
+| ------------------- | ------------------------- | ---------------------- |
+| DOM 章节完成渲染    | 触发 `onSectionRendered`  | 提供元素引用与元数据   |
+| Canvas 章节完成渲染 | 触发 `onSectionRendered`  | 提供元数据             |
+| 定位变化            | 触发 `onSectionRelocated` | 提供当前位置与章节信息 |
+| hook 内部异常       | 阅读器继续运行            | 主流程不崩溃           |
 
 ## 7. 验收标准
 

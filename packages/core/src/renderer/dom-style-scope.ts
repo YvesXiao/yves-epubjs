@@ -50,7 +50,12 @@ export function scopeDomStyleSheetCss(
     }) as MutableCssNode
 
     pruneGlobalAtRules(stylesheet)
-    scopeCssNode(stylesheet, false, scopeSelector, options.rootBackgroundSelector)
+    scopeCssNode(
+      stylesheet,
+      false,
+      scopeSelector,
+      options.rootBackgroundSelector
+    )
     return generate(stylesheet)
   } catch {
     return value
@@ -84,12 +89,20 @@ function scopeCssNode(
   }
 
   if (node.type === "Atrule") {
-    const atruleName = typeof node.name === "string" ? node.name.toLowerCase() : ""
+    const atruleName =
+      typeof node.name === "string" ? node.name.toLowerCase() : ""
     const nextInsideKeyframes =
-      insideKeyframes || atruleName === "keyframes" || atruleName.endsWith("keyframes")
+      insideKeyframes ||
+      atruleName === "keyframes" ||
+      atruleName.endsWith("keyframes")
 
     for (const child of getCssNodeListChildren(node.block)) {
-      scopeCssNode(child, nextInsideKeyframes, scopeSelector, rootBackgroundSelector)
+      scopeCssNode(
+        child,
+        nextInsideKeyframes,
+        scopeSelector,
+        rootBackgroundSelector
+      )
     }
     return
   }
@@ -113,7 +126,12 @@ function scopeCssNode(
     }
 
     for (const child of getCssNodeListChildren(node.block)) {
-      scopeCssNode(child, insideKeyframes, scopeSelector, rootBackgroundSelector)
+      scopeCssNode(
+        child,
+        insideKeyframes,
+        scopeSelector,
+        rootBackgroundSelector
+      )
     }
     return
   }
@@ -143,10 +161,12 @@ function getCssNodeListChildren(
       }
     | undefined
 ): MutableCssNode[] {
-  return node?.children?.toArray?.() as MutableCssNode[] | undefined ?? []
+  return (node?.children?.toArray?.() as MutableCssNode[] | undefined) ?? []
 }
 
-function isSelectorListNode(node: CssAstNode | undefined): node is MutableCssNode & { type: "SelectorList" } {
+function isSelectorListNode(
+  node: CssAstNode | undefined
+): node is MutableCssNode & { type: "SelectorList" } {
   return Boolean(node && node.type === "SelectorList")
 }
 
@@ -169,7 +189,10 @@ function scopeCssSelectorText(
     if (rootBackgroundSelector && rootScopedSelector.rootOnly) {
       return [
         rootScopedSelector.selector,
-        rootScopedSelector.selector.replace(scopeSelector, rootBackgroundSelector)
+        rootScopedSelector.selector.replace(
+          scopeSelector,
+          rootBackgroundSelector
+        )
       ]
     }
     return [rootScopedSelector.selector]
@@ -210,7 +233,11 @@ function scopeRootSelectorPrefix(
     }
   }
 
-  if (remainder.startsWith(">") || remainder.startsWith("+") || remainder.startsWith("~")) {
+  if (
+    remainder.startsWith(">") ||
+    remainder.startsWith("+") ||
+    remainder.startsWith("~")
+  ) {
     return {
       selector: `${scopeSelector}${rootQualifiers} ${remainder}`,
       rootOnly: false
@@ -224,10 +251,14 @@ function scopeRootSelectorPrefix(
 }
 
 function hasRootBackgroundDeclarations(rule: MutableCssNode): boolean {
-  const blockText = rule.block ? generate(rule.block as Parameters<typeof generate>[0]) : ""
+  const blockText = rule.block
+    ? generate(rule.block as Parameters<typeof generate>[0])
+    : ""
   return /(?:^|[{\s;])background(?:-|:)/i.test(blockText)
 }
 
 function shouldDropGlobalAtRule(name: unknown): boolean {
-  return typeof name === "string" && GLOBAL_AT_RULES_TO_DROP.has(name.toLowerCase())
+  return (
+    typeof name === "string" && GLOBAL_AT_RULES_TO_DROP.has(name.toLowerCase())
+  )
 }

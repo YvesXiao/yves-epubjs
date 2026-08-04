@@ -223,7 +223,9 @@ function parseInlineNodes(
         const hrefAttribute = getHtmlElementAttribute(node, "href")
         const linkNode: InlineNode = {
           kind: "link",
-          href: hrefAttribute ? resolveInlineLinkHref(sectionHref, hrefAttribute) : "",
+          href: hrefAttribute
+            ? resolveInlineLinkHref(sectionHref, hrefAttribute)
+            : "",
           children: parseInlineNodes(childNodes, sectionHref, stylesheets),
           ...getInlineNodeMetadata(node, stylesheets)
         }
@@ -272,7 +274,11 @@ function parseInlineNodes(
       }
       default:
         {
-          const fallbackChildren = parseInlineNodes(childNodes, sectionHref, stylesheets)
+          const fallbackChildren = parseInlineNodes(
+            childNodes,
+            sectionHref,
+            stylesheets
+          )
           if (fallbackChildren.length > 0) {
             inlines.push({
               kind: "span",
@@ -318,7 +324,9 @@ class XhtmlBlockParser {
 
   parseDocument(xml: string): SectionDocument {
     const domDocument = parseXhtmlDomDocument(xml)
-    const blocks = domDocument.bodyElement ? this.parseChildBlocks(domDocument.bodyElement) : []
+    const blocks = domDocument.bodyElement
+      ? this.parseChildBlocks(domDocument.bodyElement)
+      : []
 
     const section: SectionDocument = {
       id: this.createBlockId("section"),
@@ -388,7 +396,10 @@ class XhtmlBlockParser {
     this.registerAnchorIds(this.collectAnchorIds(node), blockId)
   }
 
-  private registerAnchorToFirstBlock(node: HtmlDomElement, blocks: BlockNode[]): void {
+  private registerAnchorToFirstBlock(
+    node: HtmlDomElement,
+    blocks: BlockNode[]
+  ): void {
     const firstBlockId = blocks[0]?.id
     if (!firstBlockId) {
       return
@@ -437,7 +448,10 @@ class XhtmlBlockParser {
         continue
       }
 
-      if (this.collectAnchorIds(child).length > 0 && !getHtmlNodeTextContent(child).trim()) {
+      if (
+        this.collectAnchorIds(child).length > 0 &&
+        !getHtmlNodeTextContent(child).trim()
+      ) {
         this.queuePendingAnchors(child)
       }
     }
@@ -509,14 +523,18 @@ class XhtmlBlockParser {
     if (node.name === "pre") {
       const blockId = this.createBlockId("code")
       this.registerInlineAnchors(node, blockId)
-      const codeNode = getHtmlChildElements(node).find((child) => child.name === "code")
+      const codeNode = getHtmlChildElements(node).find(
+        (child) => child.name === "code"
+      )
       const language =
         getHtmlElementAttribute(codeNode ?? node, "data-language") ??
         getHtmlElementAttribute(codeNode ?? node, "class")
       const codeBlock: BlockNode = {
         id: blockId,
         kind: "code",
-        text: normalizePreformattedText(getHtmlNodeTextContent(codeNode ?? node)),
+        text: normalizePreformattedText(
+          getHtmlNodeTextContent(codeNode ?? node)
+        ),
         ...getBlockNodeMetadata(node, this.stylesheets)
       }
 
@@ -538,7 +556,9 @@ class XhtmlBlockParser {
       const contentBlocks = getHtmlChildElements(node)
         .filter((child) => child.name !== "figcaption")
         .flatMap((child) => this.parseElement(child))
-      const captionNode = getHtmlChildElements(node).find((child) => child.name === "figcaption")
+      const captionNode = getHtmlChildElements(node).find(
+        (child) => child.name === "figcaption"
+      )
       return [
         {
           id: blockId,
@@ -593,7 +613,9 @@ class XhtmlBlockParser {
     if (node.name === "ul" || node.name === "ol") {
       const blockId = this.createBlockId("list")
       this.registerAnchor(node, blockId)
-      const itemNodes = getHtmlChildElements(node).filter((child) => child.name === "li")
+      const itemNodes = getHtmlChildElements(node).filter(
+        (child) => child.name === "li"
+      )
       const items: ListItemBlock[] = itemNodes.map((itemNode) => ({
         id: this.createListItemId(),
         blocks: this.parseListItem(itemNode)
@@ -621,7 +643,9 @@ class XhtmlBlockParser {
     if (node.name === "table") {
       const blockId = this.createBlockId("table")
       this.registerAnchor(node, blockId)
-      const captionNode = getHtmlChildElements(node).find((child) => child.name === "caption")
+      const captionNode = getHtmlChildElements(node).find(
+        (child) => child.name === "caption"
+      )
       return [
         {
           id: blockId,
@@ -660,7 +684,10 @@ class XhtmlBlockParser {
     return fallbackBlocks
   }
 
-  private applyFallbackBlockMetadata(node: HtmlDomElement, blocks: BlockNode[]): BlockNode[] {
+  private applyFallbackBlockMetadata(
+    node: HtmlDomElement,
+    blocks: BlockNode[]
+  ): BlockNode[] {
     if (blocks.length !== 1) {
       return blocks
     }
@@ -806,11 +833,12 @@ class XhtmlBlockParser {
 
   private parseTableRows(node: HtmlDomElement): TableRow[] {
     const rows: TableRow[] = []
-    const rowContainers = getHtmlChildElements(node).filter((child) =>
-      child.name === "thead" ||
-      child.name === "tbody" ||
-      child.name === "tfoot" ||
-      child.name === "tr"
+    const rowContainers = getHtmlChildElements(node).filter(
+      (child) =>
+        child.name === "thead" ||
+        child.name === "tbody" ||
+        child.name === "tfoot" ||
+        child.name === "tr"
     )
 
     for (const container of rowContainers) {
@@ -838,8 +866,8 @@ class XhtmlBlockParser {
   }
 
   private parseTableCells(node: HtmlDomElement): TableCell[] {
-    const cellNodes = getHtmlChildElements(node).filter((child) =>
-      child.name === "th" || child.name === "td"
+    const cellNodes = getHtmlChildElements(node).filter(
+      (child) => child.name === "th" || child.name === "td"
     )
 
     return cellNodes.map((cellNode) => {

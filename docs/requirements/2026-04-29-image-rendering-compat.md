@@ -30,12 +30,12 @@ epubjs 的参考价值在于边界划分：reader 控制资源解析、容器尺
 
 图片在渲染前应被归入以下类别。分类结果应尽量来自语义和上下文，而不是单纯依赖尺寸。
 
-| 类别 | 典型来源 | DOM 行为 | Canvas 行为 |
-| --- | --- | --- | --- |
-| Inline image | `a.footnote img`、`a.noteref img`、`epub:type="noteref"`、`role="doc-noteref"`、`sup/sub/small img`、文本前后混排的 `img` | `inline-block`，随文字行内排版，尺寸以 `em` 或出版方 CSS 为主 | 作为 inline fragment 参与 Pretext 行布局 |
-| Block image | 独立 `img`、`p` 中只有图片、`figure > img` | 块级居中，限制最大宽高 | 作为 native image block 或 figure image 绘制 |
-| Presentation image | cover、image-page、单图章节 | 填充展示 viewport，`object-fit: contain` | 使用 cover/image-page 专用布局 |
-| FXL image | `rendition:layout=pre-paginated` 内图片 | 保留出版方布局，整体页面缩放 | 以 DOM/FXL 展示优先，避免转成 reflowable 图片规则 |
+| 类别               | 典型来源                                                                                                                  | DOM 行为                                                      | Canvas 行为                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------- |
+| Inline image       | `a.footnote img`、`a.noteref img`、`epub:type="noteref"`、`role="doc-noteref"`、`sup/sub/small img`、文本前后混排的 `img` | `inline-block`，随文字行内排版，尺寸以 `em` 或出版方 CSS 为主 | 作为 inline fragment 参与 Pretext 行布局          |
+| Block image        | 独立 `img`、`p` 中只有图片、`figure > img`                                                                                | 块级居中，限制最大宽高                                        | 作为 native image block 或 figure image 绘制      |
+| Presentation image | cover、image-page、单图章节                                                                                               | 填充展示 viewport，`object-fit: contain`                      | 使用 cover/image-page 专用布局                    |
+| FXL image          | `rendition:layout=pre-paginated` 内图片                                                                                   | 保留出版方布局，整体页面缩放                                  | 以 DOM/FXL 展示优先，避免转成 reflowable 图片规则 |
 
 ### 分类优先级
 
@@ -47,16 +47,16 @@ epubjs 的参考价值在于边界划分：reader 控制资源解析、容器尺
 
 ## 状态矩阵
 
-| 渲染路径 | 图片状态 | 用户操作 | 期望结果 | 副作用 |
-| --- | --- | --- | --- | --- |
-| DOM paginated | 资源 URL 尚未解析 | 首次进入章节 | 使用原路径或占位 URL 渲染，避免空白崩溃 | 资源解析完成后 patch DOM |
-| DOM paginated | 图片未完成 load/decode | 测量分页 | 等待就绪屏障或使用超时兜底 | 就绪后重新测量当前 section |
-| DOM paginated | 行内图片加载完成 | 翻页或跳转 | 页码、offset、行框稳定 | 更新 `pages` 与 `sectionEstimatedHeight` |
-| DOM paginated | 块级图片加载完成 | 翻页或定位 | 图片作为可读 media band 参与分页 | 避免把行内小图当成独立分页 band |
-| DOM scroll | 图片晚加载 | 滚动阅读 | scroll height 更新后保持当前位置语义 | 捕获并恢复 scroll anchor |
-| Canvas paginated | inline 图片 intrinsic size 晚到 | 首次布局 | 使用 fallback em 尺寸布局 | intrinsic size 到达后清缓存并重绘 |
-| Canvas paginated | block 图片 intrinsic size 晚到 | 翻页或进度计算 | 先用估算高度，后用真实尺寸收敛 | 重建 display list、pages、locator map |
-| FXL DOM | 图片资源晚到 | 打开固定版式页 | 保持页面 viewport 和 scale 不变 | 只 patch URL，不套用 reflowable 分页重排 |
+| 渲染路径         | 图片状态                        | 用户操作       | 期望结果                                | 副作用                                   |
+| ---------------- | ------------------------------- | -------------- | --------------------------------------- | ---------------------------------------- |
+| DOM paginated    | 资源 URL 尚未解析               | 首次进入章节   | 使用原路径或占位 URL 渲染，避免空白崩溃 | 资源解析完成后 patch DOM                 |
+| DOM paginated    | 图片未完成 load/decode          | 测量分页       | 等待就绪屏障或使用超时兜底              | 就绪后重新测量当前 section               |
+| DOM paginated    | 行内图片加载完成                | 翻页或跳转     | 页码、offset、行框稳定                  | 更新 `pages` 与 `sectionEstimatedHeight` |
+| DOM paginated    | 块级图片加载完成                | 翻页或定位     | 图片作为可读 media band 参与分页        | 避免把行内小图当成独立分页 band          |
+| DOM scroll       | 图片晚加载                      | 滚动阅读       | scroll height 更新后保持当前位置语义    | 捕获并恢复 scroll anchor                 |
+| Canvas paginated | inline 图片 intrinsic size 晚到 | 首次布局       | 使用 fallback em 尺寸布局               | intrinsic size 到达后清缓存并重绘        |
+| Canvas paginated | block 图片 intrinsic size 晚到  | 翻页或进度计算 | 先用估算高度，后用真实尺寸收敛          | 重建 display list、pages、locator map    |
+| FXL DOM          | 图片资源晚到                    | 打开固定版式页 | 保持页面 viewport 和 scale 不变         | 只 patch URL，不套用 reflowable 分页重排 |
 
 ## DOM 路径需求
 
@@ -73,7 +73,17 @@ DOM normalization CSS 应遵循低侵入原则：
 当前已落地的最小兼容规则：
 
 ```css
-.epub-dom-section :where(a.footnote, a.noteref, a[epub\:type~="noteref"], a[role="doc-noteref"], sup, sub, small) img {
+.epub-dom-section
+  :where(
+    a.footnote,
+    a.noteref,
+    a[epub\:type~="noteref"],
+    a[role="doc-noteref"],
+    sup,
+    sub,
+    small
+  )
+  img {
   display: inline-block;
   max-width: 1.5em;
   max-height: 1.5em;
@@ -155,19 +165,19 @@ Canvas block image 继续使用 `resolveImageLayout`。后续需求：
 
 ## 模块影响
 
-| 模块 | 文件 | 影响 |
-| --- | --- | --- |
-| XHTML 解析 | `packages/core/src/parser/xhtml-parser.ts` | 保留 inline image 元信息，必要时补充脚注语义元数据 |
-| DOM 预处理 | `packages/core/src/runtime/chapter-preprocess.ts` | 保留安全属性，如 `class`、`role`、`epub:type`，供 DOM CSS 分类使用 |
-| DOM 输入 | `packages/core/src/runtime/dom-render-input-factory.ts` | 资源 URL 解析、出版方 CSS 开关、presentation image 输入 |
-| DOM 渲染 | `packages/core/src/renderer/dom-chapter-renderer.ts` | DOM 序列化、normalization CSS 注入顺序 |
-| DOM 样式 | `packages/core/src/renderer/dom-chapter-style.ts` | 图片分类 CSS、FXL override、presentation image 规则 |
-| 资源管理 | `packages/core/src/runtime/renderable-resource-manager.ts` | DOM patch、load/decode 监听、layout change 触发 |
-| DOM 分页 | `packages/core/src/runtime/reader-dom-pagination-service.ts` | 图片 band 过滤、重新测量、页码收敛 |
-| 布局引擎 | `packages/core/src/layout/layout-engine.ts` | inline image 尺寸、缓存 key、intrinsic size 变化 |
-| Canvas display | `packages/core/src/renderer/display-list-text.ts`、`display-list-builder.ts` | inline/block 图片绘制与交互区域 |
-| 图片布局 | `packages/core/src/utils/image-layout.ts` | block image 与 DOM 大图兜底参数对齐 |
-| Reader orchestration | `packages/core/src/runtime/reader.ts` | 资源晚到后的重排、重绘、scroll anchor 恢复 |
+| 模块                 | 文件                                                                         | 影响                                                               |
+| -------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| XHTML 解析           | `packages/core/src/parser/xhtml-parser.ts`                                   | 保留 inline image 元信息，必要时补充脚注语义元数据                 |
+| DOM 预处理           | `packages/core/src/runtime/chapter-preprocess.ts`                            | 保留安全属性，如 `class`、`role`、`epub:type`，供 DOM CSS 分类使用 |
+| DOM 输入             | `packages/core/src/runtime/dom-render-input-factory.ts`                      | 资源 URL 解析、出版方 CSS 开关、presentation image 输入            |
+| DOM 渲染             | `packages/core/src/renderer/dom-chapter-renderer.ts`                         | DOM 序列化、normalization CSS 注入顺序                             |
+| DOM 样式             | `packages/core/src/renderer/dom-chapter-style.ts`                            | 图片分类 CSS、FXL override、presentation image 规则                |
+| 资源管理             | `packages/core/src/runtime/renderable-resource-manager.ts`                   | DOM patch、load/decode 监听、layout change 触发                    |
+| DOM 分页             | `packages/core/src/runtime/reader-dom-pagination-service.ts`                 | 图片 band 过滤、重新测量、页码收敛                                 |
+| 布局引擎             | `packages/core/src/layout/layout-engine.ts`                                  | inline image 尺寸、缓存 key、intrinsic size 变化                   |
+| Canvas display       | `packages/core/src/renderer/display-list-text.ts`、`display-list-builder.ts` | inline/block 图片绘制与交互区域                                    |
+| 图片布局             | `packages/core/src/utils/image-layout.ts`                                    | block image 与 DOM 大图兜底参数对齐                                |
+| Reader orchestration | `packages/core/src/runtime/reader.ts`                                        | 资源晚到后的重排、重绘、scroll anchor 恢复                         |
 
 ## 验收标准
 
@@ -214,4 +224,3 @@ Canvas block image 继续使用 `resolveImageLayout`。后续需求：
 - 是否引入 CSS cascade layer 作为 reader normalization 的长期方案。
 - DOM 路径图片 decode 等待上限取值需要实测，建议从 300ms 到 800ms 区间验证。
 - Canvas 路径是否需要支持更多出版方 CSS 图片属性，例如 `vertical-align`、`max-width`、`max-height`。
-
