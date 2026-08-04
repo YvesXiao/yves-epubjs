@@ -89,6 +89,12 @@ function verifyDeclaredExports() {
 }
 
 function verifyPackedFiles(files) {
+  const buildCaches = files.filter((path) => path.endsWith(".tsbuildinfo"))
+  if (buildCaches.length > 0) {
+    throw new Error(
+      `Build caches must not be published: ${buildCaches.join(", ")}`
+    )
+  }
   const unexpected = files.filter(
     (path) =>
       path !== "package.json" &&
