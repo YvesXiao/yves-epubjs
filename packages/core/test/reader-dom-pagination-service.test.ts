@@ -20,10 +20,7 @@ describe("ReaderDomPaginationService", () => {
       scrollHeight: 640,
       offsetHeight: 640
     })
-    const pages: ReaderPage[] = [
-      createPage(1, 1, 0),
-      createPage(2, 2, 320)
-    ]
+    const pages: ReaderPage[] = [createPage(1, 1, 0), createPage(2, 2, 320)]
 
     service.positionPaginatedDomSection({
       sectionElement,
@@ -122,9 +119,7 @@ describe("ReaderDomPaginationService", () => {
     })
 
     expect(result?.pages.map((page) => page.offsetInSection)).toEqual([
-      0,
-      1112,
-      2224
+      0, 1112, 2224
     ])
     expect(result?.resolvedPage?.offsetInSection).toBe(1112)
   })
@@ -534,8 +529,7 @@ describe("ReaderDomPaginationService", () => {
     })
 
     expect(measurePaginatedDomPageOffsets(sectionElement, 430)).toEqual([
-      0,
-      430
+      0, 430
     ])
   })
 
@@ -562,9 +556,7 @@ describe("ReaderDomPaginationService", () => {
     sectionElement.append(intro, media, next)
 
     expect(measurePaginatedDomPageOffsets(sectionElement, 500)).toEqual([
-      0,
-      240,
-      640
+      0, 240, 640
     ])
   })
 
@@ -589,8 +581,7 @@ describe("ReaderDomPaginationService", () => {
     sectionElement.append(intro, media)
 
     expect(measurePaginatedDomPageOffsets(sectionElement, 790)).toEqual([
-      0,
-      390
+      0, 390
     ])
   })
 
@@ -617,9 +608,7 @@ describe("ReaderDomPaginationService", () => {
     sectionElement.append(intro, media, next)
 
     expect(measurePaginatedDomPageOffsets(sectionElement, 790)).toEqual([
-      0,
-      240,
-      1080
+      0, 240, 1080
     ])
   })
 
@@ -650,8 +639,7 @@ describe("ReaderDomPaginationService", () => {
     sectionElement.append(first, second)
 
     expect(measurePaginatedDomPageOffsets(sectionElement, 790)).toEqual([
-      0,
-      640
+      0, 640
     ])
   })
 
@@ -674,8 +662,7 @@ describe("ReaderDomPaginationService", () => {
     sectionElement.append(media)
 
     expect(measurePaginatedDomPageOffsets(sectionElement, 500)).toEqual([
-      0,
-      220
+      0, 220
     ])
   })
 
@@ -700,9 +687,7 @@ describe("ReaderDomPaginationService", () => {
     sectionElement.append(media, next)
 
     expect(measurePaginatedDomPageOffsets(sectionElement, 500)).toEqual([
-      0,
-      240,
-      640
+      0, 240, 640
     ])
   })
 
@@ -733,9 +718,7 @@ describe("ReaderDomPaginationService", () => {
     sectionElement.append(first, second)
 
     expect(measurePaginatedDomPageOffsets(sectionElement, 790)).toEqual([
-      0,
-      20,
-      670
+      0, 20, 670
     ])
   })
 
@@ -770,10 +753,7 @@ describe("ReaderDomPaginationService", () => {
     sectionElement.append(first, between, second)
 
     expect(measurePaginatedDomPageOffsets(sectionElement, 790)).toEqual([
-      0,
-      130,
-      940,
-      990
+      0, 130, 940, 990
     ])
   })
 })

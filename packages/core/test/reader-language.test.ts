@@ -85,7 +85,9 @@ describe("EpubReader reading language context", () => {
     expect(container.dataset.contentDirection).toBe("rtl")
     expect(container.dataset.experimentalRtl).toBe("disabled")
     expect(container.getAttribute("dir")).toBeNull()
-    expect(container.querySelector(".epub-dom-section")?.getAttribute("dir")).toBeNull()
+    expect(
+      container.querySelector(".epub-dom-section")?.getAttribute("dir")
+    ).toBeNull()
 
     await reader.submitPreferences({
       experimentalRtl: true
@@ -96,7 +98,11 @@ describe("EpubReader reading language context", () => {
     expect(container.dataset.experimentalRtl).toBe("enabled")
     expect(container.dir).toBe("rtl")
     expect(container.lang).toBe("ar")
-    expect(container.querySelector(".epub-dom-section")?.getAttribute("dir")).toBe("rtl")
-    expect(container.querySelector(".epub-dom-section")?.getAttribute("lang")).toBe("ar")
+    expect(
+      container.querySelector(".epub-dom-section")?.getAttribute("dir")
+    ).toBe("rtl")
+    expect(
+      container.querySelector(".epub-dom-section")?.getAttribute("lang")
+    ).toBe("ar")
   })
 })

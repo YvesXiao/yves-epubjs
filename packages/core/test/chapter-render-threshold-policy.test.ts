@@ -6,7 +6,9 @@ import {
   scoreChapterComplexity
 } from "../src"
 
-function createAnalysisInput(overrides: Partial<ChapterAnalysisInput> = {}): ChapterAnalysisInput {
+function createAnalysisInput(
+  overrides: Partial<ChapterAnalysisInput> = {}
+): ChapterAnalysisInput {
   return {
     href: "OPS/test.xhtml",
     rootTagName: "body",

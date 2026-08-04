@@ -19,8 +19,12 @@ test("demo shell renders", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Open a local EPUB" })
   ).toBeVisible()
-  await expect(page.getByRole("button", { name: "Select EPUB Choose File" })).toBeVisible()
-  await expect(page.locator(".reading-topbar-facts")).toContainText("No bookmark saved")
+  await expect(
+    page.getByRole("button", { name: "Select EPUB Choose File" })
+  ).toBeVisible()
+  await expect(page.locator(".reading-topbar-facts")).toContainText(
+    "No bookmark saved"
+  )
   await expect(page.locator(".reading-action-rail")).toContainText("TOC")
 
   await openDrawer(page, "Debug")
@@ -97,7 +101,9 @@ test("search results panel fills the drawer body", async ({ page }) => {
     }
   })
 
-  expect(Math.abs(layout.panelBottom - layout.expectedPanelBottom)).toBeLessThanOrEqual(2)
+  expect(
+    Math.abs(layout.panelBottom - layout.expectedPanelBottom)
+  ).toBeLessThanOrEqual(2)
   expect(layout.panelHeight).toBeGreaterThan(320)
   expect(layout.resultsBodyHeight).toBeGreaterThan(260)
 })
@@ -107,7 +113,10 @@ test("supports paginated next and previous navigation", async ({ page }) => {
   await openSmokeBook(page)
 
   await page.getByRole("button", { name: "Paginated" }).click()
-  await expect(page.locator(".reader-root")).toHaveAttribute("data-mode", "paginated")
+  await expect(page.locator(".reader-root")).toHaveAttribute(
+    "data-mode",
+    "paginated"
+  )
 
   await expect(page.locator(".page-input")).toHaveValue("1")
   await expect.poll(async () => await readTotalPages(page)).toBeGreaterThan(1)
@@ -119,7 +128,9 @@ test("supports paginated next and previous navigation", async ({ page }) => {
   await expect(page.locator(".page-input")).toHaveValue("1")
 })
 
-test("shows locator and restore diagnostics after bookmark restoration", async ({ page }) => {
+test("shows locator and restore diagnostics after bookmark restoration", async ({
+  page
+}) => {
   await page.goto("/")
   await openSmokeBook(page)
 
@@ -136,7 +147,9 @@ test("shows locator and restore diagnostics after bookmark restoration", async (
 
   await page.getByRole("button", { name: "Restore" }).click()
 
-  await expect(page.locator(".reading-topbar-facts")).toContainText("Bookmark restored")
+  await expect(page.locator(".reading-topbar-facts")).toContainText(
+    "Bookmark restored"
+  )
   await expect(page.locator(".reader-root")).toContainText("Chapter One")
   await openDrawer(page, "Debug")
   await expect(diagnostics).toContainText("Locator")
@@ -145,15 +158,25 @@ test("shows locator and restore diagnostics after bookmark restoration", async (
   await expect(diagnostics).toContainText("fallback:no")
 })
 
-test("renders search overlay and saves highlight inside a synthetic spread", async ({ page }) => {
+test("renders search overlay and saves highlight inside a synthetic spread", async ({
+  page
+}) => {
   await page.goto("/")
   await openBook(page, FXL_SPREAD_BOOK_PATH, "FXL Spread Smoke")
   await page.getByRole("button", { name: "Paginated" }).click()
-  await expect(page.locator(".reader-root")).toHaveAttribute("data-mode", "paginated")
+  await expect(page.locator(".reader-root")).toHaveAttribute(
+    "data-mode",
+    "paginated"
+  )
 
-  await expect(page.locator(".reader-root")).toHaveAttribute("data-synthetic-spread", "enabled")
+  await expect(page.locator(".reader-root")).toHaveAttribute(
+    "data-synthetic-spread",
+    "enabled"
+  )
   await openDrawer(page, "Debug")
-  await expect(page.locator(".reader-diagnostics")).toContainText("auto / synthetic-on")
+  await expect(page.locator(".reader-diagnostics")).toContainText(
+    "auto / synthetic-on"
+  )
 
   await openDrawer(page, "Find")
   await page.getByRole("searchbox").fill("Spread overlay target signal")
@@ -168,15 +191,26 @@ test("renders search overlay and saves highlight inside a synthetic spread", asy
   await expect(page.locator(".page-input")).toHaveValue("2")
   await expect(await readTotalPages(page)).toBe(2)
   await expect(page.locator(".reader-root")).toContainText("Right Match")
-  await expect(page.locator(".reader-viewport-overlay-rect.is-search-hit")).toHaveCount(1)
+  await expect(
+    page.locator(".reader-viewport-overlay-rect.is-search-hit")
+  ).toHaveCount(1)
 
   await closeDrawer(page)
-  await page.locator(".reader-toolbar").getByRole("button", { name: "Highlight" }).click()
+  await page
+    .locator(".reader-toolbar")
+    .getByRole("button", { name: "Highlight" })
+    .click()
 
-  await expect(page.locator(".reading-topbar-facts")).toContainText("Highlight saved")
-  await expect(page.locator(".reader-viewport-overlay-rect.is-search-hit")).toHaveCount(1)
+  await expect(page.locator(".reading-topbar-facts")).toContainText(
+    "Highlight saved"
+  )
+  await expect(
+    page.locator(".reader-viewport-overlay-rect.is-search-hit")
+  ).toHaveCount(1)
 
-  const searchBox = await page.locator(".reader-viewport-overlay-rect.is-search-hit").boundingBox()
+  const searchBox = await page
+    .locator(".reader-viewport-overlay-rect.is-search-hit")
+    .boundingBox()
 
   expect(searchBox).not.toBeNull()
   expect(searchBox.width).toBeGreaterThan(0)

@@ -39,7 +39,9 @@ describe("EpubReader annotations", () => {
       toc: [],
       sections: [section]
     }
-    ;(reader as unknown as { book: Book; sourceName: string | null }).sourceName = "sample.epub"
+    ;(
+      reader as unknown as { book: Book; sourceName: string | null }
+    ).sourceName = "sample.epub"
 
     await reader.goToLocation({
       spineIndex: 0,
@@ -47,8 +49,13 @@ describe("EpubReader annotations", () => {
       progressInSection: 0
     })
 
-    const annotation = reader.createAnnotation({ note: "Remember this", color: "#f59e0b" })
-    expect(annotation?.publicationId).toBe("title:Annotations::source:sample.epub")
+    const annotation = reader.createAnnotation({
+      note: "Remember this",
+      color: "#f59e0b"
+    })
+    expect(annotation?.publicationId).toBe(
+      "title:Annotations::source:sample.epub"
+    )
     expect(annotation?.quote).toBe("Annotation target paragraph.")
     expect(annotation?.note).toBe("Remember this")
   })
@@ -76,7 +83,9 @@ describe("EpubReader annotations", () => {
       toc: [],
       sections: [section]
     }
-    ;(reader as unknown as { book: Book; sourceName: string | null }).sourceName = "sample.epub"
+    ;(
+      reader as unknown as { book: Book; sourceName: string | null }
+    ).sourceName = "sample.epub"
 
     const annotation = reader.createAnnotation({
       locator: {
@@ -171,7 +180,9 @@ describe("EpubReader annotations", () => {
       toc: [],
       sections: [section]
     }
-    ;(reader as unknown as { book: Book; sourceName: string | null }).sourceName = "sample.epub"
+    ;(
+      reader as unknown as { book: Book; sourceName: string | null }
+    ).sourceName = "sample.epub"
 
     await reader.goToLocation({
       spineIndex: 0,
@@ -253,7 +264,9 @@ describe("EpubReader annotations", () => {
 
     await reader.render()
 
-    const textRun = container.querySelector<HTMLElement>(".epub-text-run[data-reader-block-id='text-1']")
+    const textRun = container.querySelector<HTMLElement>(
+      ".epub-text-run[data-reader-block-id='text-1']"
+    )
     const originalGetSelection = window.getSelection
     const textNode = textRun?.firstChild ?? null
     Object.defineProperty(window, "getSelection", {
@@ -273,7 +286,9 @@ describe("EpubReader annotations", () => {
       })
     })
 
-    const annotation = reader.createAnnotationFromSelection({ color: "#2563eb" })
+    const annotation = reader.createAnnotationFromSelection({
+      color: "#2563eb"
+    })
 
     expect(annotation?.locator.blockId).toBe("text-1")
     expect(annotation?.quote).toBe("Canvas selectable")
@@ -331,13 +346,17 @@ describe("EpubReader annotations", () => {
             {
               id: "text-1",
               kind: "text",
-              inlines: [{ kind: "text", text: "Dom selectable annotation target." }]
+              inlines: [
+                { kind: "text", text: "Dom selectable annotation target." }
+              ]
             }
           ]
         }
       ]
     }
-    ;(reader as unknown as { book: Book; sourceName: string | null }).sourceName = "sample.epub"
+    ;(
+      reader as unknown as { book: Book; sourceName: string | null }
+    ).sourceName = "sample.epub"
 
     const textNode = container.querySelector("p")?.firstChild ?? null
     const originalGetSelection = window.getSelection
@@ -358,7 +377,9 @@ describe("EpubReader annotations", () => {
       })
     })
 
-    const annotation = reader.createAnnotationFromSelection({ color: "#2563eb" })
+    const annotation = reader.createAnnotationFromSelection({
+      color: "#2563eb"
+    })
 
     expect(annotation?.locator.blockId).toBe("text-1")
     expect(annotation?.quote).toBe("Dom selectable")
@@ -436,7 +457,9 @@ describe("EpubReader annotations", () => {
         }
       ]
     }
-    ;(reader as unknown as { book: Book; sourceName: string | null }).sourceName = "sample.epub"
+    ;(
+      reader as unknown as { book: Book; sourceName: string | null }
+    ).sourceName = "sample.epub"
 
     const textNode = container.querySelector("span")?.firstChild ?? null
     const originalGetSelection = mockDomSelection({
@@ -447,7 +470,9 @@ describe("EpubReader annotations", () => {
       rects: [new DOMRect(72, 32, 112, 20)]
     })
 
-    const annotation = reader.createAnnotationFromSelection({ color: "#2563eb" })
+    const annotation = reader.createAnnotationFromSelection({
+      color: "#2563eb"
+    })
 
     expect(annotation?.locator.blockId).toBe("text-1")
     expect(annotation?.quote).toBe("Omega target")
@@ -483,7 +508,8 @@ describe("EpubReader annotations", () => {
       value: () => new DOMRect(0, 0, 320, 220)
     })
 
-    const selectionChanges: Array<{ text: string | null; rectCount: number }> = []
+    const selectionChanges: Array<{ text: string | null; rectCount: number }> =
+      []
     const reader = new EpubReader({
       container,
       mode: "scroll",
@@ -537,7 +563,9 @@ describe("EpubReader annotations", () => {
 
     await reader.render()
 
-    const textRun = container.querySelector<HTMLElement>(".epub-text-run[data-reader-block-id='text-1']")
+    const textRun = container.querySelector<HTMLElement>(
+      ".epub-text-run[data-reader-block-id='text-1']"
+    )
     Object.defineProperty(textRun, "getBoundingClientRect", {
       configurable: true,
       value: () => new DOMRect(48, 72, 160, 24)
@@ -659,8 +687,14 @@ describe("EpubReader annotations", () => {
         }
       ]
     }
-    ;(reader as unknown as { book: Book; sourceName: string | null }).sourceName = "sample.epub"
-    ;(reader as unknown as { annotations: ReturnType<EpubReader["getAnnotations"]> }).annotations = [
+    ;(
+      reader as unknown as { book: Book; sourceName: string | null }
+    ).sourceName = "sample.epub"
+    ;(
+      reader as unknown as {
+        annotations: ReturnType<EpubReader["getAnnotations"]>
+      }
+    ).annotations = [
       {
         id: "annotation-1",
         publicationId: "identifier:urn:test:annotations",
@@ -707,7 +741,10 @@ describe("EpubReader annotations", () => {
       reader
         .getAnnotations()
         .map((annotation) => annotation.textRange)
-        .sort((left, right) => (left?.start.inlineOffset ?? 0) - (right?.start.inlineOffset ?? 0))
+        .sort(
+          (left, right) =>
+            (left?.start.inlineOffset ?? 0) - (right?.start.inlineOffset ?? 0)
+        )
     ).toEqual([
       {
         start: {
@@ -779,8 +816,14 @@ describe("EpubReader annotations", () => {
         }
       ]
     }
-    ;(reader as unknown as { book: Book; sourceName: string | null }).sourceName = "sample.epub"
-    ;(reader as unknown as { annotations: ReturnType<EpubReader["getAnnotations"]> }).annotations = [
+    ;(
+      reader as unknown as { book: Book; sourceName: string | null }
+    ).sourceName = "sample.epub"
+    ;(
+      reader as unknown as {
+        annotations: ReturnType<EpubReader["getAnnotations"]>
+      }
+    ).annotations = [
       {
         id: "annotation-1",
         publicationId: "identifier:urn:test:annotations",
@@ -819,7 +862,9 @@ describe("EpubReader annotations", () => {
       disabled: false
     })
 
-    expect(reader.applyCurrentSelectionHighlightAction({ color: "#3b82f6" })).toEqual({
+    expect(
+      reader.applyCurrentSelectionHighlightAction({ color: "#3b82f6" })
+    ).toEqual({
       mode: "highlight",
       changedCount: 1
     })
@@ -827,7 +872,10 @@ describe("EpubReader annotations", () => {
       reader
         .getAnnotations()
         .map((annotation) => annotation.textRange)
-        .sort((left, right) => (left?.start.inlineOffset ?? 0) - (right?.start.inlineOffset ?? 0))
+        .sort(
+          (left, right) =>
+            (left?.start.inlineOffset ?? 0) - (right?.start.inlineOffset ?? 0)
+        )
     ).toEqual([
       {
         start: {
@@ -904,8 +952,14 @@ describe("EpubReader annotations", () => {
         }
       ]
     }
-    ;(reader as unknown as { book: Book; sourceName: string | null }).sourceName = "sample.epub"
-    ;(reader as unknown as { annotations: ReturnType<EpubReader["getAnnotations"]> }).annotations = [
+    ;(
+      reader as unknown as { book: Book; sourceName: string | null }
+    ).sourceName = "sample.epub"
+    ;(
+      reader as unknown as {
+        annotations: ReturnType<EpubReader["getAnnotations"]>
+      }
+    ).annotations = [
       {
         id: "annotation-1",
         publicationId: "identifier:urn:test:annotations",
@@ -943,11 +997,11 @@ describe("EpubReader annotations", () => {
     })
 
     const originalCreateRange = document.createRange.bind(document)
-    document.createRange = ((() => ({
+    document.createRange = (() => ({
       setStart: () => undefined,
       setEnd: () => undefined,
       getClientRects: () => [new DOMRect(24, 32, 72, 20)]
-    })) as unknown) as typeof document.createRange
+    })) as unknown as typeof document.createRange
 
     container.querySelector("p")?.dispatchEvent(
       new MouseEvent("click", {

@@ -6,7 +6,7 @@
  * @FilePath: \yves-epubjs\packages\demo\src\App.tsx
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react"
 import {
   CustomSelect,
   ReaderDiagnosticsPanel,
@@ -17,24 +17,24 @@ import {
   ReaderViewportOverlay,
   SearchResultsPanel,
   toggleId
-} from "./reader-ui";
+} from "./reader-ui"
 import {
   ANNOTATION_COLORS,
   THEMES,
   useReaderController
-} from "./use-reader-controller";
+} from "./use-reader-controller"
 
-type DrawerPanel = "contents" | "search" | "settings" | "diagnostics";
-const DEFAULT_READING_TITLE = "Open a local EPUB";
+type DrawerPanel = "contents" | "search" | "settings" | "diagnostics"
+const DEFAULT_READING_TITLE = "Open a local EPUB"
 
 export function App(): JSX.Element {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const readingSurfaceRef = useRef<HTMLElement | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFileName, setSelectedFileName] = useState("No file selected");
-  const [activeDrawer, setActiveDrawer] = useState<DrawerPanel | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fullscreenAvailable, setFullscreenAvailable] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const readingSurfaceRef = useRef<HTMLElement | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedFileName, setSelectedFileName] = useState("No file selected")
+  const [activeDrawer, setActiveDrawer] = useState<DrawerPanel | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [fullscreenAvailable, setFullscreenAvailable] = useState(false)
   const {
     snapshot,
     results,
@@ -85,9 +85,9 @@ export function App(): JSX.Element {
     applySelectionHighlightAction,
     setDebugMode,
     clearHighlights
-  } = useReaderController(containerRef);
+  } = useReaderController(containerRef)
 
-  const readingTitle = resolveReadingTitle(selectedFileName, snapshot.metaText);
+  const readingTitle = resolveReadingTitle(selectedFileName, snapshot.metaText)
   const selectionToolbarActions: ReaderSelectionToolbarAction[] =
     snapshot.textSelection
       ? [
@@ -103,8 +103,8 @@ export function App(): JSX.Element {
               ? { disabled: true }
               : {}),
             onSelect: async () => {
-              await applySelectionHighlightAction();
-              clearTextSelection();
+              await applySelectionHighlightAction()
+              clearTextSelection()
             }
           },
           {
@@ -112,64 +112,64 @@ export function App(): JSX.Element {
             label: "Copy",
             tone: "secondary",
             onSelect: async () => {
-              const text = snapshot.textSelection?.text.trim();
+              const text = snapshot.textSelection?.text.trim()
               if (
                 text &&
                 typeof navigator !== "undefined" &&
                 navigator.clipboard &&
                 typeof navigator.clipboard.writeText === "function"
               ) {
-                await navigator.clipboard.writeText(text);
+                await navigator.clipboard.writeText(text)
               }
-              clearTextSelection();
+              clearTextSelection()
             }
           }
         ]
-      : [];
+      : []
 
   useEffect(() => {
-    setDebugMode(activeDrawer === "diagnostics");
-  }, [activeDrawer, setDebugMode]);
+    setDebugMode(activeDrawer === "diagnostics")
+  }, [activeDrawer, setDebugMode])
 
   useEffect(() => {
-    const surface = readingSurfaceRef.current;
+    const surface = readingSurfaceRef.current
     setFullscreenAvailable(
       Boolean(document.fullscreenEnabled && surface?.requestFullscreen)
-    );
+    )
 
     function syncFullscreenState(): void {
-      setIsFullscreen(document.fullscreenElement === surface);
+      setIsFullscreen(document.fullscreenElement === surface)
     }
 
-    document.addEventListener("fullscreenchange", syncFullscreenState);
+    document.addEventListener("fullscreenchange", syncFullscreenState)
     return () =>
-      document.removeEventListener("fullscreenchange", syncFullscreenState);
-  }, []);
+      document.removeEventListener("fullscreenchange", syncFullscreenState)
+  }, [])
 
   function toggleDrawer(panel: DrawerPanel): void {
-    setActiveDrawer((current) => (current === panel ? null : panel));
+    setActiveDrawer((current) => (current === panel ? null : panel))
   }
 
   async function toggleFullscreen(): Promise<void> {
-    const surface = readingSurfaceRef.current;
+    const surface = readingSurfaceRef.current
     if (!surface || !document.fullscreenEnabled || !surface.requestFullscreen) {
-      return;
+      return
     }
 
     try {
       if (document.fullscreenElement === surface) {
-        await document.exitFullscreen();
-        return;
+        await document.exitFullscreen()
+        return
       }
 
       if (document.fullscreenElement) {
-        await document.exitFullscreen();
-        return;
+        await document.exitFullscreen()
+        return
       }
 
-      await surface.requestFullscreen();
+      await surface.requestFullscreen()
     } catch {
-      setIsFullscreen(document.fullscreenElement === surface);
+      setIsFullscreen(document.fullscreenElement === surface)
     }
   }
 
@@ -204,10 +204,10 @@ export function App(): JSX.Element {
               accept=".epub,application/epub+zip"
               className="file-picker-input"
               onChange={async (event) => {
-                const file = event.target.files?.[0];
-                setSelectedFileName(file?.name ?? "No file selected");
+                const file = event.target.files?.[0]
+                setSelectedFileName(file?.name ?? "No file selected")
                 if (file) {
-                  await openFile(file);
+                  await openFile(file)
                 }
               }}
             />
@@ -335,11 +335,11 @@ export function App(): JSX.Element {
                     activeId={activeTocId}
                     expandedIds={expandedTocIds}
                     onToggle={(id) => {
-                      setExpandedTocIds((current) => toggleId(current, id));
+                      setExpandedTocIds((current) => toggleId(current, id))
                     }}
                     onSelect={async (id) => {
-                      await goToTocItem(id);
-                      setActiveDrawer(null);
+                      await goToTocItem(id)
+                      setActiveDrawer(null)
                     }}
                   />
                 ) : null}
@@ -357,7 +357,7 @@ export function App(): JSX.Element {
                           }
                           onKeyDown={async (event) => {
                             if (event.key === "Enter") {
-                              await performSearch(searchQuery);
+                              await performSearch(searchQuery)
                             }
                           }}
                           placeholder="Search current book"
@@ -367,7 +367,7 @@ export function App(): JSX.Element {
                           type="button"
                           className="search-submit"
                           onClick={() => {
-                            void performSearch(searchQuery);
+                            void performSearch(searchQuery)
                           }}
                         >
                           Search
@@ -376,8 +376,8 @@ export function App(): JSX.Element {
                           type="button"
                           className="search-clear"
                           onClick={() => {
-                            setSearchQuery("");
-                            clearSearchResults();
+                            setSearchQuery("")
+                            clearSearchResults()
                           }}
                         >
                           Clear
@@ -388,8 +388,8 @@ export function App(): JSX.Element {
                       query={searchQuery}
                       results={results}
                       onSelect={async (index) => {
-                        await goToSearchResult(results[index]!);
-                        setActiveDrawer(null);
+                        await goToSearchResult(results[index]!)
+                        setActiveDrawer(null)
                       }}
                     />
                   </div>
@@ -410,7 +410,7 @@ export function App(): JSX.Element {
                           onChange={async (value) => {
                             await handleThemeChange(
                               value as keyof typeof THEMES
-                            );
+                            )
                           }}
                         />
                       </label>
@@ -425,7 +425,7 @@ export function App(): JSX.Element {
                           onChange={async (value) => {
                             await handleModeChange(
                               value as "scroll" | "paginated"
-                            );
+                            )
                           }}
                         />
                       </label>
@@ -440,7 +440,7 @@ export function App(): JSX.Element {
                           onChange={async (value) => {
                             await handlePublisherStylesChange(
                               value as "enabled" | "disabled"
-                            );
+                            )
                           }}
                         />
                       </label>
@@ -455,7 +455,7 @@ export function App(): JSX.Element {
                           onChange={async (value) => {
                             await handlePublisherColorOverrideChange(
                               value as "none" | "foreground"
-                            );
+                            )
                           }}
                         />
                       </label>
@@ -470,7 +470,7 @@ export function App(): JSX.Element {
                           onChange={async (value) => {
                             await handleExperimentalRtlChange(
                               value === "enabled"
-                            );
+                            )
                           }}
                         />
                       </label>
@@ -495,7 +495,7 @@ export function App(): JSX.Element {
                             }
                           ]}
                           onChange={async (value) => {
-                            await handleFontFamilyChange(value);
+                            await handleFontFamilyChange(value)
                           }}
                         />
                       </label>
@@ -572,7 +572,7 @@ export function App(): JSX.Element {
           className="image-lightbox"
           onClick={(event) => {
             if (event.target === event.currentTarget) {
-              setLightbox(null);
+              setLightbox(null)
             }
           }}
         >
@@ -591,7 +591,7 @@ export function App(): JSX.Element {
         </div>
       ) : null}
     </main>
-  );
+  )
 }
 
 function resolveReadingTitle(
@@ -601,38 +601,38 @@ function resolveReadingTitle(
   const normalizedFileName =
     selectedFileName !== "No file selected"
       ? selectedFileName.replace(/\.epub$/i, "")
-      : "";
+      : ""
   if (normalizedFileName) {
-    return normalizedFileName;
+    return normalizedFileName
   }
 
   return metaText !== "No book loaded"
     ? (metaText.split(" · ")[0] ?? DEFAULT_READING_TITLE)
-    : DEFAULT_READING_TITLE;
+    : DEFAULT_READING_TITLE
 }
 
 function resolveDrawerTitle(panel: DrawerPanel): string {
   switch (panel) {
     case "contents":
-      return "Table of Contents";
+      return "Table of Contents"
     case "search":
-      return "Search";
+      return "Search"
     case "settings":
-      return "Reader Settings";
+      return "Reader Settings"
     case "diagnostics":
-      return "Debug";
+      return "Debug"
   }
 }
 
 function resolveDrawerKicker(panel: DrawerPanel): string {
   switch (panel) {
     case "contents":
-      return "Navigate";
+      return "Navigate"
     case "search":
-      return "Find";
+      return "Find"
     case "settings":
-      return "Tune";
+      return "Tune"
     case "diagnostics":
-      return "Debug";
+      return "Debug"
   }
 }

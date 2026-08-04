@@ -38,13 +38,19 @@ export type DomPointHitTarget = {
   rect: Rect
 }
 
-export function mapDomLocatorToViewport(input: DomLocatorViewportInput): Rect[] {
+export function mapDomLocatorToViewport(
+  input: DomLocatorViewportInput
+): Rect[] {
   const target =
-    findRenderedAnchorTarget(input.sectionElement, input.locator.anchorId ?? "") ??
-    findRenderedBlockTarget(input.sectionElement, input.locator.blockId)
+    findRenderedAnchorTarget(
+      input.sectionElement,
+      input.locator.anchorId ?? ""
+    ) ?? findRenderedBlockTarget(input.sectionElement, input.locator.blockId)
 
   if (target) {
-    return [measureElementRectWithinContainer(input.container, target, input.mode)]
+    return [
+      measureElementRectWithinContainer(input.container, target, input.mode)
+    ]
   }
 
   return [
@@ -59,15 +65,29 @@ export function mapDomLocatorToViewport(input: DomLocatorViewportInput): Rect[] 
   ]
 }
 
-export function mapDomTextRangeToViewport(input: DomTextRangeViewportInput): Rect[] {
-  const startElement = findRenderedBlockTarget(input.sectionElement, input.textRange.start.blockId)
-  const endElement = findRenderedBlockTarget(input.sectionElement, input.textRange.end.blockId)
+export function mapDomTextRangeToViewport(
+  input: DomTextRangeViewportInput
+): Rect[] {
+  const startElement = findRenderedBlockTarget(
+    input.sectionElement,
+    input.textRange.start.blockId
+  )
+  const endElement = findRenderedBlockTarget(
+    input.sectionElement,
+    input.textRange.end.blockId
+  )
   if (!startElement || !endElement) {
     return []
   }
 
-  const startPosition = resolveTextNodePosition(startElement, input.textRange.start.inlineOffset)
-  const endPosition = resolveTextNodePosition(endElement, input.textRange.end.inlineOffset)
+  const startPosition = resolveTextNodePosition(
+    startElement,
+    input.textRange.start.inlineOffset
+  )
+  const endPosition = resolveTextNodePosition(
+    endElement,
+    input.textRange.end.inlineOffset
+  )
   if (!startPosition || !endPosition) {
     return []
   }
@@ -102,15 +122,17 @@ export function mapDomPointToLocator(input: DomPointLocatorInput): Locator {
   const sectionTopInViewport = sectionRect.top - containerRect.top
   const clickY = input.point.y - sectionTopInViewport
   const progress = clampProgress(clickY / Math.max(1, sectionHeight))
-  const target = findDomTargetContainingPoint({
-    container: input.container,
-    sectionElement: input.sectionElement,
-    point: input.point
-  }) ?? findDomBlockTargetContainingPoint({
-    container: input.container,
-    sectionElement: input.sectionElement,
-    point: input.point
-  })
+  const target =
+    findDomTargetContainingPoint({
+      container: input.container,
+      sectionElement: input.sectionElement,
+      point: input.point
+    }) ??
+    findDomBlockTargetContainingPoint({
+      container: input.container,
+      sectionElement: input.sectionElement,
+      point: input.point
+    })
 
   if (!target) {
     return normalizeLocator({
@@ -179,7 +201,11 @@ export function findDomHitTargetAtPoint(input: {
   return matched
     ? {
         target: matched.target,
-        rect: measureElementRectWithinContainer(input.container, matched.target, "paginated")
+        rect: measureElementRectWithinContainer(
+          input.container,
+          matched.target,
+          "paginated"
+        )
       }
     : null
 }
@@ -220,7 +246,9 @@ function findRenderedBlockTarget(
   const selectorValue = escapeAttributeSelectorValue(normalizedBlockId)
   return (
     sectionElement.querySelector<HTMLElement>(`[id="${selectorValue}"]`) ??
-    sectionElement.querySelector<HTMLElement>(`[data-reader-block-id="${selectorValue}"]`) ??
+    sectionElement.querySelector<HTMLElement>(
+      `[data-reader-block-id="${selectorValue}"]`
+    ) ??
     null
   )
 }
@@ -363,7 +391,9 @@ function findSmallestElementContainingPoint(input: {
 }
 
 function collectDomGeometryTargets(sectionRoot: HTMLElement): HTMLElement[] {
-  const targets = sectionRoot.querySelectorAll<HTMLElement>("[id], [data-reader-block-id], a[name]")
+  const targets = sectionRoot.querySelectorAll<HTMLElement>(
+    "[id], [data-reader-block-id], a[name]"
+  )
   const elements = Array.from(targets)
 
   if (sectionRoot.id || sectionRoot.getAttribute("name")) {
@@ -375,7 +405,7 @@ function collectDomGeometryTargets(sectionRoot: HTMLElement): HTMLElement[] {
 
 function collectDomHitTargets(sectionRoot: HTMLElement): HTMLElement[] {
   const targets = sectionRoot.querySelectorAll<HTMLElement>(
-    'a[href], img, image, [id], [data-reader-block-id], [name]'
+    "a[href], img, image, [id], [data-reader-block-id], [name]"
   )
   const elements = Array.from(targets)
 
@@ -456,9 +486,12 @@ function resolveBlockIdForElement(
   element: HTMLElement,
   sectionRoot: HTMLElement
 ): string | undefined {
-  const identifiedTarget = element.closest<HTMLElement>("[id], [data-reader-block-id]")
+  const identifiedTarget = element.closest<HTMLElement>(
+    "[id], [data-reader-block-id]"
+  )
   const blockId =
-    identifiedTarget?.dataset.readerBlockId?.trim() || identifiedTarget?.id?.trim()
+    identifiedTarget?.dataset.readerBlockId?.trim() ||
+    identifiedTarget?.id?.trim()
   if (blockId) {
     return blockId
   }
@@ -484,8 +517,12 @@ function resolveNearbyAnchorIdForElement(
   section: SectionDocument,
   element: HTMLElement
 ): string | undefined {
-  const directDescendantAnchor = element.querySelector<HTMLElement>("[id], [name]")
-  const directDescendantAnchorId = resolveKnownAnchorId(section, directDescendantAnchor)
+  const directDescendantAnchor =
+    element.querySelector<HTMLElement>("[id], [name]")
+  const directDescendantAnchorId = resolveKnownAnchorId(
+    section,
+    directDescendantAnchor
+  )
   if (directDescendantAnchorId) {
     return directDescendantAnchorId
   }

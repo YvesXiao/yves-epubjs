@@ -47,12 +47,16 @@ export function extractBlockText(block: BlockNode): string {
     case "image":
       return block.alt ?? ""
     case "list":
-      return block.items.flatMap((item) => item.blocks.map(extractBlockText)).join(" ")
+      return block.items
+        .flatMap((item) => item.blocks.map(extractBlockText))
+        .join(" ")
     case "table":
       return [
         block.caption?.map(extractBlockText).join(" ") ?? "",
         block.rows
-          .flatMap((row) => row.cells.flatMap((cell) => cell.blocks.map(extractBlockText)))
+          .flatMap((row) =>
+            row.cells.flatMap((cell) => cell.blocks.map(extractBlockText))
+          )
           .join(" ")
       ]
         .filter(Boolean)
@@ -61,7 +65,9 @@ export function extractBlockText(block: BlockNode): string {
       return block.items
         .flatMap((item) => [
           ...item.term.map(extractBlockText),
-          ...item.descriptions.flatMap((description) => description.map(extractBlockText))
+          ...item.descriptions.flatMap((description) =>
+            description.map(extractBlockText)
+          )
         ])
         .join(" ")
     case "thematic-break":

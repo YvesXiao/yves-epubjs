@@ -1,5 +1,5 @@
-import { XMLParser } from "fast-xml-parser";
-import { resolveResourcePath } from "../container/resource-path";
+import { XMLParser } from "fast-xml-parser"
+import { resolveResourcePath } from "../container/resource-path"
 import type {
   BookMetadata,
   FixedLayoutViewport,
@@ -8,118 +8,125 @@ import type {
   RenditionLayout,
   RenditionSpread,
   SpineItem
-} from "../model/types";
+} from "../model/types"
 
-type XmlNode = Record<string, unknown>;
+type XmlNode = Record<string, unknown>
 
 type OpfDocument = {
   package?: {
-    metadata?: XmlNode;
+    metadata?: XmlNode
     manifest?: {
-      item?: XmlNode | XmlNode[];
-    };
+      item?: XmlNode | XmlNode[]
+    }
     spine?: {
-      itemref?: XmlNode | XmlNode[];
-    };
+      itemref?: XmlNode | XmlNode[]
+    }
     guide?: {
-      reference?: XmlNode | XmlNode[];
-    };
-  };
-};
+      reference?: XmlNode | XmlNode[]
+    }
+  }
+}
 
 export type ParsedOpf = {
-  metadata: BookMetadata;
-  manifest: ManifestItem[];
-  spine: SpineItem[];
-};
+  metadata: BookMetadata
+  manifest: ManifestItem[]
+  spine: SpineItem[]
+}
 
 const xmlParser = new XMLParser({
   attributeNamePrefix: "@_",
   ignoreAttributes: false
-});
+})
 
 function asArray<T>(value: T | T[] | undefined): T[] {
   if (!value) {
-    return [];
+    return []
   }
 
-  return Array.isArray(value) ? value : [value];
+  return Array.isArray(value) ? value : [value]
 }
 
 function readTextValue(value: unknown): string | undefined {
   if (typeof value === "string") {
-    return value.trim() || undefined;
+    return value.trim() || undefined
   }
 
   if (typeof value === "number") {
-    return String(value);
+    return String(value)
   }
 
   if (value && typeof value === "object" && "#text" in value) {
-    const text = (value as { "#text"?: unknown })["#text"];
-    return typeof text === "string" && text.trim() ? text.trim() : undefined;
+    const text = (value as { "#text"?: unknown })["#text"]
+    return typeof text === "string" && text.trim() ? text.trim() : undefined
   }
 
-  return undefined;
+  return undefined
 }
 
-function readFirstText(metadata: XmlNode | undefined, keys: string[]): string | undefined {
+function readFirstText(
+  metadata: XmlNode | undefined,
+  keys: string[]
+): string | undefined {
   if (!metadata) {
-    return undefined;
+    return undefined
   }
 
   for (const key of keys) {
-    const value = metadata[key];
+    const value = metadata[key]
 
     if (Array.isArray(value)) {
       for (const entry of value) {
-        const text = readTextValue(entry);
+        const text = readTextValue(entry)
         if (text) {
-          return text;
+          return text
         }
       }
-      continue;
+      continue
     }
 
-    const text = readTextValue(value);
+    const text = readTextValue(value)
     if (text) {
-      return text;
+      return text
     }
   }
 
-  return undefined;
+  return undefined
 }
 
 export function parseOpfDocument(
   xml: string,
   packageDocumentPath: string
 ): ParsedOpf {
-  const parsed = xmlParser.parse(xml) as OpfDocument;
-  const packageNode = parsed.package;
-  const metadataNode = packageNode?.metadata;
-  const manifestNodes = asArray(packageNode?.manifest?.item);
-  const spineNodes = asArray(packageNode?.spine?.itemref);
+  const parsed = xmlParser.parse(xml) as OpfDocument
+  const packageNode = parsed.package
+  const metadataNode = packageNode?.metadata
+  const manifestNodes = asArray(packageNode?.manifest?.item)
+  const spineNodes = asArray(packageNode?.spine?.itemref)
   const guideNodes = asArray(packageNode?.guide?.reference)
 
-  const title = readFirstText(metadataNode, ["dc:title", "title"]) ?? "Untitled EPUB";
-  const metadata: BookMetadata = { title };
+  const title =
+    readFirstText(metadataNode, ["dc:title", "title"]) ?? "Untitled EPUB"
+  const metadata: BookMetadata = { title }
 
-  const language = readFirstText(metadataNode, ["dc:language", "language"]);
-  const identifier = readFirstText(metadataNode, ["dc:identifier", "identifier"]);
-  const creator = readFirstText(metadataNode, ["dc:creator", "creator"]);
-  const publisher = readFirstText(metadataNode, ["dc:publisher", "publisher"]);
+  const language = readFirstText(metadataNode, ["dc:language", "language"])
+  const identifier = readFirstText(metadataNode, [
+    "dc:identifier",
+    "identifier"
+  ])
+  const creator = readFirstText(metadataNode, ["dc:creator", "creator"])
+  const publisher = readFirstText(metadataNode, ["dc:publisher", "publisher"])
 
   if (language) {
-    metadata.language = language;
+    metadata.language = language
   }
   if (identifier) {
-    metadata.identifier = identifier;
+    metadata.identifier = identifier
   }
   if (creator) {
-    metadata.creator = creator;
+    metadata.creator = creator
   }
   if (publisher) {
-    metadata.publisher = publisher;
+    metadata.publisher = publisher
   }
   const renditionLayout = resolveMetadataRenditionLayout(metadataNode)
   const renditionViewport = resolveMetadataRenditionViewport(metadataNode)
@@ -135,32 +142,38 @@ export function parseOpfDocument(
   }
 
   const manifest = manifestNodes.flatMap((item) => {
-    const id = typeof item["@_id"] === "string" ? item["@_id"] : undefined;
-    const href = typeof item["@_href"] === "string" ? item["@_href"] : undefined;
+    const id = typeof item["@_id"] === "string" ? item["@_id"] : undefined
+    const href = typeof item["@_href"] === "string" ? item["@_href"] : undefined
     const mediaType =
-      typeof item["@_media-type"] === "string" ? item["@_media-type"] : undefined;
+      typeof item["@_media-type"] === "string"
+        ? item["@_media-type"]
+        : undefined
 
     if (!id || !href || !mediaType) {
-      return [];
+      return []
     }
 
     const manifestItem: ManifestItem = {
       id,
       href: resolveResourcePath(packageDocumentPath, href),
       mediaType
-    };
-
-    if (typeof item["@_properties"] === "string" && item["@_properties"].trim()) {
-      manifestItem.properties = item["@_properties"].trim();
     }
 
-    return [manifestItem];
-  });
+    if (
+      typeof item["@_properties"] === "string" &&
+      item["@_properties"].trim()
+    ) {
+      manifestItem.properties = item["@_properties"].trim()
+    }
 
-  const manifestById = new Map(manifest.map((item) => [item.id, item]));
+    return [manifestItem]
+  })
+
+  const manifestById = new Map(manifest.map((item) => [item.id, item]))
   const coverImageHref =
-    manifest.find((item) => item.properties?.split(/\s+/).includes("cover-image"))?.href ??
-    resolveLegacyCoverImageHref(metadataNode, manifestById)
+    manifest.find((item) =>
+      item.properties?.split(/\s+/).includes("cover-image")
+    )?.href ?? resolveLegacyCoverImageHref(metadataNode, manifestById)
 
   if (coverImageHref) {
     metadata.coverImageHref = coverImageHref
@@ -171,15 +184,16 @@ export function parseOpfDocument(
   }
 
   const spine = spineNodes.flatMap((item) => {
-    const idref = typeof item["@_idref"] === "string" ? item["@_idref"] : undefined;
+    const idref =
+      typeof item["@_idref"] === "string" ? item["@_idref"] : undefined
 
     if (!idref) {
-      return [];
+      return []
     }
 
-    const manifestItem = manifestById.get(idref);
+    const manifestItem = manifestById.get(idref)
     if (!manifestItem) {
-      return [];
+      return []
     }
 
     const spineItem: SpineItem = {
@@ -187,28 +201,35 @@ export function parseOpfDocument(
       href: manifestItem.href,
       linear: item["@_linear"] !== "no",
       mediaType: manifestItem.mediaType
-    };
-
-    if (typeof item["@_properties"] === "string" && item["@_properties"].trim()) {
-      spineItem.properties = item["@_properties"].trim();
     }
-    const spineRenditionLayout = resolveSpineItemRenditionLayout(spineItem.properties)
+
+    if (
+      typeof item["@_properties"] === "string" &&
+      item["@_properties"].trim()
+    ) {
+      spineItem.properties = item["@_properties"].trim()
+    }
+    const spineRenditionLayout = resolveSpineItemRenditionLayout(
+      spineItem.properties
+    )
     if (spineRenditionLayout) {
       spineItem.renditionLayout = spineRenditionLayout
     }
-    const pageSpreadPlacement = resolveSpineItemPageSpreadPlacement(spineItem.properties)
+    const pageSpreadPlacement = resolveSpineItemPageSpreadPlacement(
+      spineItem.properties
+    )
     if (pageSpreadPlacement) {
       spineItem.pageSpreadPlacement = pageSpreadPlacement
     }
 
-    return [spineItem];
-  });
+    return [spineItem]
+  })
 
   return {
     metadata,
     manifest,
     spine
-  };
+  }
 }
 
 function resolveGuideStartHref(
@@ -216,12 +237,16 @@ function resolveGuideStartHref(
   packageDocumentPath: string
 ): string | undefined {
   for (const reference of guideNodes) {
-    const type = typeof reference["@_type"] === "string" ? reference["@_type"].trim().toLowerCase() : ""
+    const type =
+      typeof reference["@_type"] === "string"
+        ? reference["@_type"].trim().toLowerCase()
+        : ""
     if (type !== "text") {
       continue
     }
 
-    const href = typeof reference["@_href"] === "string" ? reference["@_href"].trim() : ""
+    const href =
+      typeof reference["@_href"] === "string" ? reference["@_href"].trim() : ""
     if (!href) {
       continue
     }
@@ -235,20 +260,27 @@ function resolveGuideStartHref(
 function resolveMetadataRenditionLayout(
   metadataNode: XmlNode | undefined
 ): RenditionLayout | undefined {
-  return normalizeRenditionLayout(resolveMetadataMetaPropertyValue(metadataNode, "rendition:layout"))
+  return normalizeRenditionLayout(
+    resolveMetadataMetaPropertyValue(metadataNode, "rendition:layout")
+  )
 }
 
 function resolveMetadataRenditionViewport(
   metadataNode: XmlNode | undefined
 ): FixedLayoutViewport | undefined {
-  const content = resolveMetadataMetaPropertyValue(metadataNode, "rendition:viewport")
+  const content = resolveMetadataMetaPropertyValue(
+    metadataNode,
+    "rendition:viewport"
+  )
   return content ? parseViewportMetaContent(content) : undefined
 }
 
 function resolveMetadataRenditionSpread(
   metadataNode: XmlNode | undefined
 ): RenditionSpread | undefined {
-  return normalizeRenditionSpread(resolveMetadataMetaPropertyValue(metadataNode, "rendition:spread"))
+  return normalizeRenditionSpread(
+    resolveMetadataMetaPropertyValue(metadataNode, "rendition:spread")
+  )
 }
 
 function resolveMetadataMetaPropertyValue(
@@ -267,13 +299,17 @@ function resolveMetadataMetaPropertyValue(
 
     const metaEntry = entry as XmlNode
     const property =
-      typeof metaEntry["@_property"] === "string" ? metaEntry["@_property"].trim() : ""
+      typeof metaEntry["@_property"] === "string"
+        ? metaEntry["@_property"].trim()
+        : ""
     if (property !== propertyName) {
       continue
     }
 
     const content =
-      typeof metaEntry["@_content"] === "string" ? metaEntry["@_content"].trim() : ""
+      typeof metaEntry["@_content"] === "string"
+        ? metaEntry["@_content"].trim()
+        : ""
     if (content) {
       return content
     }
@@ -295,10 +331,16 @@ function resolveSpineItemRenditionLayout(
     .split(/\s+/)
     .map((token) => token.trim().toLowerCase())
     .filter(Boolean)
-  if (tokens.includes("rendition:layout-pre-paginated") || tokens.includes("layout-pre-paginated")) {
+  if (
+    tokens.includes("rendition:layout-pre-paginated") ||
+    tokens.includes("layout-pre-paginated")
+  ) {
     return "pre-paginated"
   }
-  if (tokens.includes("rendition:layout-reflowable") || tokens.includes("layout-reflowable")) {
+  if (
+    tokens.includes("rendition:layout-reflowable") ||
+    tokens.includes("layout-reflowable")
+  ) {
     return "reflowable"
   }
 
@@ -329,7 +371,9 @@ function resolveSpineItemPageSpreadPlacement(
   return undefined
 }
 
-function normalizeRenditionLayout(value: string | undefined): RenditionLayout | undefined {
+function normalizeRenditionLayout(
+  value: string | undefined
+): RenditionLayout | undefined {
   if (!value) {
     return undefined
   }
@@ -342,7 +386,9 @@ function normalizeRenditionLayout(value: string | undefined): RenditionLayout | 
   return undefined
 }
 
-function normalizeRenditionSpread(value: string | undefined): RenditionSpread | undefined {
+function normalizeRenditionSpread(
+  value: string | undefined
+): RenditionSpread | undefined {
   if (!value) {
     return undefined
   }
@@ -361,13 +407,20 @@ function normalizeRenditionSpread(value: string | undefined): RenditionSpread | 
   return undefined
 }
 
-function parseViewportMetaContent(content: string): FixedLayoutViewport | undefined {
+function parseViewportMetaContent(
+  content: string
+): FixedLayoutViewport | undefined {
   const widthMatch = content.match(/(?:^|[\s,;])width\s*=\s*(\d+(?:\.\d+)?)/i)
   const heightMatch = content.match(/(?:^|[\s,;])height\s*=\s*(\d+(?:\.\d+)?)/i)
   const width = widthMatch ? Number(widthMatch[1]) : NaN
   const height = heightMatch ? Number(heightMatch[1]) : NaN
 
-  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
     return undefined
   }
 
@@ -394,9 +447,13 @@ function resolveLegacyCoverImageHref(
     const metaEntry = entry as XmlNode
 
     const name =
-      typeof metaEntry["@_name"] === "string" ? metaEntry["@_name"].trim().toLowerCase() : ""
+      typeof metaEntry["@_name"] === "string"
+        ? metaEntry["@_name"].trim().toLowerCase()
+        : ""
     const content =
-      typeof metaEntry["@_content"] === "string" ? metaEntry["@_content"].trim() : ""
+      typeof metaEntry["@_content"] === "string"
+        ? metaEntry["@_content"].trim()
+        : ""
     if (name !== "cover" || !content) {
       continue
     }

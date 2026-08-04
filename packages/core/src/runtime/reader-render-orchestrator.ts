@@ -1,5 +1,9 @@
 import type { LayoutResult } from "../layout/layout-engine"
-import type { ChapterRenderDecision, Locator, SectionDocument } from "../model/types"
+import type {
+  ChapterRenderDecision,
+  Locator,
+  SectionDocument
+} from "../model/types"
 import type { ReaderPage } from "./paginated-render-plan"
 import { resolvePaginatedPageRenderOutcome } from "./paginated-render-flow"
 import type { RenderBehavior } from "./render-flow-types"
@@ -14,11 +18,11 @@ type ReaderRenderOrchestratorDependencies = {
   getSectionForRender: (section: SectionDocument) => SectionDocument
   captureScrollAnchor: () => ScrollAnchor | null
   setLastPresentationRenderSignature: (signature: string | null) => void
-  resolvePresentationRenderSignature: (section: SectionDocument) => string | null
+  resolvePresentationRenderSignature: (
+    section: SectionDocument
+  ) => string | null
   resolveChapterRenderDecision: (sectionIndex: number) => ChapterRenderDecision
-  setLastChapterRenderDecision: (
-    decision: ChapterRenderDecision | null
-  ) => void
+  setLastChapterRenderDecision: (decision: ChapterRenderDecision | null) => void
   applyContainerTheme: () => void
   getPublisherStyles: () => string
   syncFixedLayoutContainerState: (value: unknown | null) => void
@@ -32,10 +36,7 @@ type ReaderRenderOrchestratorDependencies = {
   setMeasuredSize: (size: { width: number; height: number }) => void
   ensurePages: (layout?: LayoutResult) => void
   resolveRenderedPage: (sectionId: string) => ReaderPage | null
-  renderPaginatedDomSpread: (
-    page: ReaderPage,
-    renderVersion: number
-  ) => void
+  renderPaginatedDomSpread: (page: ReaderPage, renderVersion: number) => void
   renderDomSection: (section: SectionDocument, renderVersion: number) => void
   syncMeasuredPaginatedDomPages: (section: SectionDocument) => ReaderPage | null
   setCurrentPageNumber: (pageNumber: number) => void
@@ -81,7 +82,10 @@ export class ReaderRenderOrchestrator {
       this.dependencies.getMode() === "scroll" && renderBehavior === "preserve"
         ? this.dependencies.captureScrollAnchor()
         : null
-    if (this.dependencies.getMode() === "scroll" && renderBehavior === "preserve") {
+    if (
+      this.dependencies.getMode() === "scroll" &&
+      renderBehavior === "preserve"
+    ) {
       const anchoredSectionIndex = preservedScrollAnchor?.sectionId
         ? book.sections.findIndex(
             (candidate) => candidate.id === preservedScrollAnchor.sectionId
@@ -92,7 +96,8 @@ export class ReaderRenderOrchestrator {
       }
     }
 
-    const sourceSection = book.sections[this.dependencies.getCurrentSectionIndex()]
+    const sourceSection =
+      book.sections[this.dependencies.getCurrentSectionIndex()]
     const section = sourceSection
       ? this.dependencies.getSectionForRender(sourceSection)
       : null
@@ -103,9 +108,10 @@ export class ReaderRenderOrchestrator {
     this.dependencies.setLastPresentationRenderSignature(
       this.dependencies.resolvePresentationRenderSignature(section)
     )
-    const chapterRenderDecision = this.dependencies.resolveChapterRenderDecision(
-      this.dependencies.getCurrentSectionIndex()
-    )
+    const chapterRenderDecision =
+      this.dependencies.resolveChapterRenderDecision(
+        this.dependencies.getCurrentSectionIndex()
+      )
     this.dependencies.setLastChapterRenderDecision(chapterRenderDecision)
 
     this.dependencies.applyContainerTheme()
@@ -122,7 +128,8 @@ export class ReaderRenderOrchestrator {
     const renderVersion = this.dependencies.nextRenderVersion()
     try {
       if (this.dependencies.getMode() === "paginated") {
-        const paginationMeasurement = this.dependencies.getPaginationMeasurement()
+        const paginationMeasurement =
+          this.dependencies.getPaginationMeasurement()
         const layout =
           section.renditionLayout === "pre-paginated"
             ? undefined
@@ -138,7 +145,10 @@ export class ReaderRenderOrchestrator {
         )
         if (chapterRenderDecision.mode === "dom") {
           if (currentPage) {
-            this.dependencies.renderPaginatedDomSpread(currentPage, renderVersion)
+            this.dependencies.renderPaginatedDomSpread(
+              currentPage,
+              renderVersion
+            )
           } else {
             this.dependencies.renderDomSection(section, renderVersion)
           }
@@ -165,7 +175,11 @@ export class ReaderRenderOrchestrator {
           )
           return
         }
-        this.dependencies.renderPaginatedCanvas(section, currentPage, renderVersion)
+        this.dependencies.renderPaginatedCanvas(
+          section,
+          currentPage,
+          renderVersion
+        )
         didRender = true
         if (currentPage) {
           const outcome = resolvePaginatedPageRenderOutcome({
@@ -266,7 +280,8 @@ export class ReaderRenderOrchestrator {
             this.dependencies.updateLocator({
               ...nextLocator,
               spineIndex: this.dependencies.getCurrentSectionIndex(),
-              progressInSection: this.dependencies.getProgressForCurrentLocator()
+              progressInSection:
+                this.dependencies.getProgressForCurrentLocator()
             })
           }
         }

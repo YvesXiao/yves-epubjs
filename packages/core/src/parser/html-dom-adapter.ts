@@ -48,11 +48,15 @@ export function isHtmlTextNode(node: HtmlDomNode): node is HtmlDomTextNode {
   return isText(node)
 }
 
-export function getHtmlNodeChildren(node: HtmlDomDocument | HtmlDomElement): HtmlDomChildNode[] {
+export function getHtmlNodeChildren(
+  node: HtmlDomDocument | HtmlDomElement
+): HtmlDomChildNode[] {
   return hasChildren(node) ? [...node.children] : []
 }
 
-export function getHtmlChildElements(node: HtmlDomDocument | HtmlDomElement): HtmlDomElement[] {
+export function getHtmlChildElements(
+  node: HtmlDomDocument | HtmlDomElement
+): HtmlDomElement[] {
   return getHtmlNodeChildren(node).filter(isHtmlElementNode)
 }
 

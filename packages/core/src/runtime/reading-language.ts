@@ -26,14 +26,18 @@ export function resolveReadingLanguageContext(input: {
 }): ReadingLanguageContext {
   const resolvedLanguage = input.section.lang ?? input.book.metadata.language
   const contentDirection =
-    input.section.dir ?? inferReadingDirectionFromLanguage(resolvedLanguage) ?? "ltr"
+    input.section.dir ??
+    inferReadingDirectionFromLanguage(resolvedLanguage) ??
+    "ltr"
   const rtlSuggested = contentDirection === "rtl"
 
   return {
     spineIndex: input.spineIndex,
     sectionId: input.section.id,
     sectionHref: input.section.href,
-    ...(input.book.metadata.language ? { bookLanguage: input.book.metadata.language } : {}),
+    ...(input.book.metadata.language
+      ? { bookLanguage: input.book.metadata.language }
+      : {}),
     ...(input.section.lang ? { sectionLanguage: input.section.lang } : {}),
     ...(resolvedLanguage ? { resolvedLanguage } : {}),
     contentDirection,

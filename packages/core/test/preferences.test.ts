@@ -1,10 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest"
 import {
   deserializeReaderPreferences,
   mergeReaderPreferences,
   resolveReaderSettings,
   serializeReaderPreferences
-} from "../src/runtime/preferences";
+} from "../src/runtime/preferences"
 
 describe("reader preferences helpers", () => {
   it("merges nested preferences and drops invalid values", () => {
@@ -36,7 +36,7 @@ describe("reader preferences helpers", () => {
           wordSpacing: 2
         }
       }
-    );
+    )
 
     expect(preferences).toEqual({
       mode: "paginated",
@@ -56,8 +56,8 @@ describe("reader preferences helpers", () => {
         letterSpacing: 0.4,
         wordSpacing: 2
       }
-    });
-  });
+    })
+  })
 
   it("serializes, deserializes, and resolves settings against defaults", () => {
     const serialized = serializeReaderPreferences({
@@ -76,9 +76,9 @@ describe("reader preferences helpers", () => {
         letterSpacing: 0.5,
         wordSpacing: 3
       }
-    });
+    })
 
-    const restored = deserializeReaderPreferences(serialized);
+    const restored = deserializeReaderPreferences(serialized)
     expect(restored).toEqual({
       mode: "paginated",
       publisherStyles: "disabled",
@@ -95,7 +95,7 @@ describe("reader preferences helpers", () => {
         letterSpacing: 0.5,
         wordSpacing: 3
       }
-    });
+    })
 
     expect(resolveReaderSettings(restored)).toEqual({
       mode: "paginated",
@@ -115,7 +115,7 @@ describe("reader preferences helpers", () => {
         letterSpacing: 0.5,
         wordSpacing: 3
       }
-    });
-    expect(deserializeReaderPreferences("{bad json")).toBeNull();
-  });
-});
+    })
+    expect(deserializeReaderPreferences("{bad json")).toBeNull()
+  })
+})

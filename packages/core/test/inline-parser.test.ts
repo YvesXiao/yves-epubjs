@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { parseInlineContent } from "../src/parser/inline-parser";
+import { describe, expect, it } from "vitest"
+import { parseInlineContent } from "../src/parser/inline-parser"
 
 describe("parseInlineContent", () => {
   it("parses semantic spans, emphasis, links, code, images, and line breaks", () => {
@@ -22,7 +22,7 @@ describe("parseInlineContent", () => {
         "@_src": "../images/inline.png",
         "@_alt": "Inline"
       }
-    };
+    }
 
     expect(parseInlineContent(source, "OPS/text/chapter.xhtml")).toEqual([
       { kind: "text", text: "Alice " },
@@ -51,8 +51,8 @@ describe("parseInlineContent", () => {
         src: "OPS/images/inline.png",
         alt: "Inline"
       }
-    ]);
-  });
+    ])
+  })
 
   it("downgrades unknown inline tags into span nodes while preserving children", () => {
     expect(
@@ -69,6 +69,6 @@ describe("parseInlineContent", () => {
         kind: "span",
         children: [{ kind: "text", text: "Wrapped" }]
       }
-    ]);
-  });
-});
+    ])
+  })
+})

@@ -55,7 +55,9 @@ export function collectSelectableBlocksInReadingOrder(
       case "figure":
         collected.push(...collectSelectableBlocksInReadingOrder(block.blocks))
         if (block.caption) {
-          collected.push(...collectSelectableBlocksInReadingOrder(block.caption))
+          collected.push(
+            ...collectSelectableBlocksInReadingOrder(block.caption)
+          )
         }
         break
       case "list":
@@ -65,11 +67,15 @@ export function collectSelectableBlocksInReadingOrder(
         break
       case "table":
         if (block.caption) {
-          collected.push(...collectSelectableBlocksInReadingOrder(block.caption))
+          collected.push(
+            ...collectSelectableBlocksInReadingOrder(block.caption)
+          )
         }
         for (const row of block.rows) {
           for (const cell of row.cells) {
-            collected.push(...collectSelectableBlocksInReadingOrder(cell.blocks))
+            collected.push(
+              ...collectSelectableBlocksInReadingOrder(cell.blocks)
+            )
           }
         }
         break

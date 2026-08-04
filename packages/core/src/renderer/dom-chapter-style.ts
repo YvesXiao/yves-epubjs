@@ -2,27 +2,27 @@ import type {
   PublisherColorOverride,
   Theme,
   TypographyOptions
-} from "../model/types";
+} from "../model/types"
 import {
   buildReadingStyleCssVariables,
   buildReadingStyleProfile
-} from "./reading-style-profile";
+} from "./reading-style-profile"
 
 export function buildDomChapterNormalizationCss(input: {
-  theme: Theme;
-  publisherColorOverride?: PublisherColorOverride;
-  typography: TypographyOptions;
-  fontFamily: string;
-  renditionLayout?: "reflowable" | "pre-paginated";
-  presentationRole?: "cover" | "image-page";
+  theme: Theme
+  publisherColorOverride?: PublisherColorOverride
+  typography: TypographyOptions
+  fontFamily: string
+  renditionLayout?: "reflowable" | "pre-paginated"
+  presentationRole?: "cover" | "image-page"
 }): string {
   const profile = buildReadingStyleProfile({
     theme: input.theme,
     typography: input.typography
-  });
-  const variables = buildReadingStyleCssVariables(profile);
+  })
+  const variables = buildReadingStyleCssVariables(profile)
   const overridePublisherForeground =
-    input.publisherColorOverride === "foreground";
+    input.publisherColorOverride === "foreground"
 
   return [
     `.epub-dom-section {`,
@@ -244,5 +244,5 @@ export function buildDomChapterNormalizationCss(input: {
     `  background: transparent;`,
     `  padding: 0;`,
     `}`
-  ].join("\n");
+  ].join("\n")
 }

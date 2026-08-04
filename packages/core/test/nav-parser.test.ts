@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { parseNavDocument } from "../src/parser/nav-parser";
+import { describe, expect, it } from "vitest"
+import { parseNavDocument } from "../src/parser/nav-parser"
 
 describe("parseNavDocument", () => {
   it("parses nested toc items from an EPUB 3 nav document", () => {
@@ -21,7 +21,7 @@ describe("parseNavDocument", () => {
             </ol>
           </nav>
         </body>
-      </html>`;
+      </html>`
 
     expect(parseNavDocument(xml, "OPS/nav.xhtml")).toEqual([
       {
@@ -49,8 +49,8 @@ describe("parseNavDocument", () => {
           }
         ]
       }
-    ]);
-  });
+    ])
+  })
 
   it("prefers the toc nav when multiple nav sections exist", () => {
     const xml = `<?xml version="1.0"?>
@@ -63,7 +63,7 @@ describe("parseNavDocument", () => {
             <ol><li><a href="text/start.xhtml">Start</a></li></ol>
           </nav>
         </body>
-      </html>`;
+      </html>`
 
     expect(parseNavDocument(xml, "OPS/nav.xhtml")).toEqual([
       {
@@ -72,12 +72,12 @@ describe("parseNavDocument", () => {
         href: "OPS/text/start.xhtml",
         children: []
       }
-    ]);
-  });
+    ])
+  })
 
   it("returns an empty toc when no nav element is present", () => {
-    const xml = `<?xml version="1.0"?><html><body><section>No nav</section></body></html>`;
+    const xml = `<?xml version="1.0"?><html><body><section>No nav</section></body></html>`
 
-    expect(parseNavDocument(xml, "OPS/nav.xhtml")).toEqual([]);
-  });
-});
+    expect(parseNavDocument(xml, "OPS/nav.xhtml")).toEqual([])
+  })
+})

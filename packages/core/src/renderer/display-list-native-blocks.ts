@@ -5,24 +5,24 @@ import type {
   SectionDocument,
   TextAlign,
   Theme
-} from "../model/types";
-import type { ReadingStyleProfile } from "./reading-style-profile";
+} from "../model/types"
+import type { ReadingStyleProfile } from "./reading-style-profile"
 
 export type NativeBlockRenderStyle = {
-  color: string;
-  backgroundColor?: string;
-  textAlign: TextAlign;
-  paddingTop: number;
-  paddingBottom: number;
-  paddingLeft: number;
-  paddingRight: number;
-};
+  color: string
+  backgroundColor?: string
+  textAlign: TextAlign
+  paddingTop: number
+  paddingBottom: number
+  paddingLeft: number
+  paddingRight: number
+}
 
 export function resolveNativeBlockRenderStyle(input: {
-  block: BlockNode;
-  theme: Theme;
-  styleProfile: ReadingStyleProfile;
-  publisherColorOverride?: PublisherColorOverride;
+  block: BlockNode
+  theme: Theme
+  styleProfile: ReadingStyleProfile
+  publisherColorOverride?: PublisherColorOverride
 }): NativeBlockRenderStyle {
   return {
     color:
@@ -39,7 +39,7 @@ export function resolveNativeBlockRenderStyle(input: {
     paddingBottom: input.block.style?.paddingBottom ?? 0,
     paddingLeft: input.block.style?.paddingLeft ?? 0,
     paddingRight: input.block.style?.paddingRight ?? 0
-  };
+  }
 }
 
 export function insetNativeBlockRect(
@@ -51,7 +51,7 @@ export function insetNativeBlockRect(
     y: rect.y + style.paddingTop,
     width: Math.max(40, rect.width - style.paddingLeft - style.paddingRight),
     height: Math.max(0, rect.height - style.paddingTop - style.paddingBottom)
-  };
+  }
 }
 
 export function isCoverImageBlock(
@@ -62,5 +62,5 @@ export function isCoverImageBlock(
     section.presentationRole === "cover" &&
     section.blocks.length === 1 &&
     block.kind === "image"
-  );
+  )
 }

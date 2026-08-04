@@ -6,96 +6,96 @@ import type {
   ReaderSpreadMode,
   Theme,
   TypographyOptions
-} from "../model/types";
-import type { ReaderViewSessionState } from "./reader-session-state";
+} from "../model/types"
+import type { ReaderViewSessionState } from "./reader-session-state"
 
 export class ReaderViewSession {
   constructor(private readonly state: ReaderViewSessionState) {}
 
   get preferences(): ReaderPreferences {
-    return this.state.preferences;
+    return this.state.preferences
   }
 
   set preferences(value: ReaderPreferences) {
-    this.state.preferences = value;
+    this.state.preferences = value
   }
 
   get mode(): "scroll" | "paginated" {
-    return this.state.mode;
+    return this.state.mode
   }
 
   set mode(value: "scroll" | "paginated") {
-    this.state.mode = value;
+    this.state.mode = value
   }
 
   get publisherStyles(): PublisherStylesMode {
-    return this.state.publisherStyles;
+    return this.state.publisherStyles
   }
 
   set publisherStyles(value: PublisherStylesMode) {
-    this.state.publisherStyles = value;
+    this.state.publisherStyles = value
   }
 
   get publisherColorOverride(): PublisherColorOverride {
-    return this.state.publisherColorOverride;
+    return this.state.publisherColorOverride
   }
 
   set publisherColorOverride(value: PublisherColorOverride) {
-    this.state.publisherColorOverride = value;
+    this.state.publisherColorOverride = value
   }
 
   get experimentalRtl(): boolean {
-    return this.state.experimentalRtl;
+    return this.state.experimentalRtl
   }
 
   set experimentalRtl(value: boolean) {
-    this.state.experimentalRtl = value;
+    this.state.experimentalRtl = value
   }
 
   get spreadMode(): ReaderSpreadMode {
-    return this.state.spreadMode;
+    return this.state.spreadMode
   }
 
   set spreadMode(value: ReaderSpreadMode) {
-    this.state.spreadMode = value;
+    this.state.spreadMode = value
   }
 
   get debugMode(): boolean {
-    return this.state.debugMode;
+    return this.state.debugMode
   }
 
   set debugMode(value: boolean) {
-    this.state.debugMode = value;
+    this.state.debugMode = value
   }
 
   get theme(): Theme {
-    return this.state.theme;
+    return this.state.theme
   }
 
   set theme(value: Theme) {
-    this.state.theme = value;
+    this.state.theme = value
   }
 
   get typography(): TypographyOptions {
-    return this.state.typography;
+    return this.state.typography
   }
 
   set typography(value: TypographyOptions) {
-    this.state.typography = value;
+    this.state.typography = value
   }
 
   applySettings(input: {
-    preferences: ReaderPreferences;
-    settings: ReaderSettings;
+    preferences: ReaderPreferences
+    settings: ReaderSettings
   }): void {
-    this.state.preferences = input.preferences;
-    this.state.mode = input.settings.mode;
-    this.state.publisherStyles = input.settings.publisherStyles;
-    this.state.publisherColorOverride = input.settings.publisherColorOverride;
-    this.state.experimentalRtl = input.settings.experimentalRtl;
-    this.state.spreadMode = input.settings.spreadMode;
-    this.state.theme = { ...input.settings.theme };
-    this.state.typography = { ...input.settings.typography };
+    this.state.preferences = input.preferences
+    this.state.mode = input.settings.mode
+    this.state.publisherStyles = input.settings.publisherStyles
+    this.state.publisherColorOverride = input.settings.publisherColorOverride
+    this.state.experimentalRtl = input.settings.experimentalRtl
+    this.state.spreadMode = input.settings.spreadMode
+    this.state.theme = { ...input.settings.theme }
+    this.state.typography = { ...input.settings.typography }
   }
 
   snapshotSettings(): ReaderSettings {
@@ -107,6 +107,6 @@ export class ReaderViewSession {
       spreadMode: this.state.spreadMode,
       theme: { ...this.state.theme },
       typography: { ...this.state.typography }
-    };
+    }
   }
 }

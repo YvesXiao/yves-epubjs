@@ -172,10 +172,7 @@ function createAccessibilityLeafEntry(input: {
   containerPath: AccessibilityContainerKind[]
   leafKindOverride?: AccessibilityEntryKind
 }): AccessibilityEntry[] {
-  const kind = resolveAccessibilityLeafKind(
-    input.block,
-    input.leafKindOverride
-  )
+  const kind = resolveAccessibilityLeafKind(input.block, input.leafKindOverride)
   const text = normalizeAccessibilityText(extractBlockText(input.block))
 
   if (kind !== "image" && !text) {
@@ -194,7 +191,9 @@ function createAccessibilityLeafEntry(input: {
       }),
       text,
       containerPath: [...input.containerPath],
-      ...(input.block.kind === "heading" ? { headingLevel: input.block.level } : {}),
+      ...(input.block.kind === "heading"
+        ? { headingLevel: input.block.level }
+        : {}),
       ...(kind === "image" && text ? { altText: text } : {})
     }
   ]

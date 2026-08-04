@@ -45,10 +45,18 @@ describe("image render classification", () => {
       <p><a href="plate.xhtml"><img id="linked-plate" src="plate.png"></a></p>
     `
 
-    expect(isDomInlineImageElement(container.querySelector("#note")!)).toBe(true)
-    expect(isDomInlineImageElement(container.querySelector("#mixed")!)).toBe(true)
-    expect(isDomInlineImageElement(container.querySelector("#figure")!)).toBe(false)
-    expect(isDomInlineImageElement(container.querySelector("#linked-plate")!)).toBe(false)
+    expect(isDomInlineImageElement(container.querySelector("#note")!)).toBe(
+      true
+    )
+    expect(isDomInlineImageElement(container.querySelector("#mixed")!)).toBe(
+      true
+    )
+    expect(isDomInlineImageElement(container.querySelector("#figure")!)).toBe(
+      false
+    )
+    expect(
+      isDomInlineImageElement(container.querySelector("#linked-plate")!)
+    ).toBe(false)
   })
 
   it("classifies parsed inline image nodes from ancestor metadata", () => {
@@ -89,4 +97,3 @@ describe("image render classification", () => {
     ])
   })
 })
-

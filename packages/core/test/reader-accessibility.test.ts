@@ -55,7 +55,9 @@ describe("EpubReader accessibility snapshots", () => {
       toc: [],
       sections: [section]
     }
-    ;(reader as unknown as { book: Book; sourceName: string | null }).sourceName = "sample.epub"
+    ;(
+      reader as unknown as { book: Book; sourceName: string | null }
+    ).sourceName = "sample.epub"
 
     const sectionSnapshot = reader.getSectionAccessibilitySnapshot()
     const publicationSnapshot = reader.getPublicationAccessibilitySnapshot()
@@ -135,7 +137,9 @@ describe("EpubReader accessibility snapshots", () => {
                   {
                     id: "desc-1",
                     kind: "text",
-                    inlines: [{ kind: "text", text: "Semantic definition target" }]
+                    inlines: [
+                      { kind: "text", text: "Semantic definition target" }
+                    ]
                   }
                 ]
               ]

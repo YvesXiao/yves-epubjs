@@ -63,7 +63,13 @@ describe("EpubReader compatibility behavior", () => {
               cells: [
                 {
                   id: "cell-1",
-                  blocks: [{ id: "cell-text-1", kind: "text", inlines: [{ kind: "text", text: "Alice" }] }]
+                  blocks: [
+                    {
+                      id: "cell-text-1",
+                      kind: "text",
+                      inlines: [{ kind: "text", text: "Alice" }]
+                    }
+                  ]
                 }
               ]
             }
@@ -75,9 +81,21 @@ describe("EpubReader compatibility behavior", () => {
           items: [
             {
               id: "definition-item-1",
-              term: [{ id: "term-1", kind: "text", inlines: [{ kind: "text", text: "Term" }] }],
+              term: [
+                {
+                  id: "term-1",
+                  kind: "text",
+                  inlines: [{ kind: "text", text: "Term" }]
+                }
+              ],
               descriptions: [
-                [{ id: "description-1", kind: "text", inlines: [{ kind: "text", text: "Definition body" }] }]
+                [
+                  {
+                    id: "description-1",
+                    kind: "text",
+                    inlines: [{ kind: "text", text: "Definition body" }]
+                  }
+                ]
               ]
             }
           ]
@@ -114,10 +132,22 @@ describe("EpubReader compatibility behavior", () => {
 
     ;(reader as unknown as { book: Book }).book = book
 
-    expect((await reader.search("caption")).map((result) => result.locator.blockId)).toContain("caption-1")
-    expect((await reader.search("Alice")).map((result) => result.locator.blockId)).toContain("cell-text-1")
-    expect((await reader.search("Definition body")).map((result) => result.locator.blockId)).toContain("description-1")
-    expect((await reader.search("searchable icon")).map((result) => result.locator.blockId)).toContain("text-1")
+    expect(
+      (await reader.search("caption")).map((result) => result.locator.blockId)
+    ).toContain("caption-1")
+    expect(
+      (await reader.search("Alice")).map((result) => result.locator.blockId)
+    ).toContain("cell-text-1")
+    expect(
+      (await reader.search("Definition body")).map(
+        (result) => result.locator.blockId
+      )
+    ).toContain("description-1")
+    expect(
+      (await reader.search("searchable icon")).map(
+        (result) => result.locator.blockId
+      )
+    ).toContain("text-1")
   })
 
   it("hit tests inline images inside pretext paragraphs", async () => {
@@ -188,7 +218,9 @@ describe("EpubReader compatibility behavior", () => {
 
     expect(imageRegion).toBeTruthy()
     expect(hit?.kind).toBe("image")
-    expect(hit && hit.kind === "image" ? hit.blockId : undefined).toBe("text-inline-image")
+    expect(hit && hit.kind === "image" ? hit.blockId : undefined).toBe(
+      "text-inline-image"
+    )
   })
 
   it("hit tests canvas links with absolute scroll coordinates", () => {

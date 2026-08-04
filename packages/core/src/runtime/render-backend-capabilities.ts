@@ -22,7 +22,8 @@ export function resolveRenderBackendCapabilities(input: {
       layoutAuthority: "project-layout",
       geometrySource: "interaction-map",
       interactionModel: "canvas-hit-test",
-      flowModel: input.mode === "paginated" ? "paginated-pages" : "scroll-slices"
+      flowModel:
+        input.mode === "paginated" ? "paginated-pages" : "scroll-slices"
     }
   }
 

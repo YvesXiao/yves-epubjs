@@ -6,7 +6,10 @@ const SEARCH_RESULT_INDEX = Number(process.env.SEARCH_RESULT_INDEX ?? "80")
 const MIN_SCROLL_TOP = Number(process.env.EXPECT_MIN_SCROLL_TOP ?? "5000")
 const EXPECT_BACKEND = process.env.EXPECT_BACKEND ?? "dom"
 
-test.skip(!BOOK_PATH, "BOOK_PATH is required for external EPUB search validation")
+test.skip(
+  !BOOK_PATH,
+  "BOOK_PATH is required for external EPUB search validation"
+)
 
 test("external epub search result jump keeps the hit near the visible viewport", async ({
   page
@@ -23,16 +26,20 @@ test("external epub search result jump keeps the hit near the visible viewport",
   const searchResults = page.locator(".search-card")
   await expect(searchResults.nth(SEARCH_RESULT_INDEX)).toBeVisible()
 
-  const selectedExcerpt = (await searchResults
-    .nth(SEARCH_RESULT_INDEX)
-    .locator("span")
-    .nth(1)
-    .textContent())?.trim() ?? ""
+  const selectedExcerpt =
+    (
+      await searchResults
+        .nth(SEARCH_RESULT_INDEX)
+        .locator("span")
+        .nth(1)
+        .textContent()
+    )?.trim() ?? ""
   const excerptSnippet = extractSearchSnippet(selectedExcerpt, SEARCH_QUERY)
 
   await searchResults.nth(SEARCH_RESULT_INDEX).click()
 
-  const factsText = (await page.locator(".reading-topbar-facts").textContent()) ?? ""
+  const factsText =
+    (await page.locator(".reading-topbar-facts").textContent()) ?? ""
   const actualBackend = extractBackend(factsText)
 
   if (EXPECT_BACKEND) {
@@ -63,13 +70,21 @@ test("external epub search result jump keeps the hit near the visible viewport",
 
             const containerRect = node.getBoundingClientRect()
             const visibleTexts = Array.from(
-              node.querySelectorAll("p, li, td, th, h1, h2, h3, h4, h5, h6, blockquote")
+              node.querySelectorAll(
+                "p, li, td, th, h1, h2, h3, h4, h5, h6, blockquote"
+              )
             )
               .filter((element) => {
                 const rect = element.getBoundingClientRect()
-                return rect.bottom > containerRect.top && rect.top < containerRect.bottom
+                return (
+                  rect.bottom > containerRect.top &&
+                  rect.top < containerRect.bottom
+                )
               })
-              .map((element) => element.textContent?.replace(/\s+/g, " ").trim() ?? "")
+              .map(
+                (element) =>
+                  element.textContent?.replace(/\s+/g, " ").trim() ?? ""
+              )
               .filter(Boolean)
 
             return visibleTexts.join(" ")
@@ -86,14 +101,20 @@ async function openDrawer(page, name) {
 }
 
 function extractSearchSnippet(excerpt, fallbackQuery) {
-  const normalizedExcerpt = excerpt.replace(/^\.{3}/, "").replace(/\.{3}$/, "").trim()
+  const normalizedExcerpt = excerpt
+    .replace(/^\.{3}/, "")
+    .replace(/\.{3}$/, "")
+    .trim()
   if (!normalizedExcerpt) {
     return fallbackQuery
   }
 
   const queryIndex = normalizedExcerpt.indexOf(fallbackQuery)
   if (queryIndex >= 0) {
-    return normalizedExcerpt.slice(queryIndex, queryIndex + fallbackQuery.length)
+    return normalizedExcerpt.slice(
+      queryIndex,
+      queryIndex + fallbackQuery.length
+    )
   }
 
   return normalizedExcerpt.slice(0, Math.min(12, normalizedExcerpt.length))

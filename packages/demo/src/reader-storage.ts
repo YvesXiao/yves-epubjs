@@ -6,30 +6,29 @@ import {
   serializeBookmark,
   type Bookmark,
   type ReaderPreferences
-} from "@yves-epub/core";
+} from "@yves-epub/core"
 
-const DEMO_GLOBAL_PREFERENCES_STORAGE_KEY = "yves-epub:preferences:global";
-const LEGACY_GLOBAL_PREFERENCES_STORAGE_KEY =
-  "pretext-epub:preferences:global";
+const DEMO_GLOBAL_PREFERENCES_STORAGE_KEY = "yves-epub:preferences:global"
+const LEGACY_GLOBAL_PREFERENCES_STORAGE_KEY = "pretext-epub:preferences:global"
 
 export function defaultFontFamily(): string {
-  return '"Iowan Old Style", "Palatino Linotype", serif';
+  return '"Iowan Old Style", "Palatino Linotype", serif'
 }
 
 export function persistBookmark(bookmark: Bookmark): void {
   if (typeof window === "undefined") {
-    return;
+    return
   }
 
   window.localStorage.setItem(
     bookmarkStorageKey(bookmark.publicationId),
     serializeBookmark(bookmark)
-  );
+  )
 }
 
 export function loadBookmark(publicationId: string): Bookmark | null {
   if (typeof window === "undefined") {
-    return null;
+    return null
   }
 
   return deserializeBookmark(
@@ -37,37 +36,37 @@ export function loadBookmark(publicationId: string): Bookmark | null {
       bookmarkStorageKey(publicationId),
       legacyBookmarkStorageKey(publicationId)
     )
-  );
+  )
 }
 
 export function persistReaderPreferences(input: {
-  preferences: ReaderPreferences;
-  publicationId?: string;
+  preferences: ReaderPreferences
+  publicationId?: string
 }): void {
   if (typeof window === "undefined") {
-    return;
+    return
   }
 
-  const normalized = normalizeReaderPreferences(input.preferences);
-  const globalPreferences = pickGlobalReaderPreferences(normalized);
-  const bookPreferences = pickPublicationReaderPreferences(normalized);
+  const normalized = normalizeReaderPreferences(input.preferences)
+  const globalPreferences = pickGlobalReaderPreferences(normalized)
+  const bookPreferences = pickPublicationReaderPreferences(normalized)
 
   window.localStorage.setItem(
     DEMO_GLOBAL_PREFERENCES_STORAGE_KEY,
     JSON.stringify(globalPreferences)
-  );
+  )
 
   if (input.publicationId) {
     window.localStorage.setItem(
       readerPreferenceStorageKey(input.publicationId),
       JSON.stringify(bookPreferences)
-    );
+    )
   }
 }
 
 export function loadStoredGlobalReaderPreferences(): ReaderPreferences | null {
   if (typeof window === "undefined") {
-    return null;
+    return null
   }
 
   return deserializeReaderPreferences(
@@ -75,15 +74,15 @@ export function loadStoredGlobalReaderPreferences(): ReaderPreferences | null {
       DEMO_GLOBAL_PREFERENCES_STORAGE_KEY,
       LEGACY_GLOBAL_PREFERENCES_STORAGE_KEY
     )
-  );
+  )
 }
 
 export function loadStoredReaderPreferences(
   publicationId?: string
 ): ReaderPreferences | null {
-  const globalPreferences = loadStoredGlobalReaderPreferences();
+  const globalPreferences = loadStoredGlobalReaderPreferences()
   if (typeof window === "undefined" || !publicationId) {
-    return globalPreferences;
+    return globalPreferences
   }
 
   const bookPreferences = deserializeReaderPreferences(
@@ -91,40 +90,40 @@ export function loadStoredReaderPreferences(
       readerPreferenceStorageKey(publicationId),
       legacyReaderPreferenceStorageKey(publicationId)
     )
-  );
-  return mergeReaderPreferences(globalPreferences, bookPreferences);
+  )
+  return mergeReaderPreferences(globalPreferences, bookPreferences)
 }
 
 function bookmarkStorageKey(publicationId: string): string {
-  return `yves-epub:bookmark:${publicationId}`;
+  return `yves-epub:bookmark:${publicationId}`
 }
 
 function legacyBookmarkStorageKey(publicationId: string): string {
-  return `pretext-epub:bookmark:${publicationId}`;
+  return `pretext-epub:bookmark:${publicationId}`
 }
 
 function readerPreferenceStorageKey(publicationId: string): string {
-  return `yves-epub:preferences:book:${publicationId}`;
+  return `yves-epub:preferences:book:${publicationId}`
 }
 
 function legacyReaderPreferenceStorageKey(publicationId: string): string {
-  return `pretext-epub:preferences:book:${publicationId}`;
+  return `pretext-epub:preferences:book:${publicationId}`
 }
 
 function getStorageItemWithLegacy(
   storageKey: string,
   legacyStorageKey: string
 ): string | null {
-  const value = window.localStorage.getItem(storageKey);
+  const value = window.localStorage.getItem(storageKey)
   if (value !== null) {
-    return value;
+    return value
   }
 
-  const legacyValue = window.localStorage.getItem(legacyStorageKey);
+  const legacyValue = window.localStorage.getItem(legacyStorageKey)
   if (legacyValue !== null) {
-    window.localStorage.setItem(storageKey, legacyValue);
+    window.localStorage.setItem(storageKey, legacyValue)
   }
-  return legacyValue;
+  return legacyValue
 }
 
 function pickGlobalReaderPreferences(
@@ -133,7 +132,7 @@ function pickGlobalReaderPreferences(
   return normalizeReaderPreferences({
     ...(preferences.theme ? { theme: preferences.theme } : {}),
     ...(preferences.typography ? { typography: preferences.typography } : {})
-  });
+  })
 }
 
 function pickPublicationReaderPreferences(
@@ -151,5 +150,5 @@ function pickPublicationReaderPreferences(
       ? { experimentalRtl: preferences.experimentalRtl }
       : {}),
     ...(preferences.spreadMode ? { spreadMode: preferences.spreadMode } : {})
-  });
+  })
 }

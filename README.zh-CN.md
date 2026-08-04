@@ -66,13 +66,13 @@ pnpm -F @yves-epub/demo build
 ## 最小浏览器接入
 
 ```ts
-import { EpubReader } from "@yves-epub/core";
+import { EpubReader } from "@yves-epub/core"
 
-const container = document.getElementById("reader");
-const file = fileInput.files?.[0];
+const container = document.getElementById("reader")
+const file = fileInput.files?.[0]
 
 if (!container || !file) {
-  throw new Error("Missing reader container or EPUB file");
+  throw new Error("Missing reader container or EPUB file")
 }
 
 const reader = new EpubReader({
@@ -87,12 +87,12 @@ const reader = new EpubReader({
   },
   allowExternalEmbeddedResources: true,
   onExternalLink: ({ href }) => {
-    window.open(href, "_blank", "noopener,noreferrer");
+    window.open(href, "_blank", "noopener,noreferrer")
   }
-});
+})
 
-await reader.open(file);
-await reader.render();
+await reader.open(file)
+await reader.render()
 ```
 
 ## 推荐宿主封装

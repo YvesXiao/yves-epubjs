@@ -136,7 +136,9 @@ export function restoreLocatorWithDiagnostics(input: {
   const anchorId = normalizeOptionalLocatorString(serialized.anchorId)
   const blockId = normalizeOptionalLocatorString(serialized.blockId)
   const inlineOffset = normalizeLocatorInlineOffset(serialized.inlineOffset)
-  const progressInSection = normalizeLocatorProgress(serialized.progressInSection)
+  const progressInSection = normalizeLocatorProgress(
+    serialized.progressInSection
+  )
   const resolvedInlineOffset = inlineOffset ?? parsedCfi?.inlineOffset
 
   const cfiTarget = parsedCfi ? resolveCfiTarget(section, parsedCfi) : null
@@ -145,9 +147,14 @@ export function restoreLocatorWithDiagnostics(input: {
       spineIndex: sectionIndex,
       blockId: cfiTarget.blockId,
       ...(cfiTarget.anchorId ? { anchorId: cfiTarget.anchorId } : {}),
-      ...(resolvedInlineOffset !== undefined ? { inlineOffset: resolvedInlineOffset } : {}),
+      ...(resolvedInlineOffset !== undefined
+        ? { inlineOffset: resolvedInlineOffset }
+        : {}),
       cfi,
-      progressInSection: estimateSectionProgressForBlock(section, cfiTarget.blockId)
+      progressInSection: estimateSectionProgressForBlock(
+        section,
+        cfiTarget.blockId
+      )
     })
     return {
       locator,
@@ -161,13 +168,17 @@ export function restoreLocatorWithDiagnostics(input: {
     }
   }
 
-  const anchorBlockId = anchorId ? findBlockIdForAnchor(section, anchorId) : undefined
+  const anchorBlockId = anchorId
+    ? findBlockIdForAnchor(section, anchorId)
+    : undefined
   if (anchorBlockId) {
     const locator = normalizeLocator({
       spineIndex: sectionIndex,
       blockId: anchorBlockId,
       ...(anchorId ? { anchorId } : {}),
-      ...(resolvedInlineOffset !== undefined ? { inlineOffset: resolvedInlineOffset } : {}),
+      ...(resolvedInlineOffset !== undefined
+        ? { inlineOffset: resolvedInlineOffset }
+        : {}),
       ...(cfi ? { cfi } : {}),
       progressInSection: estimateSectionProgressForBlock(section, anchorBlockId)
     })
@@ -175,8 +186,11 @@ export function restoreLocatorWithDiagnostics(input: {
       locator,
       diagnostics: {
         requestedPrecision,
-        resolvedPrecision: anchorId && cfi ? "anchor" : getLocatorPrecision(locator),
-        matchedBy: sectionMatch.matchedBy ?? (hasResolvableHref(serialized) ? "href" : "spineIndex"),
+        resolvedPrecision:
+          anchorId && cfi ? "anchor" : getLocatorPrecision(locator),
+        matchedBy:
+          sectionMatch.matchedBy ??
+          (hasResolvableHref(serialized) ? "href" : "spineIndex"),
         fallbackApplied: requestedPrecision !== "anchor",
         status: "restored"
       }
@@ -188,7 +202,9 @@ export function restoreLocatorWithDiagnostics(input: {
       spineIndex: sectionIndex,
       blockId,
       ...(anchorId ? { anchorId } : {}),
-      ...(resolvedInlineOffset !== undefined ? { inlineOffset: resolvedInlineOffset } : {}),
+      ...(resolvedInlineOffset !== undefined
+        ? { inlineOffset: resolvedInlineOffset }
+        : {}),
       ...(cfi ? { cfi } : {}),
       progressInSection: estimateSectionProgressForBlock(section, blockId)
     })
@@ -197,7 +213,9 @@ export function restoreLocatorWithDiagnostics(input: {
       diagnostics: {
         requestedPrecision,
         resolvedPrecision: cfi ? "block" : getLocatorPrecision(locator),
-        matchedBy: sectionMatch.matchedBy ?? (hasResolvableHref(serialized) ? "href" : "spineIndex"),
+        matchedBy:
+          sectionMatch.matchedBy ??
+          (hasResolvableHref(serialized) ? "href" : "spineIndex"),
         fallbackApplied: requestedPrecision !== "block",
         status: "restored"
       }
@@ -207,25 +225,33 @@ export function restoreLocatorWithDiagnostics(input: {
   const locator = normalizeLocator({
     spineIndex: sectionIndex,
     ...(anchorId ? { anchorId } : {}),
-    ...(resolvedInlineOffset !== undefined ? { inlineOffset: resolvedInlineOffset } : {}),
+    ...(resolvedInlineOffset !== undefined
+      ? { inlineOffset: resolvedInlineOffset }
+      : {}),
     ...(cfi ? { cfi } : {}),
     progressInSection: progressInSection ?? 0
   })
   const resolvedPrecision =
-    progressInSection !== undefined || resolvedInlineOffset !== undefined ? "progress" : "section"
+    progressInSection !== undefined || resolvedInlineOffset !== undefined
+      ? "progress"
+      : "section"
   return {
     locator,
     diagnostics: {
       requestedPrecision,
       resolvedPrecision,
-      matchedBy: sectionMatch.matchedBy ?? (hasResolvableHref(serialized) ? "href" : "spineIndex"),
+      matchedBy:
+        sectionMatch.matchedBy ??
+        (hasResolvableHref(serialized) ? "href" : "spineIndex"),
       fallbackApplied: requestedPrecision !== resolvedPrecision,
       status: "restored"
     }
   }
 }
 
-export function getLocatorPrecision(locator: Locator | SerializedLocator): LocatorPrecision {
+export function getLocatorPrecision(
+  locator: Locator | SerializedLocator
+): LocatorPrecision {
   if (normalizeOptionalLocatorString(locator.cfi)) {
     return "cfi"
   }
@@ -259,7 +285,10 @@ function resolveSectionMatch(input: {
   locator: Locator | SerializedLocator
   parsedCfi: ParsedLocatorCfi | null
 }): { index: number; matchedBy?: "cfi" | "href" | "spineIndex" } {
-  const cfiSectionIndex = resolveSectionIndexFromCfi(input.book, input.parsedCfi)
+  const cfiSectionIndex = resolveSectionIndexFromCfi(
+    input.book,
+    input.parsedCfi
+  )
   if (cfiSectionIndex >= 0) {
     return {
       index: cfiSectionIndex,
@@ -267,7 +296,10 @@ function resolveSectionMatch(input: {
     }
   }
 
-  const href = "href" in input.locator ? normalizeOptionalLocatorString(input.locator.href) : undefined
+  const href =
+    "href" in input.locator
+      ? normalizeOptionalLocatorString(input.locator.href)
+      : undefined
   if (href) {
     const normalizedTargetHref = normalizeBookHref(href)
     const hrefIndex = input.book.sections.findIndex((section) => {
@@ -289,7 +321,8 @@ function resolveSectionMatch(input: {
   if (isFiniteLocatorNumber(input.locator.spineIndex)) {
     const normalizedIndex = normalizeLocatorSpineIndex(input.locator.spineIndex)
     return {
-      index: normalizedIndex < input.book.sections.length ? normalizedIndex : -1,
+      index:
+        normalizedIndex < input.book.sections.length ? normalizedIndex : -1,
       matchedBy: "spineIndex"
     }
   }
@@ -331,25 +364,35 @@ export function estimateSectionProgressForBlock(
   return blockIds.length > 1 ? targetIndex / (blockIds.length - 1) : 0
 }
 
-function parseSerializedLocatorValue(raw: unknown): Record<string, unknown> | null {
+function parseSerializedLocatorValue(
+  raw: unknown
+): Record<string, unknown> | null {
   if (typeof raw === "string") {
     try {
       const parsed = JSON.parse(raw)
-      return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null
+      return parsed && typeof parsed === "object"
+        ? (parsed as Record<string, unknown>)
+        : null
     } catch {
       return null
     }
   }
 
-  return raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null
+  return raw && typeof raw === "object"
+    ? (raw as Record<string, unknown>)
+    : null
 }
 
-function isSerializedLocator(locator: Locator | SerializedLocator): locator is SerializedLocator {
+function isSerializedLocator(
+  locator: Locator | SerializedLocator
+): locator is SerializedLocator {
   return "href" in locator || locator.spineIndex === undefined
 }
 
 function hasResolvableHref(locator: Locator | SerializedLocator): boolean {
-  return "href" in locator && Boolean(normalizeOptionalLocatorString(locator.href))
+  return (
+    "href" in locator && Boolean(normalizeOptionalLocatorString(locator.href))
+  )
 }
 
 function normalizeBookHref(href: string): string {
@@ -377,9 +420,13 @@ function buildLocatorCfi(input: {
 
   const spineStep = (input.locator.spineIndex + 1) * 2
   const blockStep = (target.blockIndex + 1) * 2
-  const qualifier = target.qualifier ? `[${escapeCfiQualifier(target.qualifier)}]` : ""
+  const qualifier = target.qualifier
+    ? `[${escapeCfiQualifier(target.qualifier)}]`
+    : ""
   const offset =
-    input.locator.inlineOffset !== undefined ? `:${Math.max(0, Math.trunc(input.locator.inlineOffset))}` : ""
+    input.locator.inlineOffset !== undefined
+      ? `:${Math.max(0, Math.trunc(input.locator.inlineOffset))}`
+      : ""
 
   return `epubcfi(/6/${spineStep}!/${blockStep}${qualifier}${offset})`
 }
@@ -426,17 +473,24 @@ function resolvePreferredCfiQualifier(
   explicitAnchorId?: string,
   explicitBlockId?: string
 ): string | undefined {
-  const normalizedExplicitAnchorId = normalizeOptionalLocatorString(explicitAnchorId)
-  if (normalizedExplicitAnchorId && section.anchors[normalizedExplicitAnchorId] === blockId) {
+  const normalizedExplicitAnchorId =
+    normalizeOptionalLocatorString(explicitAnchorId)
+  if (
+    normalizedExplicitAnchorId &&
+    section.anchors[normalizedExplicitAnchorId] === blockId
+  ) {
     return normalizedExplicitAnchorId
   }
 
-  const normalizedExplicitBlockId = normalizeOptionalLocatorString(explicitBlockId)
+  const normalizedExplicitBlockId =
+    normalizeOptionalLocatorString(explicitBlockId)
   if (normalizedExplicitBlockId === blockId) {
     return blockId
   }
 
-  const anchorId = Object.entries(section.anchors).find(([, targetBlockId]) => targetBlockId === blockId)?.[0]
+  const anchorId = Object.entries(section.anchors).find(
+    ([, targetBlockId]) => targetBlockId === blockId
+  )?.[0]
   return anchorId ?? blockId
 }
 
@@ -450,7 +504,13 @@ function resolveBlockIdForProgress(
     return undefined
   }
 
-  const targetIndex = Math.max(0, Math.min(blockIds.length - 1, Math.round(normalizedProgress * (blockIds.length - 1))))
+  const targetIndex = Math.max(
+    0,
+    Math.min(
+      blockIds.length - 1,
+      Math.round(normalizedProgress * (blockIds.length - 1))
+    )
+  )
   return blockIds[targetIndex]
 }
 
@@ -480,23 +540,46 @@ function parseLocatorCfi(cfi: string): ParsedLocatorCfi | null {
   const [packagePart = "", rawContentPart = ""] = rawContent.split("!")
   const contentPart = rawContentPart.split(",")[0]?.trim() ?? ""
   const inlineOffsetMatch = contentPart.match(/:(\d+)$/)
-  const pathWithoutOffset = inlineOffsetMatch ? contentPart.slice(0, -inlineOffsetMatch[0].length) : contentPart
+  const pathWithoutOffset = inlineOffsetMatch
+    ? contentPart.slice(0, -inlineOffsetMatch[0].length)
+    : contentPart
   const packageSteps = extractCfiSteps(packagePart)
   const contentSteps = extractCfiSteps(pathWithoutOffset)
   const qualifierIds = Array.from(pathWithoutOffset.matchAll(/\[([^\]]+)\]/g))
     .map((entry) => entry[1]?.trim())
     .filter((value): value is string => Boolean(value))
-  const lastEvenContentStep = [...contentSteps].reverse().find((step) => step % 2 === 0)
+  const lastEvenContentStep = [...contentSteps]
+    .reverse()
+    .find((step) => step % 2 === 0)
 
   return {
-    ...(packageSteps.length > 0 ? { spineIndex: Math.max(0, Math.trunc(packageSteps[packageSteps.length - 1]! / 2) - 1) } : {}),
+    ...(packageSteps.length > 0
+      ? {
+          spineIndex: Math.max(
+            0,
+            Math.trunc(packageSteps[packageSteps.length - 1]! / 2) - 1
+          )
+        }
+      : {}),
     qualifierIds,
-    ...(typeof lastEvenContentStep === "number" ? { blockIndex: Math.max(0, Math.trunc(lastEvenContentStep / 2) - 1) } : {}),
-    ...(inlineOffsetMatch ? { inlineOffset: Math.max(0, Number.parseInt(inlineOffsetMatch[1]!, 10) || 0) } : {})
+    ...(typeof lastEvenContentStep === "number"
+      ? { blockIndex: Math.max(0, Math.trunc(lastEvenContentStep / 2) - 1) }
+      : {}),
+    ...(inlineOffsetMatch
+      ? {
+          inlineOffset: Math.max(
+            0,
+            Number.parseInt(inlineOffsetMatch[1]!, 10) || 0
+          )
+        }
+      : {})
   }
 }
 
-function resolveSectionIndexFromCfi(book: Book, parsedCfi: ParsedLocatorCfi | null): number {
+function resolveSectionIndexFromCfi(
+  book: Book,
+  parsedCfi: ParsedLocatorCfi | null
+): number {
   if (!parsedCfi || !isFiniteLocatorNumber(parsedCfi.spineIndex)) {
     return -1
   }
@@ -510,7 +593,9 @@ function resolveCfiTarget(
   parsedCfi: ParsedLocatorCfi
 ): { blockId?: string; anchorId?: string } | null {
   for (let index = parsedCfi.qualifierIds.length - 1; index >= 0; index -= 1) {
-    const qualifierId = normalizeOptionalLocatorString(parsedCfi.qualifierIds[index])
+    const qualifierId = normalizeOptionalLocatorString(
+      parsedCfi.qualifierIds[index]
+    )
     if (!qualifierId) {
       continue
     }
@@ -531,7 +616,9 @@ function resolveCfiTarget(
   }
 
   if (typeof parsedCfi.blockIndex === "number") {
-    const blockId = collectBlockIdsInReadingOrder(section.blocks)[parsedCfi.blockIndex]
+    const blockId = collectBlockIdsInReadingOrder(section.blocks)[
+      parsedCfi.blockIndex
+    ]
     if (blockId) {
       return {
         blockId

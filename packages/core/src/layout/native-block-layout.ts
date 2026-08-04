@@ -39,7 +39,11 @@ export function estimateNativeBlockHeight(
         availableWidth: Math.max(1, contentWidth),
         viewportHeight: input.viewportHeight,
         ...resolveImageIntrinsicSize(block, input.resolveImageIntrinsicSize),
-        fillWidth: isCoverImageBlock(input.section.blocks.length, input.section.presentationRole, block)
+        fillWidth: isCoverImageBlock(
+          input.section.blocks.length,
+          input.section.presentationRole,
+          block
+        )
       }).blockHeight
     }
     case "code": {
@@ -169,8 +173,12 @@ function resolveImageIntrinsicSize(
   const height = image.style?.height ?? image.height ?? resolvedSize?.height
 
   return {
-    ...(typeof width === "number" && width > 0 ? { intrinsicWidth: width } : {}),
-    ...(typeof height === "number" && height > 0 ? { intrinsicHeight: height } : {})
+    ...(typeof width === "number" && width > 0
+      ? { intrinsicWidth: width }
+      : {}),
+    ...(typeof height === "number" && height > 0
+      ? { intrinsicHeight: height }
+      : {})
   }
 }
 
@@ -244,7 +252,8 @@ function estimateTableBlockHeight(
         contentWidth,
         captionFont,
         styleProfile.caption.lineHeight
-      ) + styleProfile.text.marginBottom
+      ) +
+      styleProfile.text.marginBottom
   }
 
   const columnCount = Math.max(

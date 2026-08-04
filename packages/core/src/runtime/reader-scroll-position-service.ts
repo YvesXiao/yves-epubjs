@@ -1,8 +1,4 @@
-import type {
-  Rect,
-  SectionDocument,
-  VisibleDrawBounds
-} from "../model/types"
+import type { Rect, SectionDocument, VisibleDrawBounds } from "../model/types"
 import type {
   InteractionRegion,
   SectionDisplayList
@@ -268,9 +264,7 @@ function collectRenderedSectionEntries(
   const selector = options.includeVirtual
     ? "article[data-section-id]"
     : "article[data-section-id]:not(.epub-section-virtual)"
-  return Array.from(
-    container.querySelectorAll<HTMLElement>(selector)
-  )
+  return Array.from(container.querySelectorAll<HTMLElement>(selector))
     .map((element) => {
       const sectionId = element.dataset.sectionId
       if (!sectionId) {

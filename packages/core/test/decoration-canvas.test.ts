@@ -1,8 +1,8 @@
-import { describe, expect, it } from "vitest";
-import type { SectionDocument } from "../src/model/types";
-import { LayoutEngine } from "../src/layout/layout-engine";
-import { DisplayListBuilder } from "../src/renderer/display-list-builder";
-import type { TextRunDrawOp } from "../src/renderer/draw-ops";
+import { describe, expect, it } from "vitest"
+import type { SectionDocument } from "../src/model/types"
+import { LayoutEngine } from "../src/layout/layout-engine"
+import { DisplayListBuilder } from "../src/renderer/display-list-builder"
+import type { TextRunDrawOp } from "../src/renderer/draw-ops"
 
 describe("canvas decoration rendering", () => {
   it("emits underline draw ops for underlined decoration blocks", () => {
@@ -18,7 +18,7 @@ describe("canvas decoration rendering", () => {
           inlines: [{ kind: "text", text: "Underline decoration target" }]
         }
       ]
-    };
+    }
 
     const layout = new LayoutEngine().layout(
       {
@@ -34,7 +34,7 @@ describe("canvas decoration rendering", () => {
         fontFamily: "serif"
       },
       "scroll"
-    );
+    )
 
     const displayList = new DisplayListBuilder().buildSection({
       section,
@@ -53,16 +53,16 @@ describe("canvas decoration rendering", () => {
       underlinedBlockIds: new Set(["text-1"]),
       underlineColorsByBlock: new Map([["text-1", "#2563eb"]]),
       activeBlockId: undefined
-    });
+    })
 
     const textOps = displayList.ops.filter(
       (op): op is TextRunDrawOp => op.kind === "text" && op.blockId === "text-1"
-    );
+    )
 
-    expect(textOps.length).toBeGreaterThan(0);
-    expect(textOps.every((op) => op.underline === true)).toBe(true);
-    expect(textOps.every((op) => op.underlineColor === "#2563eb")).toBe(true);
-  });
+    expect(textOps.length).toBeGreaterThan(0)
+    expect(textOps.every((op) => op.underline === true)).toBe(true)
+    expect(textOps.every((op) => op.underlineColor === "#2563eb")).toBe(true)
+  })
 
   it("emits underline segments for text range underline decorations", () => {
     const section: SectionDocument = {
@@ -77,7 +77,7 @@ describe("canvas decoration rendering", () => {
           inlines: [{ kind: "text", text: "Underline decoration target" }]
         }
       ]
-    };
+    }
 
     const layout = new LayoutEngine().layout(
       {
@@ -93,7 +93,7 @@ describe("canvas decoration rendering", () => {
         fontFamily: "serif"
       },
       "scroll"
-    );
+    )
 
     const displayList = new DisplayListBuilder().buildSection({
       section,
@@ -114,23 +114,23 @@ describe("canvas decoration rendering", () => {
         ["text-1", [{ start: 10, end: 20, color: "#2563eb" }]]
       ]),
       activeBlockId: undefined
-    });
+    })
 
     const textOps = displayList.ops.filter(
       (op): op is TextRunDrawOp => op.kind === "text" && op.blockId === "text-1"
-    );
+    )
     const underlineSegments = textOps.flatMap(
       (op) => op.underlineSegments ?? []
-    );
+    )
 
-    expect(textOps.length).toBeGreaterThan(0);
-    expect(textOps.every((op) => op.underline !== true)).toBe(true);
+    expect(textOps.length).toBeGreaterThan(0)
+    expect(textOps.every((op) => op.underline !== true)).toBe(true)
     expect(underlineSegments).toEqual([
       {
         start: 10,
         end: 20,
         color: "#2563eb"
       }
-    ]);
-  });
-});
+    ])
+  })
+})

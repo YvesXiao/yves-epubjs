@@ -13,7 +13,11 @@ type RenderableResourceManagerOptions = {
 
 export class RenderableResourceManager {
   private readonly objectUrls = new Map<string, string>()
-  private readonly pendingConsumers = new Map<string, Set<RenderableResourceConsumer>>()
+  private readonly pendingConsumers = new Map<
+    string,
+    Set<RenderableResourceConsumer>
+  >()
+  private generation = 0
 
   constructor(private readonly options: RenderableResourceManagerOptions) {}
 
@@ -22,30 +26,38 @@ export class RenderableResourceManager {
     return typeof resolved === "string" && resolved.startsWith("blob:")
   }
 
-  resolveUrl(
-    path: string,
-    consumer: RenderableResourceConsumer
-  ): string {
+  resolveUrl(path: string, consumer: RenderableResourceConsumer): string {
+    const generation = this.generation
     if (this.options.hasBinary?.(path) === false) {
       return path
     }
 
+    const cached = this.objectUrls.get(path)
+    if (cached) {
+      if (!cached.startsWith("blob:")) {
+        this.trackConsumer(path, consumer)
+      }
+      return cached
+    }
+
     const readBinary = this.options.readBinary(path)
-    if (!readBinary || typeof Blob === "undefined" || typeof URL === "undefined") {
+    if (
+      !readBinary ||
+      typeof Blob === "undefined" ||
+      typeof URL === "undefined"
+    ) {
       return path
     }
 
     this.trackConsumer(path, consumer)
-    const cached = this.objectUrls.get(path)
-    if (cached) {
-      return cached
-    }
-
     const mimeType = getMimeTypeFromPath(path) ?? "application/octet-stream"
     const placeholder = path
 
     readBinary
       .then((binary) => {
+        if (generation !== this.generation) {
+          return
+        }
         if (typeof URL.createObjectURL !== "function") {
           return
         }
@@ -55,6 +67,10 @@ export class RenderableResourceManager {
         const objectUrl = URL.createObjectURL(
           new Blob([bytes.buffer as ArrayBuffer], { type: mimeType })
         )
+        if (generation !== this.generation) {
+          URL.revokeObjectURL?.(objectUrl)
+          return
+        }
         const previous = this.objectUrls.get(path)
         if (
           previous &&
@@ -74,7 +90,9 @@ export class RenderableResourceManager {
         this.pendingConsumers.delete(path)
       })
       .catch(() => {
-        this.pendingConsumers.delete(path)
+        if (generation === this.generation) {
+          this.pendingConsumers.delete(path)
+        }
       })
 
     this.objectUrls.set(path, placeholder)
@@ -82,6 +100,7 @@ export class RenderableResourceManager {
   }
 
   revokeAll(): void {
+    this.generation += 1
     if (
       typeof URL === "undefined" ||
       typeof URL.revokeObjectURL !== "function"
@@ -105,7 +124,8 @@ export class RenderableResourceManager {
     path: string,
     consumer: RenderableResourceConsumer
   ): void {
-    const consumers = this.pendingConsumers.get(path) ?? new Set<RenderableResourceConsumer>()
+    const consumers =
+      this.pendingConsumers.get(path) ?? new Set<RenderableResourceConsumer>()
     consumers.add(consumer)
     this.pendingConsumers.set(path, consumers)
   }

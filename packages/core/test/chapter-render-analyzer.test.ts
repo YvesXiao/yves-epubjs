@@ -1,13 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest"
 import {
   analyzeChapterRenderMode,
   collectComplexStyleReasons,
   collectHighRiskTagReasons,
   scoreChapterComplexity,
   type ChapterAnalysisInput
-} from "../src";
+} from "../src"
 
-function createAnalysisInput(overrides: Partial<ChapterAnalysisInput> = {}): ChapterAnalysisInput {
+function createAnalysisInput(
+  overrides: Partial<ChapterAnalysisInput> = {}
+): ChapterAnalysisInput {
   return {
     href: "OPS/test.xhtml",
     rootTagName: "body",
@@ -23,7 +25,7 @@ function createAnalysisInput(overrides: Partial<ChapterAnalysisInput> = {}): Cha
     classTokenCount: 0,
     idAttributeCount: 0,
     ...overrides
-  };
+  }
 }
 
 describe("chapter render analyzer", () => {
@@ -38,14 +40,14 @@ describe("chapter render analyzer", () => {
           iframe: 1
         }
       })
-    );
+    )
 
     expect(reasons).toEqual([
       "high-risk-tag:table",
       "high-risk-tag:svg",
       "high-risk-tag:iframe"
-    ]);
-  });
+    ])
+  })
 
   it("detects configured complex style properties without flagging ordinary text styles", () => {
     const reasons = collectComplexStyleReasons(
@@ -63,7 +65,7 @@ describe("chapter render analyzer", () => {
           "display:grid": 1
         }
       })
-    );
+    )
 
     expect(reasons).toEqual([
       "complex-style:float",
@@ -71,8 +73,8 @@ describe("chapter render analyzer", () => {
       "complex-style:position",
       "complex-style:flex",
       "complex-style:grid"
-    ]);
-  });
+    ])
+  })
 
   it("does not escalate ordinary display declarations into dom-only layout signals", () => {
     const reasons = collectComplexStyleReasons(
@@ -109,16 +111,16 @@ describe("chapter render analyzer", () => {
         "color:#333": 2,
         "font-size:1em": 2
       }
-    });
+    })
 
-    const decision = analyzeChapterRenderMode(analysis);
+    const decision = analyzeChapterRenderMode(analysis)
 
     expect(decision).toEqual({
       mode: "canvas",
       score: 0,
       reasons: []
-    });
-  });
+    })
+  })
 
   it("forces dom for high-complexity chapters with high-risk tags", () => {
     const analysis = createAnalysisInput({
@@ -127,17 +129,17 @@ describe("chapter render analyzer", () => {
         table: 1,
         svg: 1
       }
-    });
+    })
 
-    const decision = analyzeChapterRenderMode(analysis);
+    const decision = analyzeChapterRenderMode(analysis)
 
-    expect(decision.mode).toBe("dom");
-    expect(decision.score).toBe(40);
+    expect(decision.mode).toBe("dom")
+    expect(decision.score).toBe(40)
     expect(decision.reasons).toEqual([
       "high-risk-tag:table",
       "high-risk-tag:svg"
-    ]);
-  });
+    ])
+  })
 
   it("accumulates multiple weaker signals into a dom decision when threshold is exceeded", () => {
     const analysis = createAnalysisInput({
@@ -154,10 +156,10 @@ describe("chapter render analyzer", () => {
       stylePropertyValueCounts: {
         "float:left": 1
       }
-    });
+    })
 
-    const scored = scoreChapterComplexity(analysis);
-    const decision = analyzeChapterRenderMode(analysis);
+    const scored = scoreChapterComplexity(analysis)
+    const decision = analyzeChapterRenderMode(analysis)
 
     expect(scored).toEqual({
       score: 43,
@@ -168,8 +170,8 @@ describe("chapter render analyzer", () => {
         "large-node-count:320",
         "complex-inline-style:14"
       ]
-    });
-    expect(decision.mode).toBe("dom");
-    expect(decision.score).toBe(43);
-  });
-});
+    })
+    expect(decision.mode).toBe("dom")
+    expect(decision.score).toBe(43)
+  })
+})

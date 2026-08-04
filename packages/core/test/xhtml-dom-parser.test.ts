@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  parseXhtmlDomDocument
-} from "../src/parser/xhtml-dom-parser"
+import { parseXhtmlDomDocument } from "../src/parser/xhtml-dom-parser"
 import {
   findHtmlElementsByTagName,
   getHtmlElementAttribute,
@@ -49,14 +47,26 @@ describe("parseXhtmlDomDocument", () => {
 
     expect(parsed.bodyElement).toBeTruthy()
 
-    const figures = parsed.bodyElement ? findHtmlElementsByTagName(parsed.bodyElement, "figure") : []
-    const images = parsed.bodyElement ? findHtmlElementsByTagName(parsed.bodyElement, "img") : []
-    const captions = parsed.bodyElement ? findHtmlElementsByTagName(parsed.bodyElement, "figcaption") : []
+    const figures = parsed.bodyElement
+      ? findHtmlElementsByTagName(parsed.bodyElement, "figure")
+      : []
+    const images = parsed.bodyElement
+      ? findHtmlElementsByTagName(parsed.bodyElement, "img")
+      : []
+    const captions = parsed.bodyElement
+      ? findHtmlElementsByTagName(parsed.bodyElement, "figcaption")
+      : []
 
     expect(figures).toHaveLength(1)
-    expect(figures[0] && getHtmlElementAttribute(figures[0], "id")).toBe("fig-1")
-    expect(images[0] && getHtmlElementAttribute(images[0], "src")).toBe("images/cover.png")
-    expect(captions[0] && getHtmlNodeTextContent(captions[0])).toBe("Cover image")
+    expect(figures[0] && getHtmlElementAttribute(figures[0], "id")).toBe(
+      "fig-1"
+    )
+    expect(images[0] && getHtmlElementAttribute(images[0], "src")).toBe(
+      "images/cover.png"
+    )
+    expect(captions[0] && getHtmlNodeTextContent(captions[0])).toBe(
+      "Cover image"
+    )
   })
 
   it("normalizes common legacy HTML named entities before XHTML parsing", () => {
@@ -69,12 +79,14 @@ describe("parseXhtmlDomDocument", () => {
       </html>
     `)
 
-    const paragraphs = parsed.bodyElement ? findHtmlElementsByTagName(parsed.bodyElement, "p") : []
+    const paragraphs = parsed.bodyElement
+      ? findHtmlElementsByTagName(parsed.bodyElement, "p")
+      : []
 
     expect(paragraphs).toHaveLength(2)
-    expect(paragraphs[0] && getHtmlElementAttribute(paragraphs[0], "title")).toBe(
-      "Tom\u00A0Jerry “quoted”"
-    )
+    expect(
+      paragraphs[0] && getHtmlElementAttribute(paragraphs[0], "title")
+    ).toBe("Tom\u00A0Jerry “quoted”")
     expect(paragraphs[0] && getHtmlNodeTextContent(paragraphs[0])).toBe(
       "A\u00A0B\u2002C—D… © € ½"
     )
@@ -92,7 +104,9 @@ describe("parseXhtmlDomDocument", () => {
       </html>
     `)
 
-    const paragraphs = parsed.bodyElement ? findHtmlElementsByTagName(parsed.bodyElement, "p") : []
+    const paragraphs = parsed.bodyElement
+      ? findHtmlElementsByTagName(parsed.bodyElement, "p")
+      : []
 
     expect(paragraphs[0] && getHtmlNodeTextContent(paragraphs[0])).toBe(
       `& < > " ' &unknown; &madeup中文`

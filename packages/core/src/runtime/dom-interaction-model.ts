@@ -6,7 +6,8 @@ export const SUPPORTED_DOM_INTERACTIONS = [
   "chapter-progress"
 ] as const
 
-export type SupportedDomInteraction = (typeof SUPPORTED_DOM_INTERACTIONS)[number]
+export type SupportedDomInteraction =
+  (typeof SUPPORTED_DOM_INTERACTIONS)[number]
 
 export type DomClickInteraction =
   | {
@@ -45,7 +46,10 @@ export function resolveDomClickInteraction(input: {
 
   return {
     kind: "locator",
-    interaction: locator.anchorId || locator.blockId ? "anchored-fragment" : "chapter-progress",
+    interaction:
+      locator.anchorId || locator.blockId
+        ? "anchored-fragment"
+        : "chapter-progress",
     locator
   }
 }

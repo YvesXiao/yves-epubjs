@@ -32,8 +32,12 @@ describe("reader domain utilities", () => {
   })
 
   it("converts hex highlight colors to translucent rgba", () => {
-    expect(toTransparentHighlightColor("#abc")).toBe("rgba(170, 187, 204, 0.18)")
-    expect(toTransparentHighlightColor("#123456")).toBe("rgba(18, 52, 86, 0.18)")
+    expect(toTransparentHighlightColor("#abc")).toBe(
+      "rgba(170, 187, 204, 0.18)"
+    )
+    expect(toTransparentHighlightColor("#123456")).toBe(
+      "rgba(18, 52, 86, 0.18)"
+    )
   })
 
   it("collects nested block ids in reading order", () => {

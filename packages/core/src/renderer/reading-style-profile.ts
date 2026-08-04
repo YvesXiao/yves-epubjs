@@ -3,105 +3,105 @@ import type {
   TextAlign,
   Theme,
   TypographyOptions
-} from "../model/types";
+} from "../model/types"
 
 export const DEFAULT_READER_BASELINE_STYLE_PROFILE: ReaderBaselineStyleProfile =
-  "default-reflowable";
+  "default-reflowable"
 
 export type ReadingStyleProfile = {
-  name: ReaderBaselineStyleProfile;
+  name: ReaderBaselineStyleProfile
   section: {
-    sidePadding: number;
-    bottomPadding: number;
-  };
+    sidePadding: number
+    bottomPadding: number
+  }
   text: {
-    lineHeight: number;
-    marginBottom: number;
-    textAlign: TextAlign;
-    color: string;
-    letterSpacing: number;
-    wordSpacing: number;
-  };
+    lineHeight: number
+    marginBottom: number
+    textAlign: TextAlign
+    color: string
+    letterSpacing: number
+    wordSpacing: number
+  }
   heading: {
-    lineHeight: number;
-    marginBottom: number;
-    scale: Record<1 | 2 | 3 | 4 | 5 | 6, number>;
-    color: string;
-  };
+    lineHeight: number
+    marginBottom: number
+    scale: Record<1 | 2 | 3 | 4 | 5 | 6, number>
+    color: string
+  }
   link: {
-    color: string;
-  };
+    color: string
+  }
   caption: {
-    color: string;
-    fontSize: number;
-    lineHeight: number;
-    marginTop: number;
-    insetX: number;
-  };
+    color: string
+    fontSize: number
+    lineHeight: number
+    marginTop: number
+    insetX: number
+  }
   code: {
-    fontFamily: string;
-    fontSize: number;
-    lineHeight: number;
-    blockPaddingX: number;
-    blockPaddingY: number;
-    blockRadius: number;
-    blockBackground: string;
-    color: string;
-    inlinePaddingX: number;
-    inlinePaddingY: number;
-    inlineRadius: number;
-    inlineBackground: string;
-    inlineColor: string;
-  };
+    fontFamily: string
+    fontSize: number
+    lineHeight: number
+    blockPaddingX: number
+    blockPaddingY: number
+    blockRadius: number
+    blockBackground: string
+    color: string
+    inlinePaddingX: number
+    inlinePaddingY: number
+    inlineRadius: number
+    inlineBackground: string
+    inlineColor: string
+  }
   quote: {
-    accentWidth: number;
-    accentGap: number;
-    accentColor: string;
-    contentInsetY: number;
-  };
+    accentWidth: number
+    accentGap: number
+    accentColor: string
+    contentInsetY: number
+  }
   aside: {
-    accentWidth: number;
-    accentGap: number;
-    accentColor: string;
-    background: string;
-    contentInsetY: number;
-  };
+    accentWidth: number
+    accentGap: number
+    accentColor: string
+    background: string
+    contentInsetY: number
+  }
   list: {
-    indent: number;
-    markerGap: number;
-    itemGap: number;
-  };
+    indent: number
+    markerGap: number
+    itemGap: number
+  }
   table: {
-    borderColor: string;
-    borderWidth: number;
-    cellPadding: number;
-  };
+    borderColor: string
+    borderWidth: number
+    cellPadding: number
+  }
   media: {
-    blockSpacing: number;
-  };
+    blockSpacing: number
+  }
   thematicBreak: {
-    blockHeight: number;
-    lineWidth: number;
-    color: string;
-  };
+    blockHeight: number
+    lineWidth: number
+    color: string
+  }
   highlight: {
-    search: string;
-    active: string;
-    mark: string;
-  };
-};
+    search: string
+    active: string
+    mark: string
+  }
+}
 
 export function buildReadingStyleProfile(input: {
-  theme: Theme;
-  typography: TypographyOptions;
+  theme: Theme
+  typography: TypographyOptions
 }): ReadingStyleProfile {
-  const darkTheme = isDarkColor(input.theme.background);
-  const paragraphSpacing = input.typography.paragraphSpacing;
-  const headingMarginBottom = Math.max(12, Math.round(paragraphSpacing * 0.9));
-  const textLineHeight = input.typography.fontSize * input.typography.lineHeight;
-  const codeFontSize = Math.max(13, input.typography.fontSize - 1);
-  const captionFontSize = Math.max(14, input.typography.fontSize - 1);
-  const captionLineHeight = Math.max(captionFontSize * 1.45, 18);
+  const darkTheme = isDarkColor(input.theme.background)
+  const paragraphSpacing = input.typography.paragraphSpacing
+  const headingMarginBottom = Math.max(12, Math.round(paragraphSpacing * 0.9))
+  const textLineHeight = input.typography.fontSize * input.typography.lineHeight
+  const codeFontSize = Math.max(13, input.typography.fontSize - 1)
+  const captionFontSize = Math.max(14, input.typography.fontSize - 1)
+  const captionLineHeight = Math.max(captionFontSize * 1.45, 18)
 
   return {
     name: DEFAULT_READER_BASELINE_STYLE_PROFILE,
@@ -152,7 +152,9 @@ export function buildReadingStyleProfile(input: {
       inlinePaddingX: 5,
       inlinePaddingY: 1,
       inlineRadius: 4,
-      inlineBackground: darkTheme ? "rgba(148, 163, 184, 0.16)" : "rgba(15, 23, 42, 0.06)",
+      inlineBackground: darkTheme
+        ? "rgba(148, 163, 184, 0.16)"
+        : "rgba(15, 23, 42, 0.06)",
       inlineColor: darkTheme ? "#f8fafc" : "#0f172a"
     },
     quote: {
@@ -191,10 +193,12 @@ export function buildReadingStyleProfile(input: {
       active: "rgba(245, 158, 11, 0.18)",
       mark: "rgba(250, 204, 21, 0.22)"
     }
-  };
+  }
 }
 
-export function buildReadingStyleCssVariables(profile: ReadingStyleProfile): Record<string, string> {
+export function buildReadingStyleCssVariables(
+  profile: ReadingStyleProfile
+): Record<string, string> {
   return {
     "--reader-side-padding": `${profile.section.sidePadding}px`,
     "--reader-bottom-padding": `${profile.section.bottomPadding}px`,
@@ -221,29 +225,32 @@ export function buildReadingStyleCssVariables(profile: ReadingStyleProfile): Rec
     "--reader-media-block-spacing": `${profile.media.blockSpacing}px`,
     "--reader-rule-color": profile.thematicBreak.color,
     "--reader-rule-width": `${profile.thematicBreak.lineWidth}px`
-  };
+  }
 }
 
 function isDarkColor(color: string): boolean {
-  const normalized = color.trim().toLowerCase();
+  const normalized = color.trim().toLowerCase()
   if (!normalized.startsWith("#")) {
-    return false;
+    return false
   }
 
-  const hex = normalized.slice(1);
+  const hex = normalized.slice(1)
   const expanded =
     hex.length === 3
-      ? hex.split("").map((part) => `${part}${part}`).join("")
+      ? hex
+          .split("")
+          .map((part) => `${part}${part}`)
+          .join("")
       : hex.length === 6
         ? hex
-        : null;
+        : null
   if (!expanded) {
-    return false;
+    return false
   }
 
-  const red = Number.parseInt(expanded.slice(0, 2), 16);
-  const green = Number.parseInt(expanded.slice(2, 4), 16);
-  const blue = Number.parseInt(expanded.slice(4, 6), 16);
-  const luminance = (red * 299 + green * 587 + blue * 114) / 1000;
-  return luminance < 128;
+  const red = Number.parseInt(expanded.slice(0, 2), 16)
+  const green = Number.parseInt(expanded.slice(2, 4), 16)
+  const blue = Number.parseInt(expanded.slice(4, 6), 16)
+  const luminance = (red * 299 + green * 587 + blue * 114) / 1000
+  return luminance < 128
 }

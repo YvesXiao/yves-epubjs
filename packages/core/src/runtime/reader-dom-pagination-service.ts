@@ -1,4 +1,9 @@
-import type { BlockNode, InlineNode, Locator, SectionDocument } from "../model/types"
+import type {
+  BlockNode,
+  InlineNode,
+  Locator,
+  SectionDocument
+} from "../model/types"
 import { findBlockById } from "./reader-block-tree"
 import type { PageBlockSlice, ReaderPage } from "./paginated-render-plan"
 import {
@@ -58,7 +63,10 @@ export class ReaderDomPaginationService {
       typeof nextPage.offsetInSection === "number"
         ? nextPage.offsetInSection - targetOffset
         : sectionHeight - targetOffset
-    const visibleHeight = Math.max(1, Math.min(input.pageHeight, rawVisibleHeight))
+    const visibleHeight = Math.max(
+      1,
+      Math.min(input.pageHeight, rawVisibleHeight)
+    )
     viewport.style.height = `${visibleHeight}px`
     input.sectionElement.style.position = "relative"
     input.sectionElement.style.transform = `translateY(-${targetOffset}px)`
@@ -145,10 +153,7 @@ export class ReaderDomPaginationService {
           0,
           element.getBoundingClientRect().top - sectionRect.top
         )
-        const pageIndex = resolvePaginatedDomPageIndex(
-          relativeTop,
-          pageOffsets
-        )
+        const pageIndex = resolvePaginatedDomPageIndex(relativeTop, pageOffsets)
         const seenBlockIds = seenBlockIdsByPage[pageIndex]
         const blocks = pageBlocks[pageIndex]
         if (!seenBlockIds || !blocks || seenBlockIds.has(block.id)) {
@@ -203,15 +208,15 @@ export class ReaderDomPaginationService {
         previousPage && pageHasReadableTextContent(previousPage)
       const measuredStandalonePage =
         previousPage && !shouldPreservePreviousContentPage
-        ? findMeasuredStandaloneMediaPage({
-            pages,
-            sectionId: input.section.id,
-            previousOffset: previousPage.offsetInSection ?? 0,
-            pageHeight: input.pageHeight,
-            mediaBands,
-            textLineBands: collectPaginatedDomTextLineBands(sectionElement)
-          })
-        : null
+          ? findMeasuredStandaloneMediaPage({
+              pages,
+              sectionId: input.section.id,
+              previousOffset: previousPage.offsetInSection ?? 0,
+              pageHeight: input.pageHeight,
+              mediaBands,
+              textLineBands: collectPaginatedDomTextLineBands(sectionElement)
+            })
+          : null
       const currentPage = findCurrentPageForSection({
         pages,
         currentPageNumber: input.currentPageNumber,
@@ -256,8 +261,14 @@ export function measurePaginatedDomPageOffsets(
   const lineBands = mergePaginatedDomBands(textLineBands, mediaBands)
   if (lineBands.length === 0) {
     const offsets = [0]
-    for (let offset = pageHeight; offset < sectionHeight; offset += pageHeight) {
-      if (shouldKeepPaginatedDomPageOffset(offset, sectionHeight, pageHeight, [])) {
+    for (
+      let offset = pageHeight;
+      offset < sectionHeight;
+      offset += pageHeight
+    ) {
+      if (
+        shouldKeepPaginatedDomPageOffset(offset, sectionHeight, pageHeight, [])
+      ) {
         offsets.push(offset)
       }
     }
@@ -353,8 +364,7 @@ function findMeasuredStandaloneMediaPage(input: {
     .filter((entry) => entry.visibleHeight > DOM_PAGE_EDGE_TOLERANCE)
     .filter(
       (entry) =>
-        Math.abs(entry.band.top - input.previousOffset) <=
-        maximumOffsetDistance
+        Math.abs(entry.band.top - input.previousOffset) <= maximumOffsetDistance
     )
     .filter(
       (entry) =>
@@ -541,10 +551,7 @@ function findMediaPageBreak(input: {
     : null
 }
 
-function isLargeDomMediaBand(
-  band: DomMediaBand,
-  pageHeight: number
-): boolean {
+function isLargeDomMediaBand(band: DomMediaBand, pageHeight: number): boolean {
   return band.bottom - band.top >= pageHeight * DOM_LARGE_MEDIA_PAGE_RATIO
 }
 
@@ -584,7 +591,9 @@ function shouldKeepPaginatedDomPageOffset(
     return true
   }
 
-  return lineBands.some((band) => band.bottom > offset + DOM_PAGE_EDGE_TOLERANCE)
+  return lineBands.some(
+    (band) => band.bottom > offset + DOM_PAGE_EDGE_TOLERANCE
+  )
 }
 
 function getMinimumDomPageAdvance(pageHeight: number): number {

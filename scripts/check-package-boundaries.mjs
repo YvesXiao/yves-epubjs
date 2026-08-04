@@ -34,9 +34,13 @@ for (const root of rootsToCheck) {
 }
 
 if (violations.length > 0) {
-  console.error("Package boundary check failed. Demo must not import from core source paths.\n")
+  console.error(
+    "Package boundary check failed. Demo must not import from core source paths.\n"
+  )
   for (const violation of violations) {
-    console.error(`- ${path.relative(repoRoot, violation.filePath)} -> ${violation.specifier}`)
+    console.error(
+      `- ${path.relative(repoRoot, violation.filePath)} -> ${violation.specifier}`
+    )
   }
   process.exitCode = 1
 } else {

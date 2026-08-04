@@ -23,19 +23,22 @@ export const CANVAS_BACKLOG_FREEZE_SIGNALS = [
     kind: "tag",
     name: "svg",
     renderer: "dom",
-    rationale: "SVG rendering and interaction should not be expanded on the canvas fallback path."
+    rationale:
+      "SVG rendering and interaction should not be expanded on the canvas fallback path."
   },
   {
     kind: "tag",
     name: "math",
     renderer: "dom",
-    rationale: "Math content depends on browser-native fidelity and should remain DOM-owned."
+    rationale:
+      "Math content depends on browser-native fidelity and should remain DOM-owned."
   },
   {
     kind: "tag",
     name: "iframe",
     renderer: "dom",
-    rationale: "Embedded browsing contexts are outside the canvas renderer responsibility."
+    rationale:
+      "Embedded browsing contexts are outside the canvas renderer responsibility."
   },
   {
     kind: "style",
@@ -47,7 +50,8 @@ export const CANVAS_BACKLOG_FREEZE_SIGNALS = [
     kind: "style",
     name: "text-indent",
     renderer: "dom",
-    rationale: "Publisher typography with first-line indentation should use browser layout."
+    rationale:
+      "Publisher typography with first-line indentation should use browser layout."
   },
   {
     kind: "style",
@@ -69,10 +73,11 @@ export const CANVAS_BACKLOG_FREEZE_SIGNALS = [
   }
 ] as const satisfies readonly CanvasBacklogFreezeSignal[]
 
-export const HIGH_RISK_DOM_TAGS = CANVAS_BACKLOG_FREEZE_SIGNALS
-  .filter((signal) => signal.kind === "tag")
-  .map((signal) => signal.name) as readonly string[]
+export const HIGH_RISK_DOM_TAGS = CANVAS_BACKLOG_FREEZE_SIGNALS.filter(
+  (signal) => signal.kind === "tag"
+).map((signal) => signal.name) as readonly string[]
 
-export const COMPLEX_DOM_STYLE_PROPERTIES = CANVAS_BACKLOG_FREEZE_SIGNALS
-  .filter((signal) => signal.kind === "style")
-  .map((signal) => signal.name) as readonly string[]
+export const COMPLEX_DOM_STYLE_PROPERTIES =
+  CANVAS_BACKLOG_FREEZE_SIGNALS.filter((signal) => signal.kind === "style").map(
+    (signal) => signal.name
+  ) as readonly string[]

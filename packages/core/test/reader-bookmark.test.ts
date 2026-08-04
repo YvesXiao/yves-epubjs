@@ -47,7 +47,9 @@ describe("EpubReader bookmarks", () => {
       toc: [],
       sections: [section]
     }
-    ;(reader as unknown as { book: Book; sourceName: string | null }).sourceName = "sample.epub"
+    ;(
+      reader as unknown as { book: Book; sourceName: string | null }
+    ).sourceName = "sample.epub"
 
     await reader.goToLocation({
       spineIndex: 0,
@@ -56,7 +58,9 @@ describe("EpubReader bookmarks", () => {
     })
 
     const bookmark = reader.createBookmark({ label: "Saved here" })
-    expect(bookmark?.publicationId).toBe("title:Bookmark Reader::source:sample.epub")
+    expect(bookmark?.publicationId).toBe(
+      "title:Bookmark Reader::source:sample.epub"
+    )
     expect(bookmark?.locator.href).toBe("OPS/chapter-1.xhtml")
     expect(bookmark?.locator.blockId).toBe("text-1")
     expect(bookmark?.locator.cfi).toBe("epubcfi(/6/2!/2[text-1])")
@@ -93,7 +97,8 @@ describe("EpubReader bookmarks", () => {
       sections: [section]
     }
 
-    ;(reader as unknown as { book: Book; sourceName: string | null }).book = book
+    ;(reader as unknown as { book: Book; sourceName: string | null }).book =
+      book
 
     const restored = await reader.restoreBookmark({
       id: "bookmark-1",
@@ -188,7 +193,8 @@ describe("EpubReader bookmarks", () => {
       sections: [section]
     }
 
-    ;(reader as unknown as { book: Book; sourceName: string | null }).book = book
+    ;(reader as unknown as { book: Book; sourceName: string | null }).book =
+      book
 
     const restored = await reader.restoreBookmark({
       id: "bookmark-2",
@@ -251,7 +257,8 @@ describe("EpubReader bookmarks", () => {
       sections: [section]
     }
 
-    ;(reader as unknown as { book: Book; sourceName: string | null }).book = book
+    ;(reader as unknown as { book: Book; sourceName: string | null }).book =
+      book
 
     await reader.render()
     await reader.goToPage(3)

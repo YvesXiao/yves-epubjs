@@ -37,7 +37,9 @@ describe("buildScrollRenderPlan", () => {
       sectionHref: "OPS/one.xhtml",
       height: 480
     })
-    expect(plan.sectionsToRender[1]?.domHtml).toContain('data-section="section-2"')
+    expect(plan.sectionsToRender[1]?.domHtml).toContain(
+      'data-section="section-2"'
+    )
     expect(plan.measuredSectionHeights[0]).toBe(480)
     expect(plan.measuredSectionHeights[1]).toBe(720)
   })

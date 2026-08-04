@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
-import type { Annotation } from "../src/model/types";
-import { ReaderAnnotationSession } from "../src/runtime/reader-annotation-session";
-import { createReaderSessionState } from "../src/runtime/reader-session-state";
+import { describe, expect, it } from "vitest"
+import type { Annotation } from "../src/model/types"
+import { ReaderAnnotationSession } from "../src/runtime/reader-annotation-session"
+import { createReaderSessionState } from "../src/runtime/reader-session-state"
 
 describe("ReaderAnnotationSession", () => {
   it("appends annotations immutably and resets them", () => {
@@ -14,20 +14,20 @@ describe("ReaderAnnotationSession", () => {
       spreadMode: "auto",
       theme: { background: "#fff", color: "#000" },
       typography: { fontSize: 16, lineHeight: 1.5, paragraphSpacing: 1 }
-    });
-    const session = new ReaderAnnotationSession(state.annotations);
-    const original = session.annotations;
+    })
+    const session = new ReaderAnnotationSession(state.annotations)
+    const original = session.annotations
 
-    session.append(createAnnotation("a1"));
+    session.append(createAnnotation("a1"))
 
-    expect(session.annotations).toHaveLength(1);
-    expect(session.annotations).not.toBe(original);
+    expect(session.annotations).toHaveLength(1)
+    expect(session.annotations).not.toBe(original)
 
-    session.reset();
+    session.reset()
 
-    expect(session.annotations).toEqual([]);
-  });
-});
+    expect(session.annotations).toEqual([])
+  })
+})
 
 function createAnnotation(id: string): Annotation {
   return {
@@ -39,5 +39,5 @@ function createAnnotation(id: string): Annotation {
     },
     createdAt: "2026-06-02T00:00:00.000Z",
     updatedAt: "2026-06-02T00:00:00.000Z"
-  };
+  }
 }

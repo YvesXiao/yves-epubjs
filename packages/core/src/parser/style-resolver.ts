@@ -1,6 +1,9 @@
 import type { BlockStyle, TextAlign, TextStyle } from "../model/types"
 import type { CssAstDeclaration, CssAstStyleSheet } from "./css-ast-adapter"
-import { getCssDeclarationValueText, getCssRuleDeclarations } from "./css-ast-adapter"
+import {
+  getCssDeclarationValueText,
+  getCssRuleDeclarations
+} from "./css-ast-adapter"
 import type { HtmlDomElement } from "./html-dom-adapter"
 import { getHtmlElementAttribute } from "./html-dom-adapter"
 import { collectMatchedCssRules } from "./style-rule-matcher"
@@ -40,9 +43,15 @@ export function resolveElementStyle(input: {
   const resolved: ResolvedStyle = { ...(input.defaultStyle ?? {}) }
   const stylesheets = input.stylesheets ?? []
 
-  applyDeclarationEntries(resolved, collectLegacyPresentationalDeclarations(input.element))
+  applyDeclarationEntries(
+    resolved,
+    collectLegacyPresentationalDeclarations(input.element)
+  )
 
-  for (const matchedRule of collectMatchedCssRules(input.element, stylesheets)) {
+  for (const matchedRule of collectMatchedCssRules(
+    input.element,
+    stylesheets
+  )) {
     applyDeclarations(resolved, getCssRuleDeclarations(matchedRule.rule))
   }
 
@@ -174,7 +183,11 @@ function applySingleDeclaration(
       }
       break
     case "word-break":
-      if (value === "normal" || value === "keep-all" || value === "break-word") {
+      if (
+        value === "normal" ||
+        value === "keep-all" ||
+        value === "break-word"
+      ) {
         target.wordBreak = value
       }
       break

@@ -33,13 +33,13 @@ pnpm add @yves-epub/core
 ## 最小用法
 
 ```ts
-import { EpubReader } from "@yves-epub/core";
+import { EpubReader } from "@yves-epub/core"
 
-const container = document.getElementById("reader");
-const file = fileInput.files?.[0];
+const container = document.getElementById("reader")
+const file = fileInput.files?.[0]
 
 if (!container || !file) {
-  throw new Error("Missing reader container or EPUB file");
+  throw new Error("Missing reader container or EPUB file")
 }
 
 const reader = new EpubReader({
@@ -49,10 +49,10 @@ const reader = new EpubReader({
     publisherStyles: "enabled"
   },
   allowExternalEmbeddedResources: true
-});
+})
 
-await reader.open(file);
-await reader.render();
+await reader.open(file)
+await reader.render()
 ```
 
 ## 推荐宿主封装

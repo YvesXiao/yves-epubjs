@@ -1,16 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest"
 import {
   buildChapterAnalysisInput,
   parseCssStyleSheet,
   parseXhtmlDomDocument,
   type ChapterAnalysisInput
-} from "../src";
+} from "../src"
 
 function analyzeChapter(href: string, xml: string): ChapterAnalysisInput {
   return buildChapterAnalysisInput({
     href,
     document: parseXhtmlDomDocument(xml)
-  });
+  })
 }
 
 describe("chapter analysis input", () => {
@@ -21,7 +21,7 @@ describe("chapter analysis input", () => {
       <html xmlns="http://www.w3.org/1999/xhtml">
         <body></body>
       </html>`
-    );
+    )
 
     expect(analysis).toEqual({
       href: "OPS/empty.xhtml",
@@ -37,8 +37,8 @@ describe("chapter analysis input", () => {
       stylePropertyValueCounts: {},
       classTokenCount: 0,
       idAttributeCount: 0
-    } satisfies ChapterAnalysisInput);
-  });
+    } satisfies ChapterAnalysisInput)
+  })
 
   it("collects tag counts, inline style data, and shallow nesting metrics for a normal chapter", () => {
     const analysis = analyzeChapter(
@@ -53,34 +53,34 @@ describe("chapter analysis input", () => {
           </section>
         </body>
       </html>`
-    );
+    )
 
-    expect(analysis.href).toBe("OPS/normal.xhtml");
-    expect(analysis.rootTagName).toBe("body");
-    expect(analysis.nodeCount).toBe(8);
-    expect(analysis.elementCount).toBe(5);
-    expect(analysis.textNodeCount).toBe(3);
-    expect(analysis.maxDepth).toBe(4);
+    expect(analysis.href).toBe("OPS/normal.xhtml")
+    expect(analysis.rootTagName).toBe("body")
+    expect(analysis.nodeCount).toBe(8)
+    expect(analysis.elementCount).toBe(5)
+    expect(analysis.textNodeCount).toBe(3)
+    expect(analysis.maxDepth).toBe(4)
     expect(analysis.tagCounts).toEqual({
       section: 1,
       h1: 1,
       p: 1,
       strong: 1,
       img: 1
-    });
-    expect(analysis.styledElementCount).toBe(1);
-    expect(analysis.inlineStyleDeclarationCount).toBe(2);
+    })
+    expect(analysis.styledElementCount).toBe(1)
+    expect(analysis.inlineStyleDeclarationCount).toBe(2)
     expect(analysis.stylePropertyCounts).toEqual({
       "font-size": 1,
       color: 1
-    });
+    })
     expect(analysis.stylePropertyValueCounts).toEqual({
       "font-size:18px": 1,
       "color:#333": 1
-    });
-    expect(analysis.classTokenCount).toBe(1);
-    expect(analysis.idAttributeCount).toBe(0);
-  });
+    })
+    expect(analysis.classTokenCount).toBe(1)
+    expect(analysis.idAttributeCount).toBe(0)
+  })
 
   it("captures deep nesting, ids, and complex style properties for a complex chapter", () => {
     const analysis = analyzeChapter(
@@ -104,12 +104,12 @@ describe("chapter analysis input", () => {
           </div>
         </body>
       </html>`
-    );
+    )
 
-    expect(analysis.nodeCount).toBe(10);
-    expect(analysis.elementCount).toBe(8);
-    expect(analysis.textNodeCount).toBe(2);
-    expect(analysis.maxDepth).toBe(7);
+    expect(analysis.nodeCount).toBe(10)
+    expect(analysis.elementCount).toBe(8)
+    expect(analysis.textNodeCount).toBe(2)
+    expect(analysis.maxDepth).toBe(7)
     expect(analysis.tagCounts).toEqual({
       div: 1,
       section: 1,
@@ -119,20 +119,20 @@ describe("chapter analysis input", () => {
       table: 1,
       tr: 1,
       td: 1
-    });
-    expect(analysis.styledElementCount).toBe(1);
-    expect(analysis.inlineStyleDeclarationCount).toBe(2);
+    })
+    expect(analysis.styledElementCount).toBe(1)
+    expect(analysis.inlineStyleDeclarationCount).toBe(2)
     expect(analysis.stylePropertyCounts).toEqual({
       display: 1,
       position: 1
-    });
+    })
     expect(analysis.stylePropertyValueCounts).toEqual({
       "display:flex": 1,
       "position:absolute": 1
-    });
-    expect(analysis.classTokenCount).toBe(0);
-    expect(analysis.idAttributeCount).toBe(1);
-  });
+    })
+    expect(analysis.classTokenCount).toBe(0)
+    expect(analysis.idAttributeCount).toBe(1)
+  })
 
   it("includes linked stylesheet declarations in property counts", () => {
     const analysis = buildChapterAnalysisInput({

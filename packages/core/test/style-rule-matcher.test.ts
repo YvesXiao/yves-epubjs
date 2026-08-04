@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  parseCssStyleSheet
-} from "../src/parser/css-ast-adapter"
+import { parseCssStyleSheet } from "../src/parser/css-ast-adapter"
 import { parseHtmlDocument } from "../src/parser/html-dom-adapter"
 import { selectFirstHtmlElement } from "../src/parser/selector-matcher"
 import {
@@ -15,7 +13,9 @@ describe("style rule matcher", () => {
     expect(computeSelectorSpecificity("p")).toEqual([0, 0, 1])
     expect(computeSelectorSpecificity(".lead")).toEqual([0, 1, 0])
     expect(computeSelectorSpecificity("#intro")).toEqual([1, 0, 0])
-    expect(computeSelectorSpecificity("section.chapter p.lead")).toEqual([0, 2, 2])
+    expect(computeSelectorSpecificity("section.chapter p.lead")).toEqual([
+      0, 2, 2
+    ])
   })
 
   it("compares selector specificity lexicographically", () => {

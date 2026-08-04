@@ -39,7 +39,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --tsconfig tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "cd ../.. && vitest run"
+    "test": "cd ../.. && vitest run packages/core/test"
   },
   "dependencies": {
     "@chenglou/pretext": "^0.0.5",

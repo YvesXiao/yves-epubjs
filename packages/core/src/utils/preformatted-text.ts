@@ -29,7 +29,9 @@ export function wrapPreformattedText(
   font: string,
   tabWidth = 2
 ): string[] {
-  return wrapPreformattedTextWithOffsets(text, maxWidth, font, tabWidth).map((line) => line.text)
+  return wrapPreformattedTextWithOffsets(text, maxWidth, font, tabWidth).map(
+    (line) => line.text
+  )
 }
 
 export function wrapPreformattedTextWithOffsets(
@@ -64,7 +66,10 @@ export function wrapPreformattedTextWithOffsets(
     let consumed = 0
     for (const char of Array.from(expandedLine)) {
       const candidate = current + char
-      if (current.length === 0 || approximateTextWidth(candidate, font) <= safeWidth) {
+      if (
+        current.length === 0 ||
+        approximateTextWidth(candidate, font) <= safeWidth
+      ) {
         current = candidate
         consumed += char.length
         continue

@@ -23,7 +23,8 @@ describe("ScrollCoordinator", () => {
       callback(0)
       return 1
     }) as typeof window.requestAnimationFrame
-    window.cancelAnimationFrame = (() => undefined) as typeof window.cancelAnimationFrame
+    window.cancelAnimationFrame = (() =>
+      undefined) as typeof window.cancelAnimationFrame
 
     try {
       const coordinator = new ScrollCoordinator({

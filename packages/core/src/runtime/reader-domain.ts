@@ -1,6 +1,8 @@
 import type { BlockNode, TextRangeSelector } from "../model/types"
 
-export function normalizeTextRangeSelector(input: TextRangeSelector): TextRangeSelector {
+export function normalizeTextRangeSelector(
+  input: TextRangeSelector
+): TextRangeSelector {
   const normalized = {
     start: {
       blockId: input.start.blockId.trim(),
@@ -38,7 +40,12 @@ export function toTransparentHighlightColor(color?: string): string {
 
   const raw = hex[1]!
   const expanded =
-    raw.length === 3 ? raw.split("").map((char) => `${char}${char}`).join("") : raw
+    raw.length === 3
+      ? raw
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : raw
   const red = Number.parseInt(expanded.slice(0, 2), 16)
   const green = Number.parseInt(expanded.slice(2, 4), 16)
   const blue = Number.parseInt(expanded.slice(4, 6), 16)

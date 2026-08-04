@@ -32,7 +32,9 @@ describe("DecorationManager", () => {
 
     expect(manager.getGroup("search-results")).toHaveLength(1)
     expect(manager.getAll()).toHaveLength(2)
-    expect(Array.from(manager.getBlockIdsForStyles(["search-hit"]))).toEqual(["text-1"])
+    expect(Array.from(manager.getBlockIdsForStyles(["search-hit"]))).toEqual([
+      "text-1"
+    ])
     expect(manager.getFirstLocatorForStyle("active")).toEqual({
       spineIndex: 0,
       blockId: "text-2",
@@ -76,6 +78,8 @@ describe("DecorationManager", () => {
         }
       }
     ])
-    expect(Array.from(manager.getBlockIdsForStyles(["underline"]))).toEqual(["text-9"])
+    expect(Array.from(manager.getBlockIdsForStyles(["underline"]))).toEqual([
+      "text-9"
+    ])
   })
 })

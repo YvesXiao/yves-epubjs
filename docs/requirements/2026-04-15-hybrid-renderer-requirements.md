@@ -89,11 +89,11 @@
 
 ### 5.1 可选路线
 
-| 路线 | 描述 | 优点 | 风险 |
-| --- | --- | --- | --- |
-| A. 全量继续走 Canvas | 所有章节尽量原生化，不引入 DOM fallback | 架构最纯粹 | 对复杂章节兼容成本最高 |
-| B. 章节级 fallback | 每章二选一：`canvas` 或 `dom` | 风险最低，最容易先跑稳 | 复杂章节仍失去统一页感 |
-| C. 直接块级 fallback | 同一章内部同时存在 `canvas` 与 `dom` block | 长期灵活性最高 | 首期复杂度过高 |
+| 路线                 | 描述                                       | 优点                   | 风险                   |
+| -------------------- | ------------------------------------------ | ---------------------- | ---------------------- |
+| A. 全量继续走 Canvas | 所有章节尽量原生化，不引入 DOM fallback    | 架构最纯粹             | 对复杂章节兼容成本最高 |
+| B. 章节级 fallback   | 每章二选一：`canvas` 或 `dom`              | 风险最低，最容易先跑稳 | 复杂章节仍失去统一页感 |
+| C. 直接块级 fallback | 同一章内部同时存在 `canvas` 与 `dom` block | 长期灵活性最高         | 首期复杂度过高         |
 
 ### 5.2 本阶段推荐路线
 
@@ -299,19 +299,19 @@ DOM fallback 虽然是兼容兜底，但不能让视觉风格完全脱离阅读�
 
 ## 10. 状态 × 操作 → 结果矩阵
 
-| 状态 | 操作 / 事件 | 结果 | 约束 |
-| --- | --- | --- | --- |
-| `idle` | `open(file)` | 进入 `opening` | 清空旧决策缓存与旧渲染结果 |
-| `opening` | 章节解析完成 | 进入 `analyzing` | 暂不提交章节正文 |
-| `analyzing` | analyzer 输出 `canvas` | 进入 `canvas-render-pending` | 记录章节决策结果 |
-| `analyzing` | analyzer 输出 `dom` | 进入 `dom-render-pending` | 记录章节决策结果 |
-| `canvas-render-pending` | layout 与 display list ready | 进入 `ready` | 提交 canvas 章节画面 |
-| `dom-render-pending` | dom model ready | 进入 `ready` | 提交 dom 章节画面 |
-| `ready` | `goToHref / toc / search` | 进入 `relocating` | 定位行为不依赖章节渲染类型 |
-| `relocating` | 目标章节 ready | 回到 `ready` | 当前章节、进度与高亮同步更新 |
-| `ready` | `setTheme / setTypography / resize` | 进入 `rerender-pending` | 重新决策或复用已有模式 |
-| `rerender-pending` | 新章节结果 ready | 回到 `ready` | 原子替换章节渲染结果 |
-| 任意状态 | `destroy()` | 进入 `destroyed` | 释放 canvas 与 dom 章节资源 |
+| 状态                    | 操作 / 事件                         | 结果                         | 约束                         |
+| ----------------------- | ----------------------------------- | ---------------------------- | ---------------------------- |
+| `idle`                  | `open(file)`                        | 进入 `opening`               | 清空旧决策缓存与旧渲染结果   |
+| `opening`               | 章节解析完成                        | 进入 `analyzing`             | 暂不提交章节正文             |
+| `analyzing`             | analyzer 输出 `canvas`              | 进入 `canvas-render-pending` | 记录章节决策结果             |
+| `analyzing`             | analyzer 输出 `dom`                 | 进入 `dom-render-pending`    | 记录章节决策结果             |
+| `canvas-render-pending` | layout 与 display list ready        | 进入 `ready`                 | 提交 canvas 章节画面         |
+| `dom-render-pending`    | dom model ready                     | 进入 `ready`                 | 提交 dom 章节画面            |
+| `ready`                 | `goToHref / toc / search`           | 进入 `relocating`            | 定位行为不依赖章节渲染类型   |
+| `relocating`            | 目标章节 ready                      | 回到 `ready`                 | 当前章节、进度与高亮同步更新 |
+| `ready`                 | `setTheme / setTypography / resize` | 进入 `rerender-pending`      | 重新决策或复用已有模式       |
+| `rerender-pending`      | 新章节结果 ready                    | 回到 `ready`                 | 原子替换章节渲染结果         |
+| 任意状态                | `destroy()`                         | 进入 `destroyed`             | 释放 canvas 与 dom 章节资源  |
 
 ## 11. 需求拆分范围
 

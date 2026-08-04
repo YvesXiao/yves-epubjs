@@ -22,7 +22,9 @@ export function extractIntrinsicImageSize(
   )
 }
 
-function extractPngIntrinsicSize(binary: Uint8Array): IntrinsicImageSize | null {
+function extractPngIntrinsicSize(
+  binary: Uint8Array
+): IntrinsicImageSize | null {
   if (binary.length < 24) {
     return null
   }
@@ -34,8 +36,12 @@ function extractPngIntrinsicSize(binary: Uint8Array): IntrinsicImageSize | null 
   }
 
   if (
-    String.fromCharCode(binary[12] ?? 0, binary[13] ?? 0, binary[14] ?? 0, binary[15] ?? 0) !==
-    "IHDR"
+    String.fromCharCode(
+      binary[12] ?? 0,
+      binary[13] ?? 0,
+      binary[14] ?? 0,
+      binary[15] ?? 0
+    ) !== "IHDR"
   ) {
     return null
   }
@@ -45,7 +51,9 @@ function extractPngIntrinsicSize(binary: Uint8Array): IntrinsicImageSize | null 
   return isValidIntrinsicImageSize(width, height) ? { width, height } : null
 }
 
-function extractGifIntrinsicSize(binary: Uint8Array): IntrinsicImageSize | null {
+function extractGifIntrinsicSize(
+  binary: Uint8Array
+): IntrinsicImageSize | null {
   if (binary.length < 10) {
     return null
   }
@@ -67,7 +75,9 @@ function extractGifIntrinsicSize(binary: Uint8Array): IntrinsicImageSize | null 
   return isValidIntrinsicImageSize(width, height) ? { width, height } : null
 }
 
-function extractJpegIntrinsicSize(binary: Uint8Array): IntrinsicImageSize | null {
+function extractJpegIntrinsicSize(
+  binary: Uint8Array
+): IntrinsicImageSize | null {
   if (binary[0] !== 0xff || binary[1] !== 0xd8) {
     return null
   }
@@ -104,7 +114,9 @@ function extractJpegIntrinsicSize(binary: Uint8Array): IntrinsicImageSize | null
   return null
 }
 
-function extractWebpIntrinsicSize(binary: Uint8Array): IntrinsicImageSize | null {
+function extractWebpIntrinsicSize(
+  binary: Uint8Array
+): IntrinsicImageSize | null {
   if (binary.length < 30) {
     return null
   }
@@ -179,7 +191,10 @@ function extractSvgIntrinsicSize(
     : null
 }
 
-function parseSvgLength(svgTag: string, attributeName: "width" | "height"): number | null {
+function parseSvgLength(
+  svgTag: string,
+  attributeName: "width" | "height"
+): number | null {
   const match = svgTag.match(
     new RegExp(`\\b${attributeName}\\s*=\\s*["']\\s*([-+]?\\d*\\.?\\d+)`, "i")
   )
@@ -215,7 +230,7 @@ function readUint24(binary: Uint8Array, offset: number): number {
 
 function readUint32(binary: Uint8Array, offset: number): number {
   return (
-    ((binary[offset] ?? 0) * 2 ** 24) +
+    (binary[offset] ?? 0) * 2 ** 24 +
     ((binary[offset + 1] ?? 0) << 16) +
     ((binary[offset + 2] ?? 0) << 8) +
     (binary[offset + 3] ?? 0)

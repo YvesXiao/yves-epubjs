@@ -6,14 +6,14 @@
 
 ## 2. 样本与覆盖关系
 
-| 样本 | 主要场景 | 主要覆盖层 |
-| --- | --- | --- |
-| `novel-inline.xhtml` | 行内语义、`mark`、`sup`、inline image | parser / layout / renderer / reader |
-| `figure-note.xhtml` | `figure`、`figcaption`、`aside` | parser / layout / renderer / reader |
-| `nested-list.xhtml` | 嵌套列表、marker、缩进 | parser / layout / renderer |
-| `table-data.xhtml` | 表格标题、表头、网格单元格 | parser / layout / renderer / reader |
-| `footnotes.xhtml` | 同章脚注跳转、锚点 | parser / reader / toc |
-| `definition-list.xhtml` | `dl/dt/dd` | parser / renderer / reader |
+| 样本                    | 主要场景                              | 主要覆盖层                          |
+| ----------------------- | ------------------------------------- | ----------------------------------- |
+| `novel-inline.xhtml`    | 行内语义、`mark`、`sup`、inline image | parser / layout / renderer / reader |
+| `figure-note.xhtml`     | `figure`、`figcaption`、`aside`       | parser / layout / renderer / reader |
+| `nested-list.xhtml`     | 嵌套列表、marker、缩进                | parser / layout / renderer          |
+| `table-data.xhtml`      | 表格标题、表头、网格单元格            | parser / layout / renderer / reader |
+| `footnotes.xhtml`       | 同章脚注跳转、锚点                    | parser / reader / toc               |
+| `definition-list.xhtml` | `dl/dt/dd`                            | parser / renderer / reader          |
 
 ## 3. 自动化测试入口
 

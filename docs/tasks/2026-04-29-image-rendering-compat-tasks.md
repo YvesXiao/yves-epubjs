@@ -18,12 +18,12 @@
 
 行为约束：
 
-| 状态 | 操作 | 结果 |
-| --- | --- | --- |
-| 图片处于 footnote/noteref/sup/sub/small 上下文 | DOM 或 Canvas 分类 | `inline` |
-| 图片处于 figure 或单图段落 | DOM 或 Canvas 分类 | `block` |
-| section 为 cover/image-page | DOM 或 Canvas 分类 | `presentation` |
-| section 为 pre-paginated | DOM 或 Canvas 分类 | `fxl` |
+| 状态                                           | 操作               | 结果           |
+| ---------------------------------------------- | ------------------ | -------------- |
+| 图片处于 footnote/noteref/sup/sub/small 上下文 | DOM 或 Canvas 分类 | `inline`       |
+| 图片处于 figure 或单图段落                     | DOM 或 Canvas 分类 | `block`        |
+| section 为 cover/image-page                    | DOM 或 Canvas 分类 | `presentation` |
+| section 为 pre-paginated                       | DOM 或 Canvas 分类 | `fxl`          |
 
 实现范围：
 
@@ -39,12 +39,12 @@
 
 行为约束：
 
-| 状态 | 操作 | 结果 |
-| --- | --- | --- |
-| 普通 reflowable 大图 | DOM 渲染 | block、居中、受最大宽高约束 |
-| inline 语义图片 | DOM 渲染 | inline-block、随文本排版 |
-| presentation image | DOM 渲染 | 保持 presentation 专用规则 |
-| FXL 图片 | DOM 渲染 | 不套用 reflowable 大图 block 居中规则 |
+| 状态                 | 操作     | 结果                                  |
+| -------------------- | -------- | ------------------------------------- |
+| 普通 reflowable 大图 | DOM 渲染 | block、居中、受最大宽高约束           |
+| inline 语义图片      | DOM 渲染 | inline-block、随文本排版              |
+| presentation image   | DOM 渲染 | 保持 presentation 专用规则            |
+| FXL 图片             | DOM 渲染 | 不套用 reflowable 大图 block 居中规则 |
 
 实现范围：
 
@@ -59,11 +59,11 @@
 
 行为约束：
 
-| 状态 | 操作 | 结果 |
-| --- | --- | --- |
-| inline image 已包含在文本 range line bands 中 | DOM 分页测量 | 不再作为独立 media band |
-| block image 或 figure | DOM 分页测量 | 继续作为 media band |
-| FXL/presentation section | DOM 分页同步 | 跳过普通 reflowable 分页同步 |
+| 状态                                          | 操作         | 结果                         |
+| --------------------------------------------- | ------------ | ---------------------------- |
+| inline image 已包含在文本 range line bands 中 | DOM 分页测量 | 不再作为独立 media band      |
+| block image 或 figure                         | DOM 分页测量 | 继续作为 media band          |
+| FXL/presentation section                      | DOM 分页同步 | 跳过普通 reflowable 分页同步 |
 
 实现范围：
 
@@ -78,12 +78,12 @@
 
 行为约束：
 
-| 状态 | 操作 | 结果 |
-| --- | --- | --- |
-| DOM 图片 URL patch 完成但图片未 complete | 分页测量 | 等待 load/decode 或超时兜底 |
-| DOM 图片 load/error 晚到 | 当前 render version 仍有效 | 触发当前 section 重新测量 |
-| DOM 图片 load/error 晚到 | 当前 render version 已失效 | 忽略晚到结果 |
-| FXL DOM 图片晚到 | URL patch | 不触发 reflowable 重分页 |
+| 状态                                     | 操作                       | 结果                        |
+| ---------------------------------------- | -------------------------- | --------------------------- |
+| DOM 图片 URL patch 完成但图片未 complete | 分页测量                   | 等待 load/decode 或超时兜底 |
+| DOM 图片 load/error 晚到                 | 当前 render version 仍有效 | 触发当前 section 重新测量   |
+| DOM 图片 load/error 晚到                 | 当前 render version 已失效 | 忽略晚到结果                |
+| FXL DOM 图片晚到                         | URL patch                  | 不触发 reflowable 重分页    |
 
 实现范围：
 
@@ -99,12 +99,12 @@
 
 行为约束：
 
-| 状态 | 操作 | 结果 |
-| --- | --- | --- |
-| inline image 无 intrinsic size | Canvas layout | 使用字体 em fallback |
-| inline image 有 CSS 或 width/height | Canvas layout | 使用显式尺寸优先 |
-| block image intrinsic size 晚到 | Canvas paginated | 清缓存、重建 layout 和 pages |
-| image URL ready 但尺寸不变 | Canvas redraw | 重绘，不强制重排 |
+| 状态                                | 操作             | 结果                         |
+| ----------------------------------- | ---------------- | ---------------------------- |
+| inline image 无 intrinsic size      | Canvas layout    | 使用字体 em fallback         |
+| inline image 有 CSS 或 width/height | Canvas layout    | 使用显式尺寸优先             |
+| block image intrinsic size 晚到     | Canvas paginated | 清缓存、重建 layout 和 pages |
+| image URL ready 但尺寸不变          | Canvas redraw    | 重绘，不强制重排             |
 
 实现范围：
 
@@ -122,12 +122,12 @@
 
 行为约束：
 
-| 状态 | 操作 | 结果 |
-| --- | --- | --- |
-| 图片加载后页数变化 | 翻页/定位 | 当前页按 locator 或 section/page 语义收敛 |
-| 图片加载后 scroll height 变化 | scroll 模式 | 恢复 scroll anchor |
-| 图片加载后搜索结果跳转 | 搜索跳转 | 目标 block 可见 |
-| 图片加载后标注或命中区域变化 | 点击/标注 | hit region 与视觉位置一致 |
+| 状态                          | 操作        | 结果                                      |
+| ----------------------------- | ----------- | ----------------------------------------- |
+| 图片加载后页数变化            | 翻页/定位   | 当前页按 locator 或 section/page 语义收敛 |
+| 图片加载后 scroll height 变化 | scroll 模式 | 恢复 scroll anchor                        |
+| 图片加载后搜索结果跳转        | 搜索跳转    | 目标 block 可见                           |
+| 图片加载后标注或命中区域变化  | 点击/标注   | hit region 与视觉位置一致                 |
 
 实现范围：
 

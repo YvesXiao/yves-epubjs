@@ -8,15 +8,18 @@
   },
   "scripts": {
     "build": "pnpm -r build",
+    "check:bundle-size": "node scripts/check-bundle-size.mjs",
     "check:boundaries": "node scripts/check-package-boundaries.mjs",
-    "ci:check": "pnpm typecheck && pnpm check:boundaries && pnpm lint && pnpm test && pnpm build",
+    "check:package": "node scripts/check-package-artifact.mjs",
+    "ci:check": "pnpm format:check && pnpm typecheck && pnpm check:boundaries && pnpm lint && pnpm test && pnpm build && pnpm check:bundle-size && pnpm check:package",
     "dev": "pnpm --filter @yves-epub/demo dev",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@playwright/test": "^1.54.0",

@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { parseNcxDocument } from "../src/parser/ncx-parser";
+import { describe, expect, it } from "vitest"
+import { parseNcxDocument } from "../src/parser/ncx-parser"
 
 describe("parseNcxDocument", () => {
   it("parses nested navPoint structures", () => {
@@ -19,7 +19,7 @@ describe("parseNcxDocument", () => {
             </navPoint>
           </navPoint>
         </navMap>
-      </ncx>`;
+      </ncx>`
 
     expect(parseNcxDocument(xml, "OPS/toc.ncx")).toEqual([
       {
@@ -41,8 +41,8 @@ describe("parseNcxDocument", () => {
           }
         ]
       }
-    ]);
-  });
+    ])
+  })
 
   it("skips invalid navPoint nodes", () => {
     const xml = `<?xml version="1.0"?>
@@ -56,7 +56,7 @@ describe("parseNcxDocument", () => {
             <navLabel><text>Missing Content</text></navLabel>
           </navPoint>
         </navMap>
-      </ncx>`;
+      </ncx>`
 
     expect(parseNcxDocument(xml, "OPS/toc.ncx")).toEqual([
       {
@@ -65,6 +65,6 @@ describe("parseNcxDocument", () => {
         href: "OPS/text/valid.xhtml",
         children: []
       }
-    ]);
-  });
-});
+    ])
+  })
+})

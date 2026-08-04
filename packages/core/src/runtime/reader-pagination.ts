@@ -117,7 +117,9 @@ export function resolveRenderedPage(input: {
     return currentPage
   }
 
-  return input.pages.find((entry) => entry.sectionId === input.sectionId) ?? null
+  return (
+    input.pages.find((entry) => entry.sectionId === input.sectionId) ?? null
+  )
 }
 
 export function findPageByNumber(
@@ -138,8 +140,9 @@ export function resolvePaginatedSpread(input: {
     return null
   }
 
-  const spreadContext =
-    input.resolveReadingSpreadContextForSectionIndex(page.spineIndex)
+  const spreadContext = input.resolveReadingSpreadContextForSectionIndex(
+    page.spineIndex
+  )
   if (!spreadContext || !spreadContext.syntheticSpreadActive) {
     const section = book.sections[page.spineIndex] ?? null
     return createSinglePageSpread(page, section)

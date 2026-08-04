@@ -69,6 +69,9 @@ describe("reflowable compatibility fixtures", () => {
     )
 
     expect(footnotes.anchors["note-1"]).toBeTruthy()
-    expect(figure.blocks.map((block) => block.kind)).toEqual(["figure", "aside"])
+    expect(figure.blocks.map((block) => block.kind)).toEqual([
+      "figure",
+      "aside"
+    ])
   })
 })

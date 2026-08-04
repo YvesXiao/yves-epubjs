@@ -190,15 +190,15 @@ Pretext 可作为 EPUB 阅读器的“文本排版核心”，主要带来：
 
 ## 5. 核心能力拆分：Pretext 负责什么，阅读器负责什么
 
-| 领域 | Pretext 负责 | 本项目负责 |
-| --- | --- | --- |
-| 文本测量 | 段落预处理、宽度测量、行布局 | 调用时机、缓存策略、字体同步 |
-| 多语言断行 | 提供多语言文本换行能力 | 将其应用到 EPUB 段落和章节内容 |
-| 视图布局 | 输出高度、行信息、逐行范围 | 分页、滚动、虚拟化、定位恢复 |
-| 富文本 | 提供有限 inline rich layout 辅助 | 解析 XHTML、构建文本片段模型 |
-| 资源系统 | 不负责 | ZIP 解包、资源寻址、媒体加载 |
-| 阅读器交互 | 不负责 | 目录、搜索、书签、主题、选区、事件 |
-| 规范兼容 | 文本布局相关 | EPUB 3.x 结构兼容与阅读系统行为 |
+| 领域       | Pretext 负责                     | 本项目负责                         |
+| ---------- | -------------------------------- | ---------------------------------- |
+| 文本测量   | 段落预处理、宽度测量、行布局     | 调用时机、缓存策略、字体同步       |
+| 多语言断行 | 提供多语言文本换行能力           | 将其应用到 EPUB 段落和章节内容     |
+| 视图布局   | 输出高度、行信息、逐行范围       | 分页、滚动、虚拟化、定位恢复       |
+| 富文本     | 提供有限 inline rich layout 辅助 | 解析 XHTML、构建文本片段模型       |
+| 资源系统   | 不负责                           | ZIP 解包、资源寻址、媒体加载       |
+| 阅读器交互 | 不负责                           | 目录、搜索、书签、主题、选区、事件 |
+| 规范兼容   | 文本布局相关                     | EPUB 3.x 结构兼容与阅读系统行为    |
 
 ## 6. 功能范围定义
 
@@ -316,7 +316,7 @@ Pretext 可作为 EPUB 阅读器的“文本排版核心”，主要带来：
 ```ts
 type ReaderOptions = {
   container: HTMLElement
-  mode?: 'scroll' | 'paginated'
+  mode?: "scroll" | "paginated"
   theme?: Partial<Theme>
 }
 
@@ -425,4 +425,3 @@ interface EpubReader {
 - W3C EPUB 3.3: <https://www.w3.org/TR/epub-33/>
 - W3C EPUB Overview: <https://w3c.github.io/epub-specs/epub33/overview/>
 - W3C EPUB Reading Systems: <https://w3c.github.io/epub-specs/epub34/rs/>
-

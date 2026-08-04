@@ -6,4 +6,9 @@ test-results
 *.tgz
 .DS_Store
 .tmp/
+tmp/
+_temp/
+artifacts/
+*.tsbuildinfo
+packages/core/.artifact-smoke-*/
 .idea/

@@ -183,12 +183,14 @@ describe("EpubReader external links", () => {
     })
 
     await reader.render()
-    container.querySelector<HTMLAnchorElement>("a[href='https://example.com/docs']")?.dispatchEvent(
-      new MouseEvent("click", {
-        bubbles: true,
-        cancelable: true
-      })
-    )
+    container
+      .querySelector<HTMLAnchorElement>("a[href='https://example.com/docs']")
+      ?.dispatchEvent(
+        new MouseEvent("click", {
+          bubbles: true,
+          cancelable: true
+        })
+      )
     await Promise.resolve()
 
     expect(callback).toHaveBeenCalledWith(

@@ -39,7 +39,15 @@ describe("selector matcher", () => {
 
     const paragraph = selectFirstHtmlElement("p", document)
     expect(paragraph).toBeTruthy()
-    expect(paragraph ? matchesHtmlSelector(paragraph, "section.chapter p.lead") : false).toBe(true)
-    expect(paragraph ? matchesHtmlSelector(paragraph, "section.chapter p.note") : true).toBe(false)
+    expect(
+      paragraph
+        ? matchesHtmlSelector(paragraph, "section.chapter p.lead")
+        : false
+    ).toBe(true)
+    expect(
+      paragraph
+        ? matchesHtmlSelector(paragraph, "section.chapter p.note")
+        : true
+    ).toBe(false)
   })
 })

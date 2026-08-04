@@ -119,7 +119,10 @@ export function layoutTextLikeBlock(
       const imageLayout = resolveImageLayout({
         availableWidth: contentWidth,
         viewportHeight: input.viewportHeight,
-        ...resolveImageIntrinsicSize(coverImage, input.resolveImageIntrinsicSize),
+        ...resolveImageIntrinsicSize(
+          coverImage,
+          input.resolveImageIntrinsicSize
+        ),
         fillWidth: true
       })
       const font = dependencies.buildFont(
@@ -296,7 +299,11 @@ function resolveImageIntrinsicSize(
   const height = image.style?.height ?? image.height ?? resolvedSize?.height
 
   return {
-    ...(typeof width === "number" && width > 0 ? { intrinsicWidth: width } : {}),
-    ...(typeof height === "number" && height > 0 ? { intrinsicHeight: height } : {})
+    ...(typeof width === "number" && width > 0
+      ? { intrinsicWidth: width }
+      : {}),
+    ...(typeof height === "number" && height > 0
+      ? { intrinsicHeight: height }
+      : {})
   }
 }

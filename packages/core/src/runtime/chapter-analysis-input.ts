@@ -1,9 +1,9 @@
-import type { XhtmlDomDocument } from "../parser/xhtml-dom-parser";
-import type { CssAstStyleSheet } from "../parser/css-ast-adapter";
+import type { XhtmlDomDocument } from "../parser/xhtml-dom-parser"
+import type { CssAstStyleSheet } from "../parser/css-ast-adapter"
 import {
   getCssAllDeclarations,
   getCssDeclarationValueText
-} from "../parser/css-ast-adapter";
+} from "../parser/css-ast-adapter"
 import {
   getHtmlElementAttribute,
   getHtmlNodeChildren,
@@ -12,41 +12,44 @@ import {
   isHtmlTextNode,
   type HtmlDomElement,
   type HtmlDomNode
-} from "../parser/html-dom-adapter";
-import { parseInlineStyleAttribute } from "../parser/style-resolver";
-import type { PreprocessedChapter, PreprocessedChapterNode } from "./chapter-preprocess";
+} from "../parser/html-dom-adapter"
+import { parseInlineStyleAttribute } from "../parser/style-resolver"
+import type {
+  PreprocessedChapter,
+  PreprocessedChapterNode
+} from "./chapter-preprocess"
 
 export type ChapterAnalysisInput = {
-  href: string;
-  rootTagName?: string;
-  nodeCount: number;
-  elementCount: number;
-  textNodeCount: number;
-  maxDepth: number;
-  tagCounts: Record<string, number>;
-  styledElementCount: number;
-  inlineStyleDeclarationCount: number;
-  stylePropertyCounts: Record<string, number>;
-  stylePropertyValueCounts: Record<string, number>;
-  classTokenCount: number;
-  idAttributeCount: number;
-};
+  href: string
+  rootTagName?: string
+  nodeCount: number
+  elementCount: number
+  textNodeCount: number
+  maxDepth: number
+  tagCounts: Record<string, number>
+  styledElementCount: number
+  inlineStyleDeclarationCount: number
+  stylePropertyCounts: Record<string, number>
+  stylePropertyValueCounts: Record<string, number>
+  classTokenCount: number
+  idAttributeCount: number
+}
 
 export function buildChapterAnalysisInput(input: {
-  href: string;
-  document?: Pick<XhtmlDomDocument, "bodyElement" | "htmlElement">;
-  chapter?: PreprocessedChapter;
-  stylesheets?: CssAstStyleSheet[];
+  href: string
+  document?: Pick<XhtmlDomDocument, "bodyElement" | "htmlElement">
+  chapter?: PreprocessedChapter
+  stylesheets?: CssAstStyleSheet[]
 }): ChapterAnalysisInput {
   if (input.chapter) {
     return buildChapterAnalysisInputFromPreprocessedChapter(
       input.href,
       input.chapter,
       input.stylesheets
-    );
+    )
   }
 
-  const root = input.document?.bodyElement ?? input.document?.htmlElement;
+  const root = input.document?.bodyElement ?? input.document?.htmlElement
   if (!root) {
     return {
       href: input.href,
@@ -61,7 +64,7 @@ export function buildChapterAnalysisInput(input: {
       stylePropertyValueCounts: {},
       classTokenCount: 0,
       idAttributeCount: 0
-    };
+    }
   }
 
   const analysis: ChapterAnalysisInput = {
@@ -78,15 +81,15 @@ export function buildChapterAnalysisInput(input: {
     stylePropertyValueCounts: {},
     classTokenCount: 0,
     idAttributeCount: 0
-  };
+  }
 
   for (const child of getHtmlNodeChildren(root)) {
-    visitNode(child, 1, analysis);
+    visitNode(child, 1, analysis)
   }
 
   collectStyleSheetDeclarations(input.stylesheets, analysis)
 
-  return analysis;
+  return analysis
 }
 
 function buildChapterAnalysisInputFromPreprocessedChapter(
@@ -108,15 +111,15 @@ function buildChapterAnalysisInputFromPreprocessedChapter(
     stylePropertyValueCounts: {},
     classTokenCount: 0,
     idAttributeCount: 0
-  };
+  }
 
   for (const node of chapter.nodes) {
-    visitPreprocessedNode(node, 1, analysis);
+    visitPreprocessedNode(node, 1, analysis)
   }
 
   collectStyleSheetDeclarations(stylesheets, analysis)
 
-  return analysis;
+  return analysis
 }
 
 function visitNode(
@@ -126,30 +129,30 @@ function visitNode(
 ): void {
   if (isHtmlTextNode(node)) {
     if (!node.data.trim()) {
-      return;
+      return
     }
 
-    analysis.nodeCount += 1;
-    analysis.textNodeCount += 1;
-    analysis.maxDepth = Math.max(analysis.maxDepth, depth);
-    return;
+    analysis.nodeCount += 1
+    analysis.textNodeCount += 1
+    analysis.maxDepth = Math.max(analysis.maxDepth, depth)
+    return
   }
 
   if (!isHtmlElementNode(node)) {
-    return;
+    return
   }
 
-  analysis.nodeCount += 1;
-  analysis.elementCount += 1;
-  analysis.maxDepth = Math.max(analysis.maxDepth, depth);
+  analysis.nodeCount += 1
+  analysis.elementCount += 1
+  analysis.maxDepth = Math.max(analysis.maxDepth, depth)
 
-  const tagName = getHtmlTagName(node);
-  analysis.tagCounts[tagName] = (analysis.tagCounts[tagName] ?? 0) + 1;
+  const tagName = getHtmlTagName(node)
+  analysis.tagCounts[tagName] = (analysis.tagCounts[tagName] ?? 0) + 1
 
-  collectElementAttributes(node, analysis);
+  collectElementAttributes(node, analysis)
 
   for (const child of getHtmlNodeChildren(node)) {
-    visitNode(child, depth + 1, analysis);
+    visitNode(child, depth + 1, analysis)
   }
 }
 
@@ -157,31 +160,31 @@ function collectElementAttributes(
   node: HtmlDomElement,
   analysis: ChapterAnalysisInput
 ): void {
-  const id = getHtmlElementAttribute(node, "id");
+  const id = getHtmlElementAttribute(node, "id")
   if (id?.trim()) {
-    analysis.idAttributeCount += 1;
+    analysis.idAttributeCount += 1
   }
 
-  const className = getHtmlElementAttribute(node, "class");
+  const className = getHtmlElementAttribute(node, "class")
   if (className?.trim()) {
     analysis.classTokenCount += className
       .split(/\s+/)
       .map((token) => token.trim())
-      .filter(Boolean).length;
+      .filter(Boolean).length
   }
 
-  const inlineStyle = getHtmlElementAttribute(node, "style");
+  const inlineStyle = getHtmlElementAttribute(node, "style")
   if (!inlineStyle?.trim()) {
-    return;
+    return
   }
 
-  const declarations = parseInlineStyleAttribute(inlineStyle);
+  const declarations = parseInlineStyleAttribute(inlineStyle)
   if (declarations.length === 0) {
-    return;
+    return
   }
 
-  analysis.styledElementCount += 1;
-  analysis.inlineStyleDeclarationCount += declarations.length;
+  analysis.styledElementCount += 1
+  analysis.inlineStyleDeclarationCount += declarations.length
   for (const declaration of declarations) {
     collectStyleDeclaration(declaration.property, declaration.value, analysis)
   }
@@ -194,47 +197,51 @@ function visitPreprocessedNode(
 ): void {
   if (node.kind === "text") {
     if (!node.text.trim()) {
-      return;
+      return
     }
 
-    analysis.nodeCount += 1;
-    analysis.textNodeCount += 1;
-    analysis.maxDepth = Math.max(analysis.maxDepth, depth);
-    return;
+    analysis.nodeCount += 1
+    analysis.textNodeCount += 1
+    analysis.maxDepth = Math.max(analysis.maxDepth, depth)
+    return
   }
 
-  analysis.nodeCount += 1;
-  analysis.elementCount += 1;
-  analysis.maxDepth = Math.max(analysis.maxDepth, depth);
-  analysis.tagCounts[node.tagName] = (analysis.tagCounts[node.tagName] ?? 0) + 1;
+  analysis.nodeCount += 1
+  analysis.elementCount += 1
+  analysis.maxDepth = Math.max(analysis.maxDepth, depth)
+  analysis.tagCounts[node.tagName] = (analysis.tagCounts[node.tagName] ?? 0) + 1
 
-  const id = node.attributes.id;
+  const id = node.attributes.id
   if (id?.trim()) {
-    analysis.idAttributeCount += 1;
+    analysis.idAttributeCount += 1
   }
 
-  const className = node.attributes.class;
+  const className = node.attributes.class
   if (className?.trim()) {
     analysis.classTokenCount += className
       .split(/\s+/)
       .map((token) => token.trim())
-      .filter(Boolean).length;
+      .filter(Boolean).length
   }
 
-  const inlineStyle = node.attributes.style;
+  const inlineStyle = node.attributes.style
   if (inlineStyle?.trim()) {
-    const declarations = parseInlineStyleAttribute(inlineStyle);
+    const declarations = parseInlineStyleAttribute(inlineStyle)
     if (declarations.length > 0) {
-      analysis.styledElementCount += 1;
-      analysis.inlineStyleDeclarationCount += declarations.length;
+      analysis.styledElementCount += 1
+      analysis.inlineStyleDeclarationCount += declarations.length
       for (const declaration of declarations) {
-        collectStyleDeclaration(declaration.property, declaration.value, analysis)
+        collectStyleDeclaration(
+          declaration.property,
+          declaration.value,
+          analysis
+        )
       }
     }
   }
 
   for (const child of node.children) {
-    visitPreprocessedNode(child, depth + 1, analysis);
+    visitPreprocessedNode(child, depth + 1, analysis)
   }
 }
 
@@ -249,7 +256,11 @@ function collectStyleSheetDeclarations(
         continue
       }
 
-      collectStyleDeclaration(property, getCssDeclarationValueText(declaration), analysis)
+      collectStyleDeclaration(
+        property,
+        getCssDeclarationValueText(declaration),
+        analysis
+      )
     }
   }
 }

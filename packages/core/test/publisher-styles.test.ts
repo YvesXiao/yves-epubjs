@@ -32,13 +32,15 @@ describe("publisher styles helpers", () => {
     expect(section.blocks[0]?.style?.color).toBe("#b91c1c")
     expect(section.blocks[0]?.style?.marginBottom).toBe(28)
     expect(
-      section.blocks[0]?.kind === "text" && section.blocks[0].inlines[1]?.kind === "strong"
+      section.blocks[0]?.kind === "text" &&
+        section.blocks[0].inlines[1]?.kind === "strong"
         ? section.blocks[0].inlines[1].style?.backgroundColor
         : undefined
     ).toBe("#fde68a")
     expect(stripped.blocks[0]?.style).toBeUndefined()
     expect(
-      stripped.blocks[0]?.kind === "text" && stripped.blocks[0].inlines[1]?.kind === "strong"
+      stripped.blocks[0]?.kind === "text" &&
+        stripped.blocks[0].inlines[1]?.kind === "strong"
         ? stripped.blocks[0].inlines[1].style
         : undefined
     ).toBeUndefined()
@@ -57,7 +59,9 @@ describe("publisher styles helpers", () => {
         </html>`
     })
 
-    const stripped = stripPublisherStylesFromPreprocessedNodes(preprocessed.nodes)
+    const stripped = stripPublisherStylesFromPreprocessedNodes(
+      preprocessed.nodes
+    )
 
     expect(stripped).toHaveLength(1)
     expect(stripped[0]).toEqual({
